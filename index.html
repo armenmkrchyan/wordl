@@ -12,309 +12,802 @@
       flex-direction: column;
       align-items: center;
       transition: background 0.3s, color 0.3s;
+      min-height: 100vh;
+      box-sizing: border-box;
+      background-color: var(--bg-color, #fff);
+      color: var(--text-color, #000);
+    }
+
+    :root {
+        --bg-color: #fff;
+        --text-color: #000;
+        --tile-border-empty: #aaa;
+        --tile-border-filled: #666;
+        --key-bg: #d3d6da;
+        --key-text: #1a1a1b;
+        --correct-bg: #538d4e;
+        --present-bg: #b59f3b;
+        --absent-bg: #3a3a3c;
+        --delete-key-bg: #dc3545; /* Red */
+        --enter-key-bg: #538d4e; /* Green */
+        --tile-text-light: #000;
+        --tile-text-dark: #fff;
     }
 
     h1 {
-      margin-top: 20px;
+      margin-top: 15px;
+      margin-bottom: 10px;
+      font-size: 1.8rem;
+    }
+
+    .board-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-grow: 1;
+        width: 100%;
+        max-width: 350px;
+        margin: 15px 0;
     }
 
     .board {
       display: grid;
-      grid-template-columns: repeat(5, 60px);
-      grid-gap: 10px;
-      margin: 20px 0;
+      grid-template-rows: repeat(6, 1fr);
+      grid-gap: 5px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .row {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        grid-gap: 5px;
     }
 
     .tile {
-      width: 60px;
-      height: 60px;
-      border: 2px solid #444;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border: 2px solid var(--tile-border-empty);
       font-size: 2rem;
-      display: flex;
+      font-weight: bold;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      text-transform: uppercase;
-      transition: transform 0.3s ease, background-color 0.3s;
+      text-transform: lowercase;
+      color: var(--tile-text-light);
+      background-color: var(--bg-color);
+      transition: background-color 0.3s, border-color 0.3s; /* No flip anim */
+      box-sizing: border-box;
+    }
+    .tile > div {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        color: inherit;
+    }
+    .tile.filled {
+        border-color: var(--tile-border-filled);
+    }
+    .tile.correct { background-color: var(--correct-bg); color: var(--tile-text-dark); border-color: var(--correct-bg); }
+    .tile.present { background-color: var(--present-bg); color: var(--tile-text-dark); border-color: var(--present-bg); }
+    .tile.absent { background-color: var(--absent-bg); color: var(--tile-text-dark); border-color: var(--absent-bg); }
+
+    /* Keyboard Container */
+    #keyboard {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+      max-width: 650px;
+      padding: 0 8px;
+      margin: 10px auto 0;
+      box-sizing: border-box;
     }
 
-    .tile.correct { background: #538d4e; color: #fff; border-color: #538d4e; }
-    .tile.present { background: #b59f3b; color: #fff; border-color: #b59f3b; }
-    .tile.absent { background: #3a3a3c; color: #fff; border-color: #3a3a3c; }
+    #keyboard-top-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+    }
 
-#keyboard {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(44px, 1fr));
-  gap: 6px;
-  width: 100%;
-  max-width: 500px; /* 👈 max width */
-  padding: 0 1rem;
-  margin: 1.5rem auto 0;
-  box-sizing: border-box;
-}
+    #keyboard-main-grid {
+        display: grid;
+        grid-template-columns: repeat(11, 1fr);
+        gap: 4px;
+    }
 
-	
 
-.key {
-  aspect-ratio: 1 / 1;
-  min-height: 44px;
-  font-size: 1.1rem;
-  border: none;
-  border-radius: 8px;
-  background-color: var(--key-bg, #ccc);
-  color: var(--key-color, #000);
-  cursor: pointer;
-  transition: background 0.2s;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  user-select: none;
-  touch-action: manipulation;
-}
+    /* Base key style - accounts for max border width */
+    .key {
+      height: 50px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      border: 3px solid transparent; /* Default transparent border, matching max highlight border width */
+      border-radius: 4px;
+      background-color: var(--key-bg);
+      color: var(--key-text);
+      cursor: pointer;
+      transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      user-select: none;
+      touch-action: manipulation;
+      text-transform: lowercase;
+      padding: 0 1px; /* Adjusted padding for border */
+      box-sizing: border-box;
+    }
+    .key:hover {
+        filter: brightness(90%);
+    }
 
-    .key.enter { background: #6aaa64;}
-    .key.delete { background: #c9b458;}
-	
-	.key.enter,
-.key.delete {
-  aspect-ratio: auto;
-  grid-column: span 3;
-   color: white;
-  font-size: 1rem;
-  min-width: 70px;
-}
-	
-	
-		.message {
-  text-align: center;
-  font-size: 1.5em;
-  margin-top: 1rem;
-  padding: 0.5rem;
-  font-weight: bold;
-}
-.dark .message {
-  color: #fffd;
-}
-	
+    /* Enter and Delete specific styles */
+    .key.enter,
+    .key.delete {
+      font-size: 1rem;
+      color: white;
+      border-width: 3px; /* Match base key border width */
+      border-style: solid;
+    }
+    .key.enter {
+        background-color: var(--enter-key-bg);
+        border-color: var(--enter-key-bg); /* Match background */
+    }
+    .key.delete {
+         background-color: var(--delete-key-bg);
+         border-color: var(--delete-key-bg); /* Match background */
+    }
+
+    .key.placeholder {
+        background: transparent;
+        pointer-events: none;
+        border-color: transparent;
+        visibility: hidden;
+    }
+
+     /* Key statuses */
+    .key.correct {
+      background-color: var(--correct-bg);
+      color: var(--tile-text-dark);
+      border-color: transparent; /* Default correct border is transparent */
+    }
+    .key.present {
+      background-color: var(--present-bg);
+      color: var(--tile-text-dark);
+      border-color: transparent;
+    }
+    .key.absent {
+      background-color: var(--absent-bg);
+      color: var(--tile-text-dark);
+      border-color: transparent;
+    }
+
+    /* Style for keys that are correct AND were present in the LAST guess */
+    .key.correct.has-present { /* Combined class */
+        border-width: 3px; /* Use desired width */
+        border-style: solid;
+        border-color: var(--present-bg); /* Yellow border */
+    }
+
+
+    .message-container {
+        position: fixed;
+        top: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        min-height: 30px;
+        z-index: 10;
+    }
+    .message {
+      text-align: center;
+      font-size: 1.1em;
+      margin-top: 1rem;
+      padding: 8px 15px;
+      font-weight: bold;
+      background-color: #333;
+      color: white;
+      border-radius: 5px;
+      visibility: hidden;
+      opacity: 0;
+      transition: visibility 0s 1.5s, opacity 1.5s linear;
+    }
+     .message.show {
+        visibility: visible;
+        opacity: 1;
+        transition: opacity 0.3s linear;
+     }
+
+    /* --- Dark Mode --- */
     .dark {
-      background: #121213;
-      color: white;
+        --bg-color: #121213;
+        --text-color: #fff;
+        --tile-border-empty: #3a3a3c;
+        --tile-border-filled: #565758;
+        --key-bg: #818384;
+        --key-text: #dadce0;
+        --tile-text-light: #fff;
     }
 
-    .dark .tile {
-      border-color: #555;
-      background: #222;
-      color: white;
+    .dark .message {
+      background-color: #eee;
+      color: #121213;
+    }
+     .dark .key:hover {
+         filter: brightness(115%);
+     }
+     .dark .key.enter:hover, .dark .key.delete:hover {
+          filter: brightness(110%);
+     }
+      .dark .key.correct.has-present:hover {
+         filter: brightness(110%);
+     }
+
+
+    /* Dark Mode Key Statuses */
+    .dark .key.correct { background-color: var(--correct-bg); color: var(--tile-text-dark); border-color: transparent;}
+    .dark .key.present { background-color: var(--present-bg); color: var(--tile-text-dark); border-color: transparent;}
+    .dark .key.absent { background-color: var(--absent-bg); color: var(--tile-text-dark); border-color: transparent;}
+
+    /* Dark Mode for the combined state */
+    .dark .key.correct.has-present {
+        border-color: var(--present-bg); /* Yellow border */
     }
 
-    .dark .keyboard .key {
-      background: #333;
-      color: white;
-    }
 
     #toggle-theme {
+       position: absolute;
+      top: 10px;
+      right: 10px;
       margin-bottom: 10px;
-      padding: 8px 16px;
+      padding: 8px 12px;
       border-radius: 5px;
       cursor: pointer;
+      border: 1px solid #ccc;
+      background-color: #eee;
+      color: #333;
     }
+    .dark #toggle-theme {
+        background-color: #333;
+        color: white;
+        border-color: #555;
+    }
+
 
     /* Animations */
     @keyframes shake {
       0%, 100% { transform: translateX(0); }
-      20%, 60% { transform: translateX(-10px); }
-      40%, 80% { transform: translateX(10px); }
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+      20%, 40%, 60%, 80% { transform: translateX(5px); }
     }
+    .shake { animation: shake 0.6s ease-in-out; }
 
-    @keyframes flip {
-      0% { transform: rotateX(90deg); }
-      100% { transform: rotateX(0); }
-    }
-
-    .flip { animation: flip 0.3s ease-in-out; }
-    .shake { animation: shake 0.4s; }
-
-    .confetti {
-      position: absolute;
-      width: 8px;
-      height: 8px;
-      background: red;
-      top: 0;
-      animation: fall 1.5s linear infinite;
-      opacity: 0;
-    }
-
-    @keyframes fall {
-      to {
-        transform: translateY(100vh);
-        opacity: 1;
-      }
-    }
   </style>
 </head>
 <body>
-  <h1>Wordle 🇦🇲</h1>
-  <button id="toggle-theme">🌗 Փոխել գունային ռեժիմը</button>
-  <div class="board" id="board"></div>
-  <div class="keyboard" id="keyboard"></div>
-  
-  <div id="message" class="message"></div>
+  <h1>բառուկ</h1>
+  <button id="toggle-theme">🌗</button>
+  <div class="message-container">
+     <div id="message" class="message"></div>
+  </div>
+  <div class="board-container">
+     <div class="board" id="board"></div>
+  </div>
+  <div id="keyboard">
+      <div id="keyboard-top-row"></div>
+      <div id="keyboard-main-grid"></div>
+  </div>
 
 <script>
-  const board = document.getElementById('board');
-  const keyboard = document.getElementById('keyboard');
+  const boardElement = document.getElementById('board');
+  const keyboardTopRowElement = document.getElementById('keyboard-top-row');
+  const keyboardMainGridElement = document.getElementById('keyboard-main-grid');
+  const keyboardElement = document.getElementById('keyboard');
   const toggleBtn = document.getElementById('toggle-theme');
+  const messageElement = document.getElementById('message');
 
-  let theme = localStorage.getItem('theme') || 'light';
-  document.body.classList.toggle('dark', theme === 'dark');
+  // --- Constants ---
+  const WORD_LENGTH = 5;
+  const MAX_ROWS = 6;
+  const ENTER_KEY = 'ընդունել';
+  const DELETE_KEY = 'ջնջել';
 
-  toggleBtn.onclick = () => {
-    theme = theme === 'light' ? 'dark' : 'light';
-    document.body.classList.toggle('dark', theme === 'dark');
-    localStorage.setItem('theme', theme);
-  };
+  // --- Word List (Assumed 5 letters, lowercase) ---
+  const WORDS = ['ֆոտոն','նռնակ','հնդիկ','հեղուկ','արգոն','թրթուռ','կայուն','լուծում','շապիկ','հրշեջ','ընբիշ','մետաղ','ավելի','անզեն','հաշիվ','թափոր','խելառ','լքված','դայակ','ցերեկ','կտրուկ','կճղակ','վրացի','քուռակ','բորսա','ծաղիկ','հատիկ','նիհար','արձակ','թրթուր','տոկուն','եղևնի','սապատ','նեղուց','բժիշկ','ուռենի','չվերթ','մասուր','մեթոդ','թշշոց','քնքուշ','փեթակ','մեդիա','կրունկ','կաթսա','կոալա','գիտակ','կրկես','վարազ','փետուր','կտրիճ','հատուկ','կաղնի','պապիկ','ելույթ','ակամա','բուժում','անկապ','մամուլ','օրգան','արևոտ','դակիչ','թևնոց','պատիվ','մետրո','օթյակ','դրախտ','եռանդ','արկած','դալար','գուլպա','խրոխտ','կաուրի','քանոն','ճաղատ','գնորդ','փխրուն','դրամա','ռետին','զղջում','կապիչ','ապտակ','էկրան','բրդյա','դահուկ','պղտոր','դադար','երշիկ','ձյուդո','ջութակ','լվացք','արծաթ','պուրակ','դեկան','լավաշ','գավաթ','բուլկի','սիրուն','կատակ','զոդում','թեփուկ','անտեր','սափոր','հյուսն','հանում','բյուջե','սեզոն','նիզակ','գրպան','բլղուր','պղպեղ','կնճիռ','սրինգ','եղինջ','հասցե','տզրուկ','սպիրտ','դրվագ','տոկոս','մագիլ','արմավ','վստահ','անցում','չարազ','ամբոխ','պահոց','ակցիա','տիտան','ուրբաթ','անգիր','կենաց','խոռոչ','աղանձ','դարակ','փափուկ','գմբեթ','խոնավ','նախնի','գնդակ','ազդակ','ջոկատ','թենիս','ճահիճ','բնույթ','խրճիթ','թիրախ','տաճար','նշենի','անձրև','հատում','գարուն','խուրմա','ջեռոց','շնորհ','պատիժ','ժողով','դիետա','կանոն','ղազախ','ազնիվ','մոխիր','ճաշակ','բնազդ','անհոգ','ճագար','դուդուկ','խոժոռ','աջլիկ','քոթուկ','անձավ','բմբուլ','խնդիր','սուլոց','բանուկ','կավիճ','հրդեհ','սամբո','հովիվ','առյուծ','կողով','արճիճ','սմբակ','քաղցր','անտաշ','թանձր','երկիր','ատլաս','ժյուրի','ստույգ','խլուրդ','իմաստ','եռակի','կրկին','սրիկա','կաթիլ','թառափ','ճակատ','կոկիկ','սուտակ','կմախք','անբիծ','խխունջ','մտրուկ','կրպակ','աղյուս','մտրակ','հրթիռ','արժեք','էական','ֆիզիկ','վարակ','բացում','առվակ','դոնոր','հուզիչ','կյանք','խնամի','թափուր','կարոտ','համեմ','չնչին','տեսուչ','ուղերձ','շաքար','մալուխ','կոմիկ','հասուն','աղվես','տաքսի','զվարթ','դրոշմ','ծածուկ','մաքուր','օպերա','կուզիկ','կիթառ','ձվաձև','թթենի','էթիկա','չաման','նախիր','բլրակ','բուդդա','աբեղա','հնաոճ','եզակի','դժվար','փաթեթ','պտույտ','արդար','աղցան','առույգ','լրտես','անխնա','ռեգբի','ածելի','հովազ','քարոզ','չամիչ','գրեթե','աղմուկ','դժգոհ','խոշոր','շիտակ','համառ','բանան','միտում','հուժկու','օրենք','զնդան','սողուն','գնացք','փողոց','բոված','քացախ','չմուշկ','ժանիք','ծղրիդ','հասած','թոշակ','անմահ','տարեց','լեմուր','պանդա','մկրատ','խռպոտ','խավիծ','բրդոտ','երդում','չեզոք','նոտար','վտանգ','պիցցա','ֆերմա','ծովափ','ագենտ','մառան','վիպակ','ռուբլի','հուշում','պառավ','խմբակ','սպունգ','թռչուն','ատյան','բեկոր','մատուռ','իներտ','թութակ','անտուն','աբխազ','բոբիկ','չարչի','զգեստ','հուլիս','խավար','գալար','նորեկ','գոռոզ','բազուկ','վզկապ','անամպ','սնդիկ','խուճուճ','լազեր','տափակ','զիջող','ակումբ','կնունք','սալիկ','հնարք','գիշեր','գազան','կաղին','կանեփ','պիտակ','սրճեփ','տավիղ','սամիթ','մորուք','ալևոր','եղունգ','տարազ','գազար','ականջ','սուլիչ','թթվաշ','բացիչ','պատառ','օրրան','օազիս','կորիզ','պարոն','պարեկ','կարիք','պղինձ','թաքուն','ձագար','երեխա','հաշիշ','սխտոր','անհատ','պահակ','վիշապ','շրջան','ծամոն','մածուն','վայրի','ծիծաղ','միջատ','թալան','նամուս','ամուրի','վաղուց','հումոր','ամորֆ','խնոցի','սփռոց','բազում','թափոն','ապրիլ','դելտա','ցնցուղ','զավակ','կայսր','բոլուկ','մենակ','փրկիչ','խղճուկ','չեչեն','սյուժե','աճյուն','կաշվե','ստրուկ','բալետ','թանաք','սանիկ','կշեռք','թմբուկ','վիրուս','բռնիչ','քամիչ','լրատու','գաճաճ','թովիչ','միջոց','մոտիկ','դիմակ','բաժակ','ավարտ','դաժան','բկլիկ','արթուն','մանրէ','կոտեմ','գոմեշ','սիսեռ','սավան','օդաչու','սոխակ','ծիծակ','սոխուկ','ընկեր','ներկա','շլդիկ','ծպտուն','ճկույթ','աքլոր','ակնոց','գնդիկ','ցուցում','ծագում','քննիչ','արշավ','աղջիկ','ունելի','սնունդ','տխմար','տիկին','հպարտ','սթրես','սրվակ','օթևան','բողոք','արմատ','կրքոտ','ծանոթ','արյուն','երանգ','աճուրդ','լյարդ','ամայի','զրույց','սալոր','երկաթ','տոննա','արծիվ','դրույթ','նյարդ','անգետ','կատար','դրացի','լարում','կռունկ','ուղևոր','մանգո','ալբոմ','բեղլու','անուրջ','դուստր','ողորկ','իշխան','ոլորտ','ուլունք','անճար','թոնիր','աուդիո','բիզոն','կողակ','ցորեն','օքսիդ','սմբուկ','սամբա','անկոչ','քանակ','հոկեյ','վահան','խանութ','հրաշք','կոշիկ','անմիտ','զորեղ','արձան','տեսակ','ցողուն','ոսկոր','ըմբիշ','դագաղ','ապակի','դիպուկ','թաթար','մկնիկ','կոկոս','փուչիկ','անդուր','ամփոփ','կոբրա','գագաթ','ապշած','բրինձ','նժույգ','եղնիկ','սենատ','ռեզուս','ջնջոց','շաշկի','կոճակ','ագռավ','իսլամ','դղյակ','մեռած','գերան','զննող','թիթեռ','շեփոր','աքսոր','սելավ','մանուկ','սիբեխ','սպորտ','պնդուկ','երբեք','քիմիկ','պարան','արդուկ','խնձոր','նեխուր','հստակ','միջուկ','ստվեր','գետին','փարոս','հնչեղ','տատիկ','թշվառ','քլունգ','ձավար','պալատ','անջուր','ծղոտե','տանիք','հասակ','խաղաղ','պակաս','կարիճ','հսկիչ','ակունք','երեկո','լուցկի','անսեռ','շարան','հոպոպ','տարիք','համար','կուրծք','անեծք','պաշար','չղջիկ','խորան','վիսկի','անկախ','լուսան','եղյամ','ավանդ','կաքավ','ալյուր','կապար','մորեխ','փրփուր','նամակ','մթերք','անցած','դժոխք','սկիզբ','կապոց','եղեռն','բարդի','բուժիչ','մեխակ','պնդում','րաբբի','սեղան','չափում','ծուղակ','կոպեկ','ծարավ','ցնցում','ակորդ','ոչինչ','քիմիա','ակցիզ','ֆանտա','թավիշ','խշշոց','մոծակ','ավազե','կրճատ','կապիկ','բրոնզ','հարավ','թերաճ','ռեժիմ','ցուցակ','բերրի','բաժին','տոմատ','նվաստ','համեղ','տակառ','զգաստ','գերաճ','շքերթ','լողափ','ապագա','բանակ','հարիչ','զուռնա','ռոբոտ','պարգև','անմեղ','շռայլ','սխեմա','հունիս','այլուր','կամար','արդեն','տաջիկ','խարան','չքնաղ','բարձր','քաղաք','թզենի','բշտիկ','աղքատ','թախիծ','կակաչ','անդամ','խճուղի','ջրվեժ','լորտու','ավյուն','ասպետ','կոչում','սկյուռ','անբան','կացին','տեքստ','խիզախ','ճուռակ','նպաստ','եղեգն','կպչուն','առողջ','մայիս','կնճիթ','կցորդ','զատիկ','դիմում','օսկար','համով','հատակ','խմիչք','դանակ','կարագ','անհամ','թռիչք','ամրոց','մելիք','սեդան','լապշա','բացատ','կեսօր','ծծումբ','գումար','սրբիչ','վզնոց','երկար','անվախ','հմայք','սնանկ','բացիկ','մռայլ','բիրժա','բացիլ','կլիմա','մրցում','ոհմակ','նարդի','լատտե','մումիա','առնետ','մրրիկ','աղերս','ոչխար','ելևէջ','հերոս','գունատ','կեռիկ','դեղին','կեռաս','ծնունդ','խնամք','արխիվ','երգիչ','հազար','կարապ','պասիվ','տաբատ','ծիրան','դոլար','խուճապ','հավատ','փական','փաթիլ','գուշակ','կախիչ','սակավ','պարեն','ծակող','լուսին','ռադիո','կրծող','հիմար','սերիա','լոլիկ','խաղող','ռեհան','ասույթ','դափնի','ուտեստ','այսօր','զգույշ','դպրոց','բերան','միջին','դոդոշ','ամբար','անտիկ','ծորակ','հաճախ','երաշտ','շաբաթ','պարտք','բախում','աղոթք','գզրոց','անզոր','լիմոն','տնջրի','բռնակ','աուդիտ','սրունք','դդմիկ','ալիբի','տոնուս','լակոտ','մորթի','խրթին','կեֆիր','բարակ','անոնս','սպասք','կանաչ','վրձին','խելոք','ամրակ','ակտիվ','դահիճ','շուշան','մատիտ','պանիր','կոպիտ','տապակ','կակաո','վիճակ','ճնշում','անտառ','արարք','մողես','շերեփ','հովիտ','ֆիլտր','պեպսի','մասոն','անկում','ուզբեկ','եռյակ','ներուժ']; // Added example word
 
-  const allLetters = ['Ա','Բ','Գ','Դ','Ե','Զ','Է','Ը','Թ','Ժ','Ի','Լ','Խ','Ծ','Կ','Հ','Ձ','Ղ','Ճ','Մ','Յ','Ն','Շ','Ո','Չ','Պ','Ջ','Ռ','Ս','Վ','Տ','Ր','Ց','ՈՒ','Փ','Ք','Ֆ'];
-  const specialKeys = ['ԸՆԴՈՒՆԵԼ', 'ՋՆՋԵԼ'];
-  const keys = [...allLetters, ...specialKeys];
-
-  const WORDS = ['ֆոտոն', 'նռնակ', 'հնդիկ', 'հեղուկ', 'արգոն', 'թրթուռ', /* ...other words*/];
-
-  const startDate = new Date("2025-04-11");
-  const today = new Date();
-  const dayOffset = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
-  const targetWord = WORDS[dayOffset % WORDS.length];
-  const dateKey = `armenianWordle-${dayOffset}`;
-  const parsedTarget = splitWord(targetWord);
-
-  let guesses = [];
-  let current = [];
-  let row = 0;
-  const maxRows = 6;
-
-  function splitWord(word) {
-    const chars = [];
-    for (let i = 0; i < word.length; i++) {
-      if (word[i] === 'Ո' && word[i + 1] === 'Ւ') {
-        chars.push('ՈՒ');
-        i++;
-      } else {
-        chars.push(word[i]);
-      }
-    }
-    return chars;
+  if (WORDS.length === 0) {
+      console.error("Word list is empty!");
   }
 
+  // --- Correctly Sorted LOWERCASE Armenian Letters for Keyboard ---
+  const sortedLetters = [
+      'ա', 'բ', 'գ', 'դ', 'ե', 'զ', 'է', 'ը', 'թ', 'ժ', 'ի', 'լ', 'խ',
+      'ծ', 'կ', 'հ', 'ձ', 'ղ', 'ճ', 'մ', 'յ', 'ն', 'շ', 'ո', 'չ',
+      'պ', 'ջ', 'ռ', 'ս', 'վ', 'տ', 'ր', 'ց', 'ու',
+      'փ', 'ք', 'և', 'օ', 'ֆ'
+    ];
+  const allLetters = [...sortedLetters]; // Keep for iterating all possible keys
+
+  // --- Keyboard Layout (Letters only, 11 columns) ---
+  const keyboardLetterLayout = [
+     sortedLetters.slice(0, 11), // ա - ի
+     sortedLetters.slice(11, 22), // լ - ն
+     sortedLetters.slice(22, 33), // շ - ր
+     ['', '', ...sortedLetters.slice(33), '', ''] // Placeholders, ց - ֆ, Placeholders
+  ];
+
+  // --- Daily Word Logic ---
+  const startDate = new Date("2024-01-01");
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dayOffset = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+  const targetWord = WORDS.length > 0 ? WORDS[dayOffset % WORDS.length] : "սխալ";
+  const parsedTarget = splitWord(targetWord);
+  const dateKey = `armenianWordle-${today.toISOString().split('T')[0]}`;
+
+  // --- Game State Variables ---
+  let guesses = [];
+  let currentGuess = [];
+  let currentRowIndex = 0;
+  let isGameOver = false;
+  let messageTimeout;
+  // Stores CUMULATIVE best status: {'letter': 'correct' | 'present' | 'absent'}
+  let keyStatuses = {};
+  // Temporary info for the current turn's highlighting specifics (not saved)
+  let lastGuessSpecificInfo = {};
+
+
+  // --- Initialization ---
+  function init() {
+    loadState(); // Loads cumulative keyStatuses
+    buildBoard();
+    buildKeyboard();
+    redrawBoardFromState();
+    // Apply highlights using only the loaded CUMULATIVE state initially
+    // No border logic on refresh, as lastGuessSpecificInfo is empty then
+    updateKeyboardHighlight({});
+    // Check for game over state on refresh
+    if (isGameOver && currentRowIndex >= MAX_ROWS) {
+        const lastGuessString = guesses.length > 0 ? guesses[guesses.length - 1].map(g => g.letter).join('') : '';
+        if (splitWord(lastGuessString).join('') !== parsedTarget.join('')) {
+             showMessage(`պարտություն։ բառը՝ ${targetWord}`, 0);
+             disableInput();
+        } else {
+             showMessage('🎉 հաղթանակ 🎉', 0);
+             disableInput();
+        }
+    } else if (isGameOver) {
+         showMessage('🎉 հաղթանակ 🎉', 0);
+         disableInput();
+    }
+
+    window.addEventListener('keydown', handlePhysicalKey);
+  }
+
+  // --- State Management (localStorage) ---
+  function saveState() {
+    const state = {
+      guesses,
+      currentRowIndex,
+      isGameOver,
+      targetWord,
+      keyStatuses // Save only the CUMULATIVE keyStatuses
+      // lastGuessSpecificInfo is NOT saved
+    };
+    localStorage.setItem(dateKey, JSON.stringify(state));
+  }
+
+  function loadState() {
+    // Theme
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.body.classList.toggle('dark', savedTheme === 'dark');
+    toggleBtn.textContent = savedTheme === 'dark' ? '☀️' : '🌗';
+
+    // Game State
+    const savedStateJSON = localStorage.getItem(dateKey);
+    if (savedStateJSON) {
+        try {
+            const savedState = JSON.parse(savedStateJSON);
+            if (savedState.targetWord === targetWord) {
+                guesses = savedState.guesses || [];
+                currentRowIndex = savedState.currentRowIndex || 0;
+                isGameOver = savedState.isGameOver || false;
+                keyStatuses = savedState.keyStatuses || {}; // Load cumulative statuses
+                // Add basic validation for loaded statuses
+                for (const key in keyStatuses) {
+                   const validStatuses = ['correct', 'present', 'absent', null]; // Allow null if not seen
+                   if (!validStatuses.includes(keyStatuses[key])) {
+                       delete keyStatuses[key]; // Remove invalid entries
+                   }
+                }
+            } else {
+                console.log("New day or different word detected. Starting fresh.");
+                keyStatuses = {};
+            }
+        } catch (e) {
+            console.error("Error loading saved state:", e);
+            keyStatuses = {};
+        }
+    } else {
+        keyStatuses = {};
+    }
+    lastGuessSpecificInfo = {}; // Always reset this on load
+  }
+
+   // --- Word Processing ---
+   function splitWord(word) {
+    const chars = [];
+    const lowerWord = String(word || '').toLowerCase();
+    for (let i = 0; i < lowerWord.length; i++) {
+      if (lowerWord[i] === 'ո' && i + 1 < lowerWord.length && lowerWord[i + 1] === 'ւ') {
+        chars.push('ու');
+        i++;
+      } else {
+        chars.push(lowerWord[i]);
+      }
+    }
+     return chars;
+   }
+
+  // --- UI Building ---
   function buildBoard() {
-    for (let i = 0; i < maxRows * 5; i++) {
-      const tile = document.createElement('div');
-      tile.className = 'tile';
-      board.appendChild(tile);
+    boardElement.innerHTML = '';
+    for (let i = 0; i < MAX_ROWS; i++) {
+        const row = document.createElement('div');
+        row.className = 'row';
+        for (let j = 0; j < WORD_LENGTH; j++) {
+            const tile = document.createElement('div');
+            tile.className = 'tile';
+            tile.innerHTML = '<div></div>';
+            row.appendChild(tile);
+        }
+        boardElement.appendChild(row);
     }
   }
 
   function buildKeyboard() {
-    keys.forEach(k => {
-      const key = document.createElement('button');
-      key.textContent = k;
-      key.className = 'key';
-      if (k === 'ԸՆԴՈՒՆԵԼ') key.classList.add('enter');
-      if (k === 'ՋՆՋԵԼ') key.classList.add('delete');
-      key.onclick = () => handleKey(k);
-      keyboard.appendChild(key);
+    keyboardTopRowElement.innerHTML = '';
+    keyboardMainGridElement.innerHTML = '';
+
+    // Top Row
+    [ENTER_KEY, DELETE_KEY].forEach(keyText => {
+        const keyElement = document.createElement('button');
+        keyElement.textContent = keyText;
+        keyElement.className = 'key';
+        if (keyText === ENTER_KEY) {
+            keyElement.classList.add('enter');
+            keyElement.onclick = handleSubmit;
+        } else {
+            keyElement.classList.add('delete');
+            keyElement.onclick = handleDelete;
+        }
+        keyboardTopRowElement.appendChild(keyElement);
+    });
+
+    // Main Grid
+    keyboardLetterLayout.forEach(rowKeys => {
+        rowKeys.forEach(keyText => {
+            const keyElement = document.createElement('button');
+            keyElement.textContent = keyText;
+            keyElement.className = 'key';
+            if (!keyText) {
+                 keyElement.classList.add('placeholder');
+                 keyElement.disabled = true;
+                 keyElement.style.cursor = 'default';
+            } else {
+                keyElement.dataset.key = keyText;
+                keyElement.onclick = () => handleKeyClick(keyText);
+            }
+            keyboardMainGridElement.appendChild(keyElement);
+        });
     });
   }
 
-  function handleKey(k) {
-    if (row >= maxRows) return;
+  // --- UI Updating & State Restoration ---
+  function redrawBoardFromState() {
+     const rows = boardElement.querySelectorAll('.row');
+     rows.forEach((row, rowIndex) => {
+        const tiles = row.querySelectorAll('.tile');
+        if (rowIndex < guesses.length) {
+             const guessData = guesses[rowIndex];
+             tiles.forEach((tile, tileIndex) => {
+                const tileInner = tile.querySelector('div');
+                if (!tileInner) return;
+                const letterData = guessData[tileIndex] || { letter: '', status: '' };
+                tileInner.textContent = letterData.letter;
+                tile.classList.remove('correct', 'present', 'absent', 'filled');
+                if (letterData.letter) {
+                     tile.classList.add('filled');
+                     if (letterData.status) {
+                         tile.classList.add(letterData.status);
+                     }
+                }
+             });
+        } else {
+              tiles.forEach(tile => {
+                 const tileInner = tile.querySelector('div');
+                 if (tileInner) tileInner.textContent = '';
+                 tile.classList.remove('correct', 'present', 'absent', 'filled');
+              });
+        }
+     });
+  }
 
-    if (k === 'ԸՆԴՈՒՆԵԼ') {
-      if (current.length !== 5) {
-        shakeRow(row);
+  function updateCurrentRowDisplay() {
+    if (currentRowIndex >= MAX_ROWS) return;
+    const currentRow = boardElement.querySelectorAll('.row')[currentRowIndex];
+    const tiles = currentRow.querySelectorAll('.tile');
+    tiles.forEach((tile, index) => {
+        const tileInner = tile.querySelector('div');
+        if (!tileInner) return;
+        const letter = currentGuess[index] || '';
+        tileInner.textContent = letter;
+        if (letter) {
+            tile.classList.add('filled');
+        } else {
+            tile.classList.remove('filled');
+        }
+        tile.classList.remove('correct', 'present', 'absent');
+    });
+  }
+
+  // --- UPDATED: updateKeyboardHighlight uses cumulative AND last guess info ---
+  function updateKeyboardHighlight(displayInfoForLastGuess) { // Expects {'letter': {wasCorrect:bool, wasPresent:bool}}
+    keyboardMainGridElement.querySelectorAll('.key[data-key]').forEach(keyElement => {
+        const letter = keyElement.dataset.key;
+        // Get CUMULATIVE best status for background color
+        const cumulativeStatus = keyStatuses[letter];
+        // Get info specific to the LAST guess for border logic
+        const lastGuessInfo = displayInfoForLastGuess ? displayInfoForLastGuess[letter] : null;
+
+        // Remove previous status classes
+        keyElement.classList.remove('correct', 'present', 'absent', 'has-present');
+
+        // Apply classes based on cumulative status first (for background)
+        if (cumulativeStatus === 'correct') {
+            keyElement.classList.add('correct');
+            // NOW, check the LAST GUESS info to see if border should be added
+            // Border only added if it was BOTH correct AND present in the LAST guess
+            if (lastGuessInfo && lastGuessInfo.wasCorrect && lastGuessInfo.wasPresent) {
+                keyElement.classList.add('has-present');
+            }
+        } else if (cumulativeStatus === 'present') {
+            keyElement.classList.add('present');
+        } else if (cumulativeStatus === 'absent') {
+            keyElement.classList.add('absent');
+        }
+        // If no cumulativeStatus, key remains default
+    });
+}
+
+
+   // --- Event Handlers ---
+  function handleKeyClick(key) {
+    if (isGameOver || currentGuess.length >= WORD_LENGTH) {
         return;
-      }
-      checkGuess();
+    }
+    currentGuess.push(key);
+    updateCurrentRowDisplay();
+  }
+
+  function handleDelete() {
+    if (isGameOver || currentGuess.length === 0) {
+        return;
+    }
+    currentGuess.pop();
+    updateCurrentRowDisplay();
+  }
+
+  // --- UPDATED: handleSubmit updates cumulative statuses AND calculates last guess info ---
+  function handleSubmit() {
+    if (isGameOver) return;
+
+    if (currentGuess.length !== WORD_LENGTH) {
+      shakeRow(currentRowIndex);
+      showMessage("բավարար տառեր չկան", 1500);
       return;
     }
 
-    if (k === 'ՋՆՋԵԼ') {
-      current.pop();
-      updateRow();
-      return;
-    }
+    const guessString = currentGuess.join('');
+    const result = checkGuess(guessString);
+    guesses.push(result);
 
-    if (allLetters.includes(k) && current.length < 5) {
-      current.push(k);
-      updateRow();
+    // --- Reset temporary info for this turn ---
+    lastGuessSpecificInfo = {}; // Clear info from previous turn
+    let seenInThisGuess = {}; // Track correct/present within this specific guess
+
+    // --- Update CUMULATIVE keyStatuses AND track specifics for THIS guess ---
+    result.forEach(({ letter, status }) => {
+        // 1. Track specifics for THIS guess
+        if (!seenInThisGuess[letter]) {
+            seenInThisGuess[letter] = { wasCorrect: false, wasPresent: false };
+        }
+        if (status === 'correct') seenInThisGuess[letter].wasCorrect = true;
+        if (status === 'present') seenInThisGuess[letter].wasPresent = true;
+
+        // 2. Update CUMULATIVE best status
+        const currentStoredBest = keyStatuses[letter];
+        let nextBestStatus = currentStoredBest;
+
+        if (status === 'correct') {
+            nextBestStatus = 'correct'; // Correct always overrides
+        } else if (status === 'present') {
+            if (currentStoredBest !== 'correct') { // Present overrides absent/null
+                nextBestStatus = 'present';
+            }
+        } else if (status === 'absent') {
+            if (!currentStoredBest) { // Absent only overrides null
+                nextBestStatus = 'absent';
+            }
+        }
+        keyStatuses[letter] = nextBestStatus; // Update cumulative status
+    });
+
+    // 3. Populate lastGuessSpecificInfo based on what was seen in THIS guess
+    for (const letter in seenInThisGuess) {
+        lastGuessSpecificInfo[letter] = seenInThisGuess[letter];
     }
+    // --- End of status update ---
+
+
+    animateGuessResult(currentRowIndex, result);
+    // Pass the info calculated specifically for THIS guess to the highlight function
+    updateKeyboardHighlight(lastGuessSpecificInfo);
+
+    currentRowIndex++;
+    currentGuess = [];
+    saveState(); // Save the updated CUMULATIVE keyStatuses
+
+    setTimeout(() => {
+        checkWinLoss(guessString);
+    }, WORD_LENGTH * 150);
   }
 
-  function updateRow() {
-    const tiles = board.querySelectorAll('.tile');
-    for (let i = 0; i < 5; i++) {
-      const tile = tiles[row * 5 + i];
-      tile.textContent = current[i] || '';
-    }
+
+  function handlePhysicalKey(e) {
+     if (isGameOver) return;
+     let key = e.key;
+     if (key.length > 1 && key !== 'Backspace' && key !== 'Delete' && key !== 'Enter') {
+         return;
+     }
+     key = key.toLowerCase();
+
+     if (key === 'enter') {
+         handleSubmit();
+     } else if (key === 'backspace' || key === 'delete') {
+         handleDelete();
+     } else if (sortedLetters.includes(key)) {
+        if (currentGuess.length < WORD_LENGTH) {
+            handleKeyClick(key);
+        }
+     } else if (key === 'u' && sortedLetters.includes('ու')) {
+         if (currentGuess.length < WORD_LENGTH) {
+             handleKeyClick('ու');
+         }
+     }
   }
 
-  function checkGuess() {
-    const guess = current;
-    const tiles = board.querySelectorAll('.tile');
-    const letterStatus = ['absent', 'absent', 'absent', 'absent', 'absent'];
 
-    // Create a copy of the target word to check for "present" and "correct" letters
-    let targetWordCopy = [...parsedTarget];
-    
-    // First, check for "correct" positions (green)
-    for (let i = 0; i < 5; i++) {
-      if (guess[i] === targetWordCopy[i]) {
-        letterStatus[i] = 'correct';
-        targetWordCopy[i] = null;  // Remove the matched letter
-      }
-    }
+  // --- Game Logic ---
+  function checkGuess(guessString) {
+     const guessChars = splitWord(guessString);
+     const result = [];
+     const targetCopy = [...parsedTarget];
 
-    // Then, check for "present" letters (yellow)
-    for (let i = 0; i < 5; i++) {
-      if (letterStatus[i] !== 'correct' && targetWordCopy.includes(guess[i])) {
-        letterStatus[i] = 'present';
-        targetWordCopy[targetWordCopy.indexOf(guess[i])] = null;  // Remove the matched letter
-      }
-    }
+     // Pass 1: Correct
+     for (let i = 0; i < WORD_LENGTH; i++) {
+         const letter = guessChars[i];
+         if (letter === parsedTarget[i]) {
+             result[i] = { letter: letter, status: 'correct' };
+             targetCopy[i] = null;
+         } else {
+             result[i] = { letter: letter, status: '' };
+         }
+     }
 
-    // Update the tiles based on the letter status
-    for (let i = 0; i < 5; i++) {
-      const tile = tiles[row * 5 + i];
-      tile.classList.add(letterStatus[i]);
-    }
-
-    // Add the guess to the list of guesses
-    guesses.push(guess.join(''));
-
-    // Check if the guess is correct
-    if (guess.join('') === targetWord) {
-      document.getElementById('message').textContent = 'Բարի գալուստ, հաղթեցիր!';
-    } else {
-      row++;
-      current = [];
-      if (row >= maxRows) {
-        document.getElementById('message').textContent = `Խաղը վերջացավ, ճիշտ բառը՝ ${targetWord}`;
-      }
-    }
+     // Pass 2: Present/Absent
+     for (let i = 0; i < WORD_LENGTH; i++) {
+         if (result[i].status === 'correct') continue;
+         const letter = guessChars[i];
+         const indexInTarget = targetCopy.indexOf(letter);
+         if (indexInTarget !== -1) {
+             result[i].status = 'present';
+             targetCopy[indexInTarget] = null;
+         } else {
+             result[i].status = 'absent';
+         }
+     }
+     return result;
   }
+
+  function checkWinLoss(lastGuessString) {
+     if (splitWord(lastGuessString).join('') === parsedTarget.join('')) {
+         showMessage('🎉 հաղթանակ 🎉', 5000);
+         isGameOver = true;
+         disableInput();
+         saveState();
+     } else if (currentRowIndex >= MAX_ROWS) {
+          showMessage(`պարտություն։ բառը՝ ${targetWord}`, 10000);
+          isGameOver = true;
+          disableInput();
+          saveState();
+     }
+  }
+
+  function disableInput() {
+     console.log("Game Over - Input Disabled");
+     window.removeEventListener('keydown', handlePhysicalKey);
+     keyboardElement.querySelectorAll('.key').forEach(btn => {
+         if (!btn.classList.contains('placeholder')) {
+            btn.onclick = null;
+            btn.style.cursor = 'default';
+         }
+     });
+  }
+
+
+  // --- Animations & Messages ---
+  function animateGuessResult(rowIndex, result) {
+     const row = boardElement.querySelectorAll('.row')[rowIndex];
+     const tiles = row.querySelectorAll('.tile');
+     tiles.forEach((tile, index) => {
+         const { letter, status } = result[index];
+         const tileInner = tile.querySelector('div');
+
+         if (!tileInner) return;
+
+         if (letter) {
+            tile.classList.add('filled');
+         } else {
+             tile.classList.remove('filled');
+         }
+
+         // Apply text and status class with stagger
+         setTimeout(() => {
+             tileInner.textContent = letter;
+             if (status) {
+                tile.classList.add(status);
+             }
+         }, index * 150); // Stagger delay
+     });
+  }
+
 
   function shakeRow(rowIndex) {
-    const tiles = board.querySelectorAll('.tile');
-    const rowTiles = Array.from(tiles).slice(rowIndex * 5, (rowIndex + 1) * 5);
-    rowTiles.forEach(tile => tile.classList.add('shake'));
-    setTimeout(() => {
-      rowTiles.forEach(tile => tile.classList.remove('shake'));
-    }, 500);
+    const row = boardElement.querySelectorAll('.row')[rowIndex];
+    if (row) {
+        row.classList.add('shake');
+        row.addEventListener('animationend', () => {
+            row.classList.remove('shake');
+        }, { once: true });
+    }
   }
 
-  buildBoard();
-  buildKeyboard();
+   function showMessage(msg, duration = 2000) {
+        clearTimeout(messageTimeout);
+        messageElement.textContent = msg;
+        messageElement.classList.add('show');
+        if (duration > 0) {
+            messageTimeout = setTimeout(() => {
+                messageElement.classList.remove('show');
+            }, duration);
+        }
+   }
+
+  // --- Theme Toggle ---
+  toggleBtn.onclick = () => {
+    const isDark = document.body.classList.toggle('dark');
+    const theme = isDark ? 'dark' : 'light';
+    toggleBtn.textContent = isDark ? '☀️' : '🌗';
+    localStorage.setItem('theme', theme);
+  };
+
+
+  // --- Start the game ---
+  init();
+
 </script>
-
-
 
 </body>
 </html>
