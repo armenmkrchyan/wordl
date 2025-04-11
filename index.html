@@ -281,25 +281,60 @@
     animateGuess(guess, row);
     saveState();
 
+    // Create a copy of the target to track which letters have been matched
+    const targetCopy = [...parsedTarget];
+    const feedback = [];
+
+    // First pass: Check for correct letters in the correct position (correct)
+    for (let i = 0; i < guess.length; i++) {
+        if (guess[i] === targetCopy[i]) {
+            feedback.push('correct');
+            targetCopy[i] = null; // Mark this position as matched
+        } else {
+            feedback.push('absent');
+        }
+    }
+
+    // Second pass: Check for correct letters in the wrong position (present)
+    for (let i = 0; i < guess.length; i++) {
+        if (feedback[i] !== 'correct' && targetCopy.includes(guess[i])) {
+            feedback[i] = 'present';
+            targetCopy[targetCopy.indexOf(guess[i])] = null; // Remove that letter from the target copy
+        }
+    }
+
+    // Apply feedback styles (you should have appropriate CSS classes like 'correct', 'present', 'absent')
+    for (let i = 0; i < guess.length; i++) {
+        const letterElement = document.getElementById('letter-' + row + '-' + i);
+        if (feedback[i] === 'correct') {
+            letterElement.classList.add('correct');
+        } else if (feedback[i] === 'present') {
+            letterElement.classList.add('present');
+        } else {
+            letterElement.classList.add('absent');
+        }
+    }
+
+    // Check if the guess is correct
     if (guess.join('') === parsedTarget.join('')) {
-      saveState(true);
-      setTimeout(() => {
-        confetti();
-       document.getElementById('message').innerHTML = '🎉 <b>Հաղթանակ</b> - Խոսքը էր <b>' + parsedTarget.join('') + '</b>';
-      }, 1200);
-      row = maxRows;
-      return;
+        saveState(true);
+        setTimeout(() => {
+            confetti();
+            document.getElementById('message').innerHTML = '🎉 <b>Հաղթանակ</b> - Այսօրվա բառը՝ <b>' + parsedTarget.join('') + '</b>';
+        }, 1200);
+        row = maxRows;
+        return;
     }
 
     row++;
     current = [];
     if (row >= maxRows) {
-      setTimeout(() => {
-        document.getElementById('message').innerHTML = '😢 <b>Պարտություն</b> - Խոսքը էր <b>' + parsedTarget.join('') + '</b>';
-      }, 1200);
-      saveState(false, true);
+        setTimeout(() => {
+            document.getElementById('message').innerHTML = '😢 <b>Պարտություն</b> - Այսօրվա բառը՝ <b>' + parsedTarget.join('') + '</b>';
+        }, 1200);
+        saveState(false, true);
     }
-  }
+}
 
   function shakeRow(r) {
     const tiles = board.querySelectorAll('.tile');
