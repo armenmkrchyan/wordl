@@ -3,19 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Wordle Armenian 🇦🇲</title>
+  <title>ArmWordl 🇦🇲</title>
   <style>
+    html, body {
+        height: 100%;
+        margin: 0;
+    }
     body {
-      margin: 0;
       font-family: sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
       transition: background 0.3s, color 0.3s;
-      min-height: 100vh;
+      min-height: 100%;
       box-sizing: border-box;
       background-color: var(--bg-color, #fff);
       color: var(--text-color, #000);
+      padding-bottom: 10px;
     }
 
     :root {
@@ -32,19 +36,39 @@
         --enter-key-bg: #538d4e; /* Green */
         --tile-text-light: #000;
         --tile-text-dark: #fff;
+        --link-color: #007bff;
+    }
+
+    .main-content {
+        flex: 1 0 auto;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
     }
 
     h1 {
       margin-top: 15px;
-      margin-bottom: 10px;
+      margin-bottom: 5px;
       font-size: 1.8rem;
+      white-space: nowrap;
     }
+
+    .subtitle {
+        font-size: 0.9rem;
+        color: #777;
+        margin-top: 0;
+        margin-bottom: 10px;
+    }
+    .dark .subtitle {
+        color: #aaa;
+    }
+
 
     .board-container {
         display: flex;
         justify-content: center;
         align-items: center;
-        flex-grow: 1;
         width: 100%;
         max-width: 350px;
         margin: 15px 0;
@@ -76,7 +100,7 @@
       text-transform: lowercase;
       color: var(--tile-text-light);
       background-color: var(--bg-color);
-      transition: background-color 0.3s, border-color 0.3s; /* No flip anim */
+      transition: background-color 0.3s, border-color 0.3s;
       box-sizing: border-box;
     }
     .tile > div {
@@ -94,13 +118,12 @@
     .tile.present { background-color: var(--present-bg); color: var(--tile-text-dark); border-color: var(--present-bg); }
     .tile.absent { background-color: var(--absent-bg); color: var(--tile-text-dark); border-color: var(--absent-bg); }
 
-    /* Keyboard Container */
     #keyboard {
       display: flex;
       flex-direction: column;
       gap: 8px;
       width: 100%;
-      max-width: 650px;
+      max-width: 550px; /* Adjusted for 8 keys */
       padding: 0 8px;
       margin: 10px auto 0;
       box-sizing: border-box;
@@ -114,17 +137,15 @@
 
     #keyboard-main-grid {
         display: grid;
-        grid-template-columns: repeat(11, 1fr);
-        gap: 4px;
+        grid-template-columns: repeat(8, 1fr); /* 8 columns */
+        gap: 6px;
     }
 
-
-    /* Base key style - accounts for max border width */
     .key {
       height: 50px;
-      font-size: 1.1rem;
+      font-size: 1.2rem;
       font-weight: bold;
-      border: 3px solid transparent; /* Default transparent border, matching max highlight border width */
+      border: 3px solid transparent;
       border-radius: 4px;
       background-color: var(--key-bg);
       color: var(--key-text);
@@ -136,28 +157,27 @@
       user-select: none;
       touch-action: manipulation;
       text-transform: lowercase;
-      padding: 0 1px; /* Adjusted padding for border */
+      padding: 0 1px;
       box-sizing: border-box;
     }
     .key:hover {
         filter: brightness(90%);
     }
 
-    /* Enter and Delete specific styles */
     .key.enter,
     .key.delete {
       font-size: 1rem;
       color: white;
-      border-width: 3px; /* Match base key border width */
+      border-width: 3px;
       border-style: solid;
     }
     .key.enter {
         background-color: var(--enter-key-bg);
-        border-color: var(--enter-key-bg); /* Match background */
+        border-color: var(--enter-key-bg);
     }
     .key.delete {
          background-color: var(--delete-key-bg);
-         border-color: var(--delete-key-bg); /* Match background */
+         border-color: var(--delete-key-bg);
     }
 
     .key.placeholder {
@@ -167,11 +187,10 @@
         visibility: hidden;
     }
 
-     /* Key statuses */
     .key.correct {
       background-color: var(--correct-bg);
       color: var(--tile-text-dark);
-      border-color: transparent; /* Default correct border is transparent */
+      border-color: transparent;
     }
     .key.present {
       background-color: var(--present-bg);
@@ -184,9 +203,8 @@
       border-color: transparent;
     }
 
-    /* Style for keys that are correct AND were present in the LAST guess */
-    .key.correct.has-present { /* Combined class */
-        border-width: 3px; /* Use desired width */
+    .key.correct.has-present {
+        border-width: 3px;
         border-style: solid;
         border-color: var(--present-bg); /* Yellow border */
     }
@@ -194,7 +212,7 @@
 
     .message-container {
         position: fixed;
-        top: 80px;
+        top: 100px;
         left: 50%;
         transform: translateX(-50%);
         min-height: 30px;
@@ -219,7 +237,6 @@
         transition: opacity 0.3s linear;
      }
 
-    /* --- Dark Mode --- */
     .dark {
         --bg-color: #121213;
         --text-color: #fff;
@@ -228,6 +245,7 @@
         --key-bg: #818384;
         --key-text: #dadce0;
         --tile-text-light: #fff;
+        --link-color: #64b5f6;
     }
 
     .dark .message {
@@ -244,15 +262,12 @@
          filter: brightness(110%);
      }
 
-
-    /* Dark Mode Key Statuses */
     .dark .key.correct { background-color: var(--correct-bg); color: var(--tile-text-dark); border-color: transparent;}
     .dark .key.present { background-color: var(--present-bg); color: var(--tile-text-dark); border-color: transparent;}
     .dark .key.absent { background-color: var(--absent-bg); color: var(--tile-text-dark); border-color: transparent;}
 
-    /* Dark Mode for the combined state */
     .dark .key.correct.has-present {
-        border-color: var(--present-bg); /* Yellow border */
+        border-color: var(--present-bg);
     }
 
 
@@ -274,8 +289,6 @@
         border-color: #555;
     }
 
-
-    /* Animations */
     @keyframes shake {
       0%, 100% { transform: translateX(0); }
       10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
@@ -283,21 +296,48 @@
     }
     .shake { animation: shake 0.6s ease-in-out; }
 
+    footer {
+        flex-shrink: 0;
+        width: 100%;
+        text-align: center;
+        padding: 15px 0;
+        margin-top: 20px;
+        font-size: 0.9em;
+        color: #555;
+    }
+    footer a {
+        color: var(--link-color);
+        text-decoration: none;
+    }
+    footer a:hover {
+        text-decoration: underline;
+    }
+    .dark footer {
+        color: #aaa;
+    }
   </style>
 </head>
 <body>
-  <h1>բառուկ</h1>
-  <button id="toggle-theme">🌗</button>
-  <div class="message-container">
-     <div id="message" class="message"></div>
+  <div class="main-content">
+      <h1>ArmWordl 🇦🇲</h1>
+      <p class="subtitle">by Armen Mkrtchyan</p>
+
+      <button id="toggle-theme">🌗</button>
+      <div class="message-container">
+         <div id="message" class="message"></div>
+      </div>
+      <div class="board-container">
+         <div class="board" id="board"></div>
+      </div>
+      <div id="keyboard">
+          <div id="keyboard-top-row"></div>
+          <div id="keyboard-main-grid"></div>
+      </div>
   </div>
-  <div class="board-container">
-     <div class="board" id="board"></div>
-  </div>
-  <div id="keyboard">
-      <div id="keyboard-top-row"></div>
-      <div id="keyboard-main-grid"></div>
-  </div>
+
+  <footer>
+      <a href="https://armblog.net" target="_blank" rel="noopener noreferrer">Armblog.net</a>
+  </footer>
 
 <script>
   const boardElement = document.getElementById('board');
@@ -322,20 +362,23 @@
 
   // --- Correctly Sorted LOWERCASE Armenian Letters for Keyboard ---
   const sortedLetters = [
-      'ա', 'բ', 'գ', 'դ', 'ե', 'զ', 'է', 'ը', 'թ', 'ժ', 'ի', 'լ', 'խ',
-      'ծ', 'կ', 'հ', 'ձ', 'ղ', 'ճ', 'մ', 'յ', 'ն', 'շ', 'ո', 'չ',
-      'պ', 'ջ', 'ռ', 'ս', 'վ', 'տ', 'ր', 'ց', 'ու',
-      'փ', 'ք', 'և', 'օ', 'ֆ'
+      'ա', 'բ', 'գ', 'դ', 'ե', 'զ', 'է', 'ը', // 8
+      'թ', 'ժ', 'ի', 'լ', 'խ', 'ծ', 'կ', 'հ', // 8 (16 total)
+      'ձ', 'ղ', 'ճ', 'մ', 'յ', 'ն', 'շ', 'ո', // 8 (24 total)
+      'չ', 'պ', 'ջ', 'ռ', 'ս', 'վ', 'տ', 'ր', // 8 (32 total)
+      'ց', 'ու', 'փ', 'ք', 'և', 'օ', 'ֆ'      // 7 (39 total)
     ];
-  const allLetters = [...sortedLetters]; // Keep for iterating all possible keys
+  const allLetters = [...sortedLetters];
 
-  // --- Keyboard Layout (Letters only, 11 columns) ---
+  // --- CHANGE: Keyboard Layout (Letters only, 8 columns) ---
   const keyboardLetterLayout = [
-     sortedLetters.slice(0, 11), // ա - ի
-     sortedLetters.slice(11, 22), // լ - ն
-     sortedLetters.slice(22, 33), // շ - ր
-     ['', '', ...sortedLetters.slice(33), '', ''] // Placeholders, ց - ֆ, Placeholders
+     sortedLetters.slice(0, 8),   // ա - ը
+     sortedLetters.slice(8, 16),  // թ - հ
+     sortedLetters.slice(16, 24), // ձ - ո
+     sortedLetters.slice(24, 32), // չ - ր
+     [...sortedLetters.slice(32), ''] // ց - ֆ (7 letters) + 1 placeholder = 8 elements
   ];
+
 
   // --- Daily Word Logic ---
   const startDate = new Date("2025-04-11");
@@ -360,13 +403,11 @@
 
   // --- Initialization ---
   function init() {
-    loadState(); // Loads cumulative keyStatuses
+    loadState();
     buildBoard();
     buildKeyboard();
     redrawBoardFromState();
-    // Apply highlights using only the loaded CUMULATIVE state initially
-    // No border logic on refresh, as lastGuessSpecificInfo is empty then
-    updateKeyboardHighlight({});
+    updateKeyboardHighlight({}); // Pass empty object initially
     // Check for game over state on refresh
     if (isGameOver && currentRowIndex >= MAX_ROWS) {
         const lastGuessString = guesses.length > 0 ? guesses[guesses.length - 1].map(g => g.letter).join('') : '';
@@ -393,7 +434,6 @@
       isGameOver,
       targetWord,
       keyStatuses // Save only the CUMULATIVE keyStatuses
-      // lastGuessSpecificInfo is NOT saved
     };
     localStorage.setItem(dateKey, JSON.stringify(state));
   }
@@ -414,11 +454,10 @@
                 currentRowIndex = savedState.currentRowIndex || 0;
                 isGameOver = savedState.isGameOver || false;
                 keyStatuses = savedState.keyStatuses || {}; // Load cumulative statuses
-                // Add basic validation for loaded statuses
                 for (const key in keyStatuses) {
-                   const validStatuses = ['correct', 'present', 'absent', null]; // Allow null if not seen
+                   const validStatuses = ['correct', 'present', 'absent', null];
                    if (!validStatuses.includes(keyStatuses[key])) {
-                       delete keyStatuses[key]; // Remove invalid entries
+                       delete keyStatuses[key];
                    }
                 }
             } else {
@@ -485,7 +524,7 @@
         keyboardTopRowElement.appendChild(keyElement);
     });
 
-    // Main Grid
+    // Main Grid (using updated layout)
     keyboardLetterLayout.forEach(rowKeys => {
         rowKeys.forEach(keyText => {
             const keyElement = document.createElement('button');
@@ -552,23 +591,18 @@
     });
   }
 
-  // --- UPDATED: updateKeyboardHighlight uses cumulative AND last guess info ---
+  // --- updateKeyboardHighlight uses cumulative AND last guess info ---
   function updateKeyboardHighlight(displayInfoForLastGuess) { // Expects {'letter': {wasCorrect:bool, wasPresent:bool}}
     keyboardMainGridElement.querySelectorAll('.key[data-key]').forEach(keyElement => {
         const letter = keyElement.dataset.key;
-        // Get CUMULATIVE best status for background color
-        const cumulativeStatus = keyStatuses[letter];
-        // Get info specific to the LAST guess for border logic
+        const cumulativeStatus = keyStatuses[letter]; // Cumulative best
         const lastGuessInfo = displayInfoForLastGuess ? displayInfoForLastGuess[letter] : null;
 
-        // Remove previous status classes
         keyElement.classList.remove('correct', 'present', 'absent', 'has-present');
 
-        // Apply classes based on cumulative status first (for background)
         if (cumulativeStatus === 'correct') {
             keyElement.classList.add('correct');
-            // NOW, check the LAST GUESS info to see if border should be added
-            // Border only added if it was BOTH correct AND present in the LAST guess
+            // Add border ONLY if it was BOTH correct AND present in the LAST guess
             if (lastGuessInfo && lastGuessInfo.wasCorrect && lastGuessInfo.wasPresent) {
                 keyElement.classList.add('has-present');
             }
@@ -577,7 +611,6 @@
         } else if (cumulativeStatus === 'absent') {
             keyElement.classList.add('absent');
         }
-        // If no cumulativeStatus, key remains default
     });
 }
 
@@ -599,7 +632,7 @@
     updateCurrentRowDisplay();
   }
 
-  // --- UPDATED: handleSubmit updates cumulative statuses AND calculates last guess info ---
+  // --- handleSubmit updates cumulative statuses AND calculates last guess info ---
   function handleSubmit() {
     if (isGameOver) return;
 
@@ -613,11 +646,11 @@
     const result = checkGuess(guessString);
     guesses.push(result);
 
-    // --- Reset temporary info for this turn ---
-    lastGuessSpecificInfo = {}; // Clear info from previous turn
+    // Reset temporary info for this turn
+    lastGuessSpecificInfo = {};
     let seenInThisGuess = {}; // Track correct/present within this specific guess
 
-    // --- Update CUMULATIVE keyStatuses AND track specifics for THIS guess ---
+    // Update CUMULATIVE keyStatuses AND track specifics for THIS guess
     result.forEach(({ letter, status }) => {
         // 1. Track specifics for THIS guess
         if (!seenInThisGuess[letter]) {
@@ -637,7 +670,17 @@
                 nextBestStatus = 'present';
             }
         } else if (status === 'absent') {
-            if (!currentStoredBest) { // Absent only overrides null
+             // Before marking absent, ensure it wasn't correct/present in THIS guess
+            let trulyAbsentInThisGuess = true;
+             for(let item of result) {
+                if(item.letter === letter && (item.status === 'correct' || item.status === 'present')) {
+                   trulyAbsentInThisGuess = false;
+                    break;
+                }
+            }
+             // Mark absent only if it wasn't seen as correct/present anywhere before
+            // AND it was truly absent in this specific guess
+            if (!currentStoredBest && trulyAbsentInThisGuess) {
                 nextBestStatus = 'absent';
             }
         }
@@ -648,8 +691,6 @@
     for (const letter in seenInThisGuess) {
         lastGuessSpecificInfo[letter] = seenInThisGuess[letter];
     }
-    // --- End of status update ---
-
 
     animateGuessResult(currentRowIndex, result);
     // Pass the info calculated specifically for THIS guess to the highlight function
