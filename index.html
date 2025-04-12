@@ -412,14 +412,14 @@
     if (isGameOver && currentRowIndex >= MAX_ROWS) {
         const lastGuessString = guesses.length > 0 ? guesses[guesses.length - 1].map(g => g.letter).join('') : '';
         if (splitWord(lastGuessString).join('') !== parsedTarget.join('')) {
-             showMessage(`պարտություն։ բառը՝ ${targetWord}`, 0);
+             showMessage(`Պարտություն։ Այսօրվա բառը՝ ${targetWord}`, 0);
              disableInput();
         } else {
-             showMessage('🎉 հաղթանակ 🎉', 0);
+             showMessage('🎉 Հաղթանակ 🎉', 0);
              disableInput();
         }
     } else if (isGameOver) {
-         showMessage('🎉 հաղթանակ 🎉', 0);
+         showMessage('🎉 Հաղթանակ 🎉', 0);
          disableInput();
     }
 
@@ -638,7 +638,7 @@
 
     if (currentGuess.length !== WORD_LENGTH) {
       shakeRow(currentRowIndex);
-      showMessage("բավարար տառեր չկան", 1500);
+      showMessage("Անբավարար տառերի քանակ", 1500);
       return;
     }
 
@@ -764,12 +764,12 @@
 
   function checkWinLoss(lastGuessString) {
      if (splitWord(lastGuessString).join('') === parsedTarget.join('')) {
-         showMessage('🎉 հաղթանակ 🎉', 5000);
+         showMessage('🎉 Հաղթանակ 🎉', 5000);
          isGameOver = true;
          disableInput();
          saveState();
      } else if (currentRowIndex >= MAX_ROWS) {
-          showMessage(`պարտություն։ բառը՝ ${targetWord}`, 10000);
+          showMessage(`Պարտություն։ Այսօրվա բառը՝ ${targetWord}`, 10000);
           isGameOver = true;
           disableInput();
           saveState();
