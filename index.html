@@ -340,7 +340,7 @@
         text-align: center;
         /* Reduced vertical padding/margin */
         padding: 8px 0;
-        margin-top: 5px;
+        margin-top: 3px;
         font-size: 0.8em;
         color: #555;
     }
@@ -732,6 +732,12 @@
     }
 
     const guessString = currentGuess.join('');
+    
+    if (!WORDS.includes(guessString)) {
+        shakeRow(currentRowIndex);
+        showMessage("Տվյալ բառը մեր բառարանում չկա :(", 1500); // Message for non-existent word
+        return; // Stop processing if the word is not valid
+    }
     const result = checkGuess(guessString);
     guesses.push(result);
 
