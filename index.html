@@ -50,7 +50,7 @@
         --keyboard-padding-x: 3px; /* Left/right padding on #keyboard */
         --key-gap: 4px; /* Gap between keys */
 
-        /* Calculate base size for a single key based on the widest row (10 keys) fitting within keyboard-max-width */
+        /* Calculate base size for a single key based on the widest row (10 keys in phonetic) fitting within board-max-width */
         /* Calculation: (var(--board-max-width) - (2 * var(--keyboard-padding-x)) - ((num_keys_in_widest_row - 1) * var(--key-gap))) / num_keys_in_widest_row */
         /* For 350px width, 3px padding, 4px gap, 10 keys: (350 - (2*3) - (10-1)*4) / 10 = (350 - 6 - 9*4) / 10 = (344 - 36) / 10 = 308 / 10 = 30.8px */
         --key-base-size: 30.8px;
@@ -391,13 +391,15 @@
     /* Media Query for very small/short screens */
     @media (max-width: 380px) {
         :root {
-           --board-max-width: 300px; /* Smaller board max-width */
+           /* Keep board max width at 350px */
+           --board-max-width: 350px;
            --key-gap: 3px; /* Smaller gap */
-           /* Recalculate base size for 300px width, 3px padding, 3px gap, 10 keys: */
-           /* (300 - (2*3) - (10-1)*3) / 10 = (300 - 6 - 9*3) / 10 = (294 - 27) / 10 = 267 / 10 = 26.7px */
-           --key-base-size: 26.7px;
+           /* Recalculate base size for 350px width, 3px padding, 3px gap, 10 keys: */
+           /* (350 - (2*3) - (10-1)*3) / 10 = (350 - 6 - 9*3) / 10 = (344 - 27) / 10 = 317 / 10 = 31.7px */
+           --key-base-size: 31.7px;
            --key-min-height: 36px; /* Adjusted min height */
-           --key-height: var(--key-base-size); /* Height follows the base size unless min-height takes over */
+           /* Key height is based on base size unless min-height overrides */
+           --key-height: var(--key-base-size);
         }
         h1 {
             font-size: 1.3rem;
@@ -445,34 +447,17 @@
     @media (min-width: 551px) {
         :root {
              --key-gap: 5px; /* Larger gap on desktop */
-             /* Let keys have a slightly larger base size on wider screens if desired */
-             /* This might make the keyboard wider than 550px main-content */
-             /* Let's choose a base size that looks good on desktop */
-             --key-base-size: 45px; /* Desired size on large screens */
+             /* Recalculate base size for a potential wider board, e.g., 400px */
+             --board-max-width: 400px; /* Let's make the board and keyboard wider */
+             /* Calculation for 400px width, 3px padding, 5px gap, 10 keys: */
+             /* (400 - (2*3) - (10-1)*5) / 10 = (400 - 6 - 45) / 10 = 349 / 10 = 34.9px */
+             --key-base-size: 34.9px;
              --key-height: var(--key-base-size);
              --key-min-height: var(--key-base-size); /* Min height matches height */
-             --board-max-width: 400px; /* Optionally make board wider on larger screens too */
-             /* Recalculate base size for 400px width, 3px padding, 5px gap, 10 keys: */
-             /* (400 - (2*3) - (10-1)*5) / 10 = (400 - 6 - 9*5) / 10 = (394 - 45) / 10 = 349 / 10 = 34.9px */
-             /* Overwriting --key-base-size with a fixed value here might not achieve exact board width fit */
-             /* Let's keep the calculation logic or use a responsive formula */
-             /* Revert to calculation for min-width > X */
-             /* (var(--board-max-width) - (2 * var(--keyboard-padding-x)) - (9 * var(--key-gap))) / 10 */
-             --key-base-size: calc( (var(--board-max-width) - (2 * var(--keyboard-padding-x)) - (9 * var(--key-gap))) / 10 );
-             --key-height: var(--key-base-size);
-             --key-min-height: var(--key-base-size);
         }
         #keyboard {
             max-width: var(--board-max-width); /* Keyboard still matches board width */
         }
-        /* Remove the flex-basis override for .key in this media query */
-         .key {
-             /* Let width be determined by the base size variable */
-             flex-basis: initial; /* Remove flex-basis override */
-         }
-         .key.placeholder {
-              flex-basis: initial; /* Remove flex-basis override */
-         }
     }
 
 
