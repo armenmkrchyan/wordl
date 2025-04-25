@@ -46,21 +46,14 @@
         --link-color: #007bff;
 
         /* New CSS Variables for Layout & Sizing */
-        --overall-screen-margin: 5px; /* Small margin on mobile sides */
-        --desktop-content-width: 400px; /* Target width for board and keyboard on desktop */
+        --keyboard-padding-x: 3px; /* Left/right padding *inside* keyboard block */
         --key-gap: 4px; /* Gap between keys */
-        --keyboard-padding-x: 3px; /* Left/right padding on #keyboard */
 
         /* Max keys overall will be set by JS via a CSS variable on #keyboard */
-        /* It is needed for the calc() function below */
         --max-keys-overall: 10; /* Default value - will be updated by JS */
 
-        /* Calculate base size for a single key */
-        /* This calculation needs to be done within media queries based on the active content width */
-        /* --key-base-size: calc(...); */ /* Defined in media queries */
-
-
-        --key-min-height: 40px; /* Minimum height for touch target */
+        /* Default min-height for touch target */
+        --key-min-height-base: 40px;
         --key-padding: 2px; /* Padding inside key for letter margin */
     }
 
@@ -71,17 +64,17 @@
         flex-direction: column;
         align-items: center;
         max-width: 550px; /* Max width for the main content container (titles, etc.) */
-        margin: auto; /* Center the main content */
-        padding: 0; /* Padding handled by body > main-content */
+        margin: auto; /* Center the main content block */
+        padding: 0; /* Padding handled by media queries */
         position: relative; /* Needed for absolute positioning of buttons */
     }
      /* Add horizontal padding to the main-content based on screen size for overall margin */
      @media (max-width: 550px) {
           body > .main-content {
-              padding: 0 var(--overall-screen-margin); /* Use responsive margin */
+              padding: 0 5px; /* Use small margin on mobile */
           }
-          #toggle-theme { right: var(--overall-screen-margin); } /* Position buttons relative to padding */
-          #toggle-keyboard { right: calc(var(--overall-screen-margin) + 50px); } /* Position to the left */
+          #toggle-theme { right: 5px; } /* Position buttons relative to padding */
+          #toggle-keyboard { right: 55px; } /* Position to the left */
      }
       @media (min-width: 551px) {
           body > .main-content {
@@ -109,22 +102,21 @@
         color: #aaa;
     }
 
-
-    .board-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        width: 100%; /* Take full width of main-content's inner space */
-        max-width: var(--board-keyboard-width); /* Match keyboard max width */
-        margin: 8px auto; /* Center board-container itself */
-        /* No extra padding needed here if #keyboard handles its own */
+    /* Board and Keyboard Wrapper Widths */
+    .board-container, #keyboard {
+        width: 100%; /* Take available space within main-content's padding */
+        margin: 8px auto; /* Center the blocks */
+        box-sizing: border-box; /* Include padding/border in width */
     }
+     .board-container { margin-bottom: 5px; /* Less space between board and keyboard */ }
+
 
     .board {
       display: grid;
       grid-template-rows: repeat(6, 1fr);
       grid-gap: 4px;
       width: 100%; /* Fill board-container width */
+      /* Max width handled by board-container */
     }
 
     .row {
@@ -160,11 +152,10 @@
       display: flex;
       flex-direction: column;
       gap: var(--key-gap); /* Use key-gap variable */
-      width: 100%; /* Keyboard block width */
-      max-width: var(--board-keyboard-width); /* Match board width */
+      /* Max width handled by the general .board-container, #keyboard rule */
       padding: 0 var(--keyboard-padding-x); /* Apply horizontal padding *inside* keyboard */
-      margin: 5px auto 0; /* Center the keyboard block */
-      box-sizing: border-box; /* Include padding in max-width */
+      margin-top: 5px; /* Space above keyboard */
+      margin-bottom: 0; /* No bottom margin */
     }
 
     #keyboard-top-row {
@@ -178,7 +169,6 @@
         display: flex; /* Use flexbox to stack rows */
         flex-direction: column;
         gap: var(--key-gap); /* Use key-gap variable */
-        /* align-items: center; Removed - we want rows to stretch/distribute space */
         width: 100%; /* Ensure the main grid takes full width of #keyboard */
     }
 
@@ -191,13 +181,26 @@
          /* justify-content: center; Removed - keys stretch, no need to center remaining space */
      }
 
+    /* Calculate key size responsively */
+    /* Default calculation (desktop and general fallback) */
+    :root {
+        --board-keyboard-area-width: 400px; /* Target max width */
+         /* Calculation: (Available width - total gap) / total items (keys + placeholders) */
+         /* Available width = --board-keyboard-area-width - (2 * --keyboard-padding-x) */
+         /* Total gap = (--max-keys-overall - 1) * --key-gap */
+         --key-calculated-size: calc( (var(--board-keyboard-area-width) - (2 * var(--keyboard-padding-x)) - (var(--max-keys-overall) - 1) * var(--key-gap)) / var(--max-keys-overall) );
+    }
+     .board-container, #keyboard {
+         max-width: var(--board-keyboard-area-width);
+     }
+
 
     .key {
       /* --- Letter Keys & Placeholders --- */
       /* Key width is calculated to make them fit and be equal */
-      width: var(--key-base-size);
-      /* Key height is the maximum of base size (for square) and min-height (for touch target) */
-      height: max(var(--key-base-size), var(--key-min-height));
+      width: var(--key-calculated-size);
+      /* Key height is the maximum of calculated size (for square) and min-height (for touch target) */
+      height: max(var(--key-calculated-size), var(--key-min-height-base));
       flex: 0 0 auto; /* Fixed size, no shrinking/growing */
       box-sizing: border-box;
       padding: var(--key-padding); /* Add padding inside the key */
@@ -255,7 +258,7 @@
         border-color: transparent;
         visibility: hidden; /* Hide the placeholder key visually */
         /* Placeholders need the same fixed size as letter keys */
-        width: var(--key-base-size);
+        width: var(--key-calculated-size);
         height: var(--key-height); /* Match height calculation */
         flex: 0 0 auto; /* Fixed size */
         box-sizing: border-box;
@@ -294,7 +297,7 @@
         z-index: 10;
         /* Match the content width */
         width: calc(100% - (2 * var(--overall-screen-margin))); /* Fluid width minus margin */
-        max-width: var(--board-keyboard-width); /* Match board/keyboard max width */
+        max-width: var(--board-keyboard-area-width); /* Match board/keyboard max width */
     }
 
 
@@ -399,69 +402,59 @@
 
     /* Default styles (for screens > 550px and as base) */
     :root {
-        --board-keyboard-width: var(--desktop-content-width); /* 400px */
-        --overall-screen-margin: 10px; /* Example larger margin on wider screens */
-         --key-base-size: calc( (var(--board-keyboard-width) - (2 * var(--keyboard-padding-x)) - (var(--max-keys-overall) - 1) * var(--key-gap)) / var(--max-keys-overall) );
-         --key-min-height: var(--key-base-size); /* Keys are square on desktop */
+        --board-keyboard-area-width: 400px; /* Target max width for board & keyboard */
+        --key-gap: 5px; /* Larger gap on desktop */
+        --keyboard-padding-x: 5px; /* Match padding */
+        --key-min-height-base: 45px; /* Base min height on desktop */
+
+         /* key-calculated-size recalculates based on these variables */
+         --key-calculated-size: calc( (var(--board-keyboard-area-width) - (2 * var(--keyboard-padding-x)) - (var(--max-keys-overall) - 1) * var(--key-gap)) / var(--max-keys-overall) );
     }
+     /* Overall screen margin for desktop */
      body > .main-content {
-         padding: 0 var(--overall-screen-margin);
+         padding: 0 10px; /* Default large margin */
      }
-      #toggle-theme { right: var(--overall-screen-margin); }
-      #toggle-keyboard { right: calc(var(--overall-screen-margin) + 50px); }
+      #toggle-theme { right: 10px; }
+      #toggle-keyboard { right: 60px; }
 
 
     /* Media Query for screens up to 550px (mobile/smaller tablets) */
     @media (max-width: 550px) {
         :root {
            --overall-screen-margin: 5px; /* Smaller margin on mobile */
-           /* Board/keyboard width fills screen minus margin */
-           --board-keyboard-width: calc(100vw - (2 * var(--overall-screen-margin)));
+           /* Board/keyboard width is 70% of viewport, limited by a max */
+           --board-keyboard-area-width: min(400px, 70vw); /* 70% fluid up to 400px */
 
            --key-gap: 3px; /* Smaller gap */
            --keyboard-padding-x: 2px; /* Smaller padding inside keyboard */
+            --key-min-height-base: 38px; /* Adjusted min height for touch */
 
            /* Recalculate base size based on dynamic board width */
-           /* (var(--board-keyboard-width) - (2 * var(--keyboard-padding-x)) - ((var(--max-keys-overall) - 1) * var(--key-gap))) / var(--max-keys-overall) */
-           --key-base-size: calc( (var(--board-keyboard-width) - (2 * var(--keyboard-padding-x)) - (var(--max-keys-overall) - 1) * var(--key-gap)) / var(--max-keys-overall) );
+           --key-calculated-size: calc( (var(--board-keyboard-area-width) - (2 * var(--keyboard-padding-x)) - (var(--max-keys-overall) - 1) * var(--key-gap)) / var(--max-keys-overall) );
 
-           --key-min-height: 38px; /* Adjusted min height for touch */
            /* Key height calculation now happens in the .key rule using max() */
         }
-        h1 {
-            font-size: 1.3rem;
-            margin-top: 8px;
-        }
-        .subtitle {
-            margin-bottom: 3px;
-        }
-        .board-container {
-            margin: 5px auto; /* Center board-container */
-            /* Board width handled by --board-keyboard-width and max-width */
-        }
-        .board, .row {
-            grid-gap: 3px;
-        }
-        #keyboard {
-            gap: var(--key-gap);
-            padding: 0 var(--keyboard-padding-x); /* Use adjusted padding */
-            margin-top: 3px;
-             /* Keyboard width handled by --board-keyboard-width and max-width */
-        }
-        #keyboard-top-row, #keyboard-main-grid .keyboard-row {
-            gap: var(--key-gap);
-        }
+         /* Overall screen margin for mobile */
+         body > .main-content {
+              padding: 0 var(--overall-screen-margin);
+         }
+         #toggle-theme { right: var(--overall-screen-margin); }
+         #toggle-keyboard { right: calc(var(--overall-screen-margin) + 50px); } /* Adjust pos relative to margin */
+
     }
 
      /* Media query for very small screens (adjust margin further) */
     @media (max-width: 380px) {
         :root {
            --overall-screen-margin: 2px; /* Even smaller margin on very small mobile */
-            /* board-keyboard-width recalculates automatically based on new margin */
+           /* Board/keyboard width takes more space on tiny screens */
+           --board-keyboard-area-width: calc(100vw - (2 * var(--overall-screen-margin))); /* Fill almost all screen */
+
            --key-gap: 2px; /* Even smaller gap */
            --keyboard-padding-x: 1px; /* Even smaller padding */
-            /* key-base-size recalculates automatically */
-           --key-min-height: 36px; /* Minimum key height */
+           --key-min-height-base: 36px; /* Minimum key height */
+
+            /* key-calculated-size recalculates automatically */
         }
          body > .main-content {
              padding: 0 var(--overall-screen-margin);
@@ -471,7 +464,7 @@
          .key.enter, .key.delete {
              font-size: clamp(0.6rem, 2vw, 0.8rem); /* Smaller font for tiny keys */
          }
-          .message-container {
+           .message-container {
              top: 55px; /* Adjust message position */
          }
     }
@@ -770,7 +763,6 @@
 
 
       buildKeyboard(layoutData); // Build the keyboard with the selected layout
-
       // Update the button text to show the *next* layout
       keyboardToggleBtn.textContent = currentKeyboardLayoutType === 'phonetic' ? 'ԱԲԳ' : 'ՓՆԹԿ';
 
