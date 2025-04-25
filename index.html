@@ -45,21 +45,22 @@
         --tile-text-dark: #fff;
         --link-color: #007bff;
 
-        /* New CSS Variables for Key Sizing/Spacing */
-        --board-max-width: 400px; /* Target width for the board and widest keyboard row on medium screens */
-        --keyboard-padding-x: 3px; /* Left/right padding on #keyboard */
+        /* New CSS Variables for Layout & Sizing */
+        --overall-screen-margin: 5px; /* Small margin on mobile sides */
+        --desktop-content-width: 400px; /* Target width for board and keyboard on desktop */
         --key-gap: 4px; /* Gap between keys */
+        --keyboard-padding-x: 3px; /* Left/right padding on #keyboard */
 
         /* Max keys overall will be set by JS via a CSS variable on #keyboard */
         /* It is needed for the calc() function below */
-        --max-keys-overall: 10; /* Default value - will be updated by JS (10 for phonetic, 8 for alphabetical) */
+        --max-keys-overall: 10; /* Default value - will be updated by JS */
 
-        /* Calculate base size for a single key based on max keys fitting within board-max-width */
-        /* Calculation: (var(--board-max-width) - (2 * var(--keyboard-padding-x)) - ((var(--max-keys-overall) - 1) * var(--key-gap))) / var(--max-keys-overall) */
-        --key-base-size: calc( (var(--board-max-width) - (2 * var(--keyboard-padding-x)) - (var(--max-keys-overall) - 1) * var(--key-gap)) / var(--max-keys-overall) );
+        /* Calculate base size for a single key */
+        /* This calculation needs to be done within media queries based on the active content width */
+        /* --key-base-size: calc(...); */ /* Defined in media queries */
 
-        --key-height: var(--key-base-size); /* Key height matches calculated width for square look */
-        --key-min-height: 40px; /* Minimum height for touch target on smaller screens */
+
+        --key-min-height: 40px; /* Minimum height for touch target */
         --key-padding: 2px; /* Padding inside key for letter margin */
     }
 
@@ -69,16 +70,26 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        max-width: 550px; /* Max width for the main content container */
-        margin-left: auto;
-        margin-right: auto;
-        /* padding: 0 5px; Removed padding here, handled by body > main-content */
+        max-width: 550px; /* Max width for the main content container (titles, etc.) */
+        margin: auto; /* Center the main content */
+        padding: 0; /* Padding handled by body > main-content */
         position: relative; /* Needed for absolute positioning of buttons */
     }
-     /* Add horizontal padding to the body or a container if needed for overall margin */
-     body > .main-content {
-         padding: 0 5px; /* Add the 5px padding here for overall margin */
+     /* Add horizontal padding to the main-content based on screen size for overall margin */
+     @media (max-width: 550px) {
+          body > .main-content {
+              padding: 0 var(--overall-screen-margin); /* Use responsive margin */
+          }
+          #toggle-theme { right: var(--overall-screen-margin); } /* Position buttons relative to padding */
+          #toggle-keyboard { right: calc(var(--overall-screen-margin) + 50px); } /* Position to the left */
      }
+      @media (min-width: 551px) {
+          body > .main-content {
+              padding: 0 10px; /* Slightly larger padding on wider screens if needed */
+          }
+           #toggle-theme { right: 10px; }
+           #toggle-keyboard { right: 60px; }
+      }
 
 
     h1 {
@@ -103,9 +114,10 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        width: 100%; /* Take full width of main-content padding */
-        max-width: var(--board-max-width); /* Board Max Width */
+        width: 100%; /* Take full width of main-content's inner space */
+        max-width: var(--board-keyboard-width); /* Match keyboard max width */
         margin: 8px auto; /* Center board-container itself */
+        /* No extra padding needed here if #keyboard handles its own */
     }
 
     .board {
@@ -149,8 +161,8 @@
       flex-direction: column;
       gap: var(--key-gap); /* Use key-gap variable */
       width: 100%; /* Keyboard block width */
-      max-width: var(--board-max-width); /* Match board width */
-      padding: 0 var(--keyboard-padding-x); /* Apply horizontal padding */
+      max-width: var(--board-keyboard-width); /* Match board width */
+      padding: 0 var(--keyboard-padding-x); /* Apply horizontal padding *inside* keyboard */
       margin: 5px auto 0; /* Center the keyboard block */
       box-sizing: border-box; /* Include padding in max-width */
     }
@@ -158,7 +170,7 @@
     #keyboard-top-row {
         display: flex; /* Use Flexbox for the top row */
         gap: var(--key-gap);
-        width: 100%; /* Take full width of #keyboard */
+        width: 100%; /* Take full width of #keyboard (minus its padding) */
         /* justify-content: center; Removed, flex: 1 on children is enough for equal width */
     }
 
@@ -175,17 +187,17 @@
          display: flex; /* Use flexbox for keys within the row */
          gap: var(--key-gap); /* Use key-gap variable */
          flex-wrap: nowrap; /* Prevent keys from wrapping */
-         width: 100%; /* !!! Crucial - Make the row take full width of main-grid */
+         width: 100%; /* !!! Crucial - Make the row take full width of main-grid (which is #keyboard's inner width) */
          /* justify-content: center; Removed - keys stretch, no need to center remaining space */
      }
 
 
     .key {
       /* --- Letter Keys & Placeholders --- */
-      width: var(--key-base-size); /* Fixed width based on calculation */
-      /* Calculate height based on base size or min-height */
+      /* Key width is calculated to make them fit and be equal */
+      width: var(--key-base-size);
+      /* Key height is the maximum of base size (for square) and min-height (for touch target) */
       height: max(var(--key-base-size), var(--key-min-height));
-      /* min-height: var(--key-min-height); Removed as height uses max() */
       flex: 0 0 auto; /* Fixed size, no shrinking/growing */
       box-sizing: border-box;
       padding: var(--key-padding); /* Add padding inside the key */
@@ -214,7 +226,6 @@
     .key.delete {
       /* These are in the top FLEX row */
       height: var(--key-height); /* Match height of letter keys (using max calc) */
-      /* min-height: var(--key-min-height); Removed as height uses max() */
 
       flex: 1; /* Make both Enter and Delete take equal width */
       flex-basis: 0; /* Explicitly set flex-basis to 0 for more reliable equal width distribution */
@@ -246,7 +257,6 @@
         /* Placeholders need the same fixed size as letter keys */
         width: var(--key-base-size);
         height: var(--key-height); /* Match height calculation */
-        /* min-height: var(--key-min-height); Removed as height uses max() */
         flex: 0 0 auto; /* Fixed size */
         box-sizing: border-box;
         padding: var(--key-padding);
@@ -282,16 +292,10 @@
         transform: translateX(-50%);
         min-height: 30px;
         z-index: 10;
-        /* Match the content width, accounting for parent padding */
-        width: calc(100% - 10px); /* Default 5px padding on main-content -> 10px total */
-        max-width: var(--board-max-width); /* Match board width */
+        /* Match the content width */
+        width: calc(100% - (2 * var(--overall-screen-margin))); /* Fluid width minus margin */
+        max-width: var(--board-keyboard-width); /* Match board/keyboard max width */
     }
-     /* Adjust message container width for smaller main-content padding */
-     @media (max-width: 550px) {
-         .message-container {
-             width: calc(100% - 4px); /* 2px padding on main-content -> 4px total */
-         }
-     }
 
 
     .message {
@@ -361,21 +365,7 @@
       color: #333;
       z-index: 20;
     }
-    #toggle-theme {
-        right: 10px;
-    }
-    #toggle-keyboard {
-        right: 60px; /* Position to the left of the theme button */
-        white-space: nowrap;
-        min-width: 40px; /* Ensure it's not too small */
-        text-align: center;
-    }
-
-    .dark #toggle-theme, .dark #toggle-keyboard {
-        background-color: #333;
-        color: white;
-        border-color: #555;
-    }
+    /* Position relative to main-content padding now */
 
 
     @keyframes shake {
@@ -405,31 +395,38 @@
         color: #aaa;
     }
 
+    /* --- Responsive Design --- */
+
+    /* Default styles (for screens > 550px and as base) */
+    :root {
+        --board-keyboard-width: var(--desktop-content-width); /* 400px */
+        --overall-screen-margin: 10px; /* Example larger margin on wider screens */
+         --key-base-size: calc( (var(--board-keyboard-width) - (2 * var(--keyboard-padding-x)) - (var(--max-keys-overall) - 1) * var(--key-gap)) / var(--max-keys-overall) );
+         --key-min-height: var(--key-base-size); /* Keys are square on desktop */
+    }
+     body > .main-content {
+         padding: 0 var(--overall-screen-margin);
+     }
+      #toggle-theme { right: var(--overall-screen-margin); }
+      #toggle-keyboard { right: calc(var(--overall-screen-margin) + 50px); }
+
+
     /* Media Query for screens up to 550px (mobile/smaller tablets) */
     @media (max-width: 550px) {
-        body > .main-content {
-           padding: 0 2px; /* Reduce overall margin on very small screens */
-        }
-         #toggle-theme { right: 2px; } /* Adjust button position */
-         #toggle-keyboard { right: 52px; } /* Adjust button position */
-
         :root {
-           /* Board max width is fluid up to 350px, minus overall padding */
-           /* Use viewport width minus the main-content padding */
-           --dynamic-width-minus-padding: calc(100vw - 4px); /* 2px padding left/right on main-content */
-           --board-max-width: min(400px, var(--dynamic-width-minus-padding)); /* Max width is 350px or screen width minus padding */
-
+           --overall-screen-margin: 5px; /* Smaller margin on mobile */
+           /* Board/keyboard width fills screen minus margin */
+           --board-keyboard-width: calc(100vw - (2 * var(--overall-screen-margin)));
 
            --key-gap: 3px; /* Smaller gap */
-           --keyboard-padding-x: 2px; /* Smaller padding */
+           --keyboard-padding-x: 2px; /* Smaller padding inside keyboard */
 
            /* Recalculate base size based on dynamic board width */
-           /* (var(--board-max-width) - (2 * var(--keyboard-padding-x)) - ((var(--max-keys-overall) - 1) * var(--key-gap))) / var(--max-keys-overall) */
-           --key-base-size: calc( (var(--board-max-width) - (2 * var(--keyboard-padding-x)) - (var(--max-keys-overall) - 1) * var(--key-gap)) / var(--max-keys-overall) );
+           /* (var(--board-keyboard-width) - (2 * var(--keyboard-padding-x)) - ((var(--max-keys-overall) - 1) * var(--key-gap))) / var(--max-keys-overall) */
+           --key-base-size: calc( (var(--board-keyboard-width) - (2 * var(--keyboard-padding-x)) - (var(--max-keys-overall) - 1) * var(--key-gap)) / var(--max-keys-overall) );
 
-           --key-min-height: 38px; /* Adjusted min height */
+           --key-min-height: 38px; /* Adjusted min height for touch */
            /* Key height calculation now happens in the .key rule using max() */
-           /* --key-height: max(var(--key-base-size), var(--key-min-height)); */ /* This definition moved to .key */
         }
         h1 {
             font-size: 1.3rem;
@@ -440,6 +437,7 @@
         }
         .board-container {
             margin: 5px auto; /* Center board-container */
+            /* Board width handled by --board-keyboard-width and max-width */
         }
         .board, .row {
             grid-gap: 3px;
@@ -448,58 +446,35 @@
             gap: var(--key-gap);
             padding: 0 var(--keyboard-padding-x); /* Use adjusted padding */
             margin-top: 3px;
+             /* Keyboard width handled by --board-keyboard-width and max-width */
         }
         #keyboard-top-row, #keyboard-main-grid .keyboard-row {
             gap: var(--key-gap);
         }
-         .key.enter, .key.delete {
-             height: max(var(--key-base-size), var(--key-min-height)); /* Ensure enter/delete match key height calc */
-             min-height: initial; /* Removed min-height here as it's handled by height calc */
-         }
-        #toggle-theme, #toggle-keyboard {
-            padding: 4px 7px;
-            font-size: 0.8rem;
-            top: 5px;
-        }
-        footer {
-            padding: 5px 0;
-            margin-top: 5px;
-            font-size: 0.7em;
-        }
     }
 
-     /* Media query for wider screens (over 550px, where main-content is max-width: 550px) */
-     @media (min-width: 551px) {
+     /* Media query for very small screens (adjust margin further) */
+    @media (max-width: 380px) {
+        :root {
+           --overall-screen-margin: 2px; /* Even smaller margin on very small mobile */
+            /* board-keyboard-width recalculates automatically based on new margin */
+           --key-gap: 2px; /* Even smaller gap */
+           --keyboard-padding-x: 1px; /* Even smaller padding */
+            /* key-base-size recalculates automatically */
+           --key-min-height: 36px; /* Minimum key height */
+        }
          body > .main-content {
-             padding: 0 5px; /* Restore default padding */
+             padding: 0 var(--overall-screen-margin);
          }
-          #toggle-theme { right: 10px; }
-          #toggle-keyboard { right: 60px; }
-
-         :root {
-              /* Board max width can be larger on desktop, e.g., 450px */
-             --board-max-width: 450px;
-
-             --key-gap: 5px; /* Larger gap on desktop */
-             --keyboard-padding-x: 5px; /* Match padding */
-
-             /* Recalculate base size based on desktop board max width */
-             /* (var(--board-max-width) - (2 * var(--keyboard-padding-x)) - ((var(--max-keys-overall) - 1) * var(--key-gap))) / var(--max-keys-overall) */
-             --key-base-size: calc( (var(--board-max-width) - (2 * var(--keyboard-padding-x)) - (var(--max-keys-overall) - 1) * var(--key-gap)) / var(--max-keys-overall) );
-
-             /* Key height calculation now happens in the .key rule using max() */
-             /* --key-height: var(--key-base-size); */ /* This definition moved to .key */
-             --key-min-height: var(--key-base-size); /* Min height matches base size for squares on desktop */
+          #toggle-theme { right: var(--overall-screen-margin); }
+          #toggle-keyboard { right: calc(var(--overall-screen-margin) + 50px); } /* Adjust pos relative to new margin */
+         .key.enter, .key.delete {
+             font-size: clamp(0.6rem, 2vw, 0.8rem); /* Smaller font for tiny keys */
          }
-         #keyboard {
-             max-width: var(--board-max-width); /* Keyboard still matches board width */
-             padding: 0 var(--keyboard-padding-x); /* Use adjusted padding */
+          .message-container {
+             top: 55px; /* Adjust message position */
          }
-          .key.enter, .key.delete {
-             height: max(var(--key-base-size), var(--key-min-height)); /* Ensure enter/delete match key height calc */
-             min-height: initial; /* Removed min-height here as it's handled by height calc */
-         }
-     }
+    }
 
 
   </style>
@@ -544,7 +519,7 @@
 
   // --- Word List (Assumed 5 letters, lowercase) ---
   // (Keep your large word list here)
-  const WORDS = ['ֆոտոն','նռնակ','հնդիկ','հեղուկ','արգոն','թրթուռ','կայուն','լուծում','շապիկ','հրշեջ','ընբիշ','մետաղ','ավելի','անզեն','հաշիվ','թափոր','խելառ','լքված','դայակ','ցերեկ','կտրուկ','կճղակ','վրացի','քուռակ','բորսա','ծաղիկ','հատիկ','նիհար','արձակ','թրթուր','տոկուն','եղևնի','սապատ','նեղուց','բժիշկ','ուռենի','չվերթ','մասուր','մեթոդ','թշշոց','քնքուշ','փեթակ','մեդիա','կրունկ','կաթսա','կոալա','գիտակ','կրկես','վարազ','փետուր','կտրիճ','հատուկ','կաղնի','պապիկ','ելույթ','ակամա','բուժում','անկապ','մամուլ','օրգան','արևոտ','դակիչ','թևնոց','պատիվ','մետրո','օթյակ','դրախտ','եռանդ','արկած','դալար','գուլպա','խրոխտ','կաուրի','քանոն','ճաղատ','գնորդ','փխրուն','դրամա','ռետին','զղջում','կապիչ','ապտակ','էկրան','բրդյա','դահուկ','պղտոր','դադար','երշիկ','ձյուդո','ջութակ','լվացք','արծաթ','պուրակ','դեկան','լավաշ','գավաթ','բուլկի','սիրուն','կատակ','զոդում','թեփուկ','անտեր','սափոր','հյուսն','հանում','բյուջե','սեզոն','նիզակ','գրպան','բլղուր','պղպեղ','կնճիռ','սրինգ','եղինջ','հասցե','տզրուկ','սպիրտ','դրվագ','տոկոս','մագիլ','արմավ','վստահ','անցում','չարազ','ամբոխ','պահոց','ակցիա','տիտան','ուրբաթ','անգիր','կենաց','խոռոչ','աղանձ','դարակ','փափուկ','գմբեթ','խոնավ','նախնի','գնդակ','ազդակ','ջոկատ','թենիս','ճահիճ','բնույթ','խրճիթ','թիրախ','տաճար','նշենի','անձրև','հատում','գարուն','խուրմա','ջեռոց','շնորհ','պատիժ','ժողով','դիետա','կանոն','ղազախ','ազնիվ','մոխիր','ճաշակ','բնազդ','անհոգ','ճագար','դուդուկ','խոժոռ','աջլիկ','քոթուկ','անձավ','բմբուլ','խնդիր','սուլոց','բանուկ','կավիճ','հրդեհ','սամբո','հովիվ','առյուծ','կողով','արճիճ','սմբակ','քաղցր','անտաշ','թանձր','երկիր','ատլաս','ժյուրի','ստույգ','խլուրդ','իմաստ','եռակի','կրկին','սրիկա','կաթիլ','թառափ','ճակատ','կոկիկ','սուտակ','կմախք','անբիծ','խխունջ','մտրուկ','կրպակ','աղյուս','մտրակ','հրթիռ','արժեք','էական','ֆիզիկ','վարակ','բացում','առվակ','դոնոր','հուզիչ','կյանք','խնամի','թափուր','կարոտ','համեմ','չնչին','տեսուչ','ուղերձ','շաքար','մալուխ','կոմիկ','հասուն','աղվես','տաքսի','զվարթ','դրոշմ','ծածուկ','մաքուր','օպերա','կուզիկ','կիթառ','ձվաձև','թթենի','էթիկա','չաման','նախիր','բլրակ','բուդդա','աբեղա','հնաոճ','եզակի','դժվար','փաթեթ','պտույտ','արդար','աղցան','առույգ','լրտես','անխնա','ռեգբի','ածելի','հովազ','քարոզ','չամիչ','գրեթե','աղմուկ','դժգոհ','խոշոր','շիտակ','համառ','բանան','միտում','հուժկու','օրենք','զնդան','սողուն','գնացք','փողոց','բոված','քացախ','չմուշկ','ժանիք','ծղրիդ','հասած','թոշակ','անմահ','տարեց','լեմուր','պանդա','մկրատ','խռպոտ','խավիծ','բրդոտ','երդում','չեզոք','նոտար','վտանգ','պիցցա','ֆերմա','ծովափ','ագենտ','մառան','վիպակ','ռուբլի','հուշում','պառավ','խմբակ','սպունգ','թռչուն','ատյան','բեկոր','մատուռ','իներտ','թութակ','անտուն','աբխազ','բոբիկ','չարչի','զգեստ','հուլիս','խավար','գալար','նորեկ','գոռոզ','բազուկ','վզկապ','անամպ','սնդիկ','խուճուճ','լազեր','տափակ','զիջող','ակումբ','կնունք','սալիկ','հնարք','գիշեր','գազան','կաղին','կանեփ','պիտակ','սրճեփ','տավիղ','սամիթ','մորուք','ալևոր','եղունգ','տարազ','գազար','ականջ','սուլիչ','թթվաշ','բացիչ','պատառ','օրրան','օազիս','կորիզ','պարոն','պարեկ','կարիք','պղինձ','թաքուն','ձագար','երեխա','հաշիշ','սխտոր','անհատ','պահակ','վիշապ','շրջան','ծամոն','մածուն','վայրի','ծիծաղ','միջատ','թալան','նամուս','ամուրի','վաղուց','հումոր','ամորֆ','խնոցի','սփռոց','բազում','թափոն','ապրիլ','դելտա','ցնցուղ','զավակ','կայսր','բոլուկ','մենակ','փրկիչ','խղճուկ','չեչեն','սյուժե','աճյուն','կաշվե','ստրուկ','բալետ','թանաք','սանիկ','կշեռք','թմբուկ','վիրուս','բռնիչ','քամիչ','լրատու','գաճաճ','թովիչ','միջոց','մոտիկ','դիմակ','բաժակ','ավարտ','դաժան','բկլիկ','արթուն','մանրէ','կոտեմ','գոմեշ','սիսեռ','սավան','օդաչու','սոխակ','ծիծակ','սոխուկ','ընկեր','ներկա','շլդիկ','ծպտուն','ճկույթ','աքլոր','ակնոց','գնդիկ','ցուցում','ծագում','քննիչ','արշավ','աղջիկ','ունելի','սնունդ','տխմար','տիկին','հպարտ','սթրես','սրվակ','օթևան','բողոք','արմատ','կրքոտ','ծանոթ','արյուն','երանգ','աճուրդ','լյարդ','ամայի','զրույց','սալոր','երկաթ','տոննա','արծիվ','դրույթ','նյարդ','անգետ','կատար','դրացի','լարում','կռունկ','ուղևոր','մանգո','ալբոմ','բեղլու','անուրջ','դուստր','ողորկ','իշխան','ոլորտ','ուլունք','անճար','թոնիր','աուդիո','բիզոն','կողակ','ցորեն','օքսիդ','սմբուկ','սամբա','անկոչ','քանակ','հոկեյ','վահան','խանութ','հրաշք','կոշիկ','անմիտ','զորեղ','արձան','տեսակ','ցողուն','ոսկոր','ըմբիշ','դագաղ','ապակի','դիպուկ','թաթար','մկնիկ','կոկոս','փուչիկ','անդուր','ամփոփ','կոբրա','գագաթ','ապշած','բրինձ','նժույգ','եղնիկ','սենատ','ռեզուս','ջնջոց','շաշկի','կոճակ','ագռավ','իսլամ','դղյակ','մեռած','գերան','զննող','թիթեռ','շեփոր','աքսոր','սելավ','մանուկ','սիբեխ','սպորտ','պնդուկ','երբեք','քիմիկ','պարան','արդուկ','խնձոր','նեխուր','հստակ','միջուկ','ստվեր','գետին','փարոս','հնչեղ','տատիկ','թշվառ','քլունգ','ձավար','պալատ','անջուր','ծղոտե','տանիք','հասակ','խաղաղ','պակաս','կարիճ','հսկիչ','ակունք','երեկո','լուցկի','անսեռ','շարան','հոպոպ','տարիք','համար','կուրծք','անեծք','պաշար','չղջիկ','խորան','վիսկի','անկախ','լուսան','եղյամ','ավանդ','կաքավ','ալյուր','կապար','մորեխ','փրփուր','նամակ','մթերք','անցած','դժոխք','սկիզբ','կապոց','եղեռն','բարդի','բուժիչ','մեխակ','պնդում','րաբբի','սեղան','չափում','ծուղակ','կոպեկ','ծարավ','ցնցում','ակորդ','ոչինչ','քիմիա','ակցիզ','ֆանտա','թավիշ','խշշոց','մոծակ','ավազե','կրճատ','կապիկ','բրոնզ','հարավ','թերաճ','ռեժիմ','ցուցակ','բերրի','բաժին','տոմատ','նվաստ','համեղ','տակառ','զգաստ','գերաճ','շքերթ','լողափ','ապագա','բանակ','հարիչ','զուռնա','ռոբոտ','պարգև','անմեղ','շռայլ','սխեմա','հունիս','այլուր','կամար','արդեն','տաջիկ','խարան','չքնաղ','բարձր','քաղաք','թզենի','բշտիկ','աղքատ','թախիծ','կակաչ','անդամ','խճուղի','ջրվեժ','լորտու','ավյուն','ասպետ','կոչում','սկյուռ','անբան','կացին','տեքստ','խիզախ','ճուռակ','նպաստ','եղեգն','կպչուն','առողջ','մայիս','կնճիթ','կցորդ','զատիկ','դիմում','օսկար','համով','հատակ','խմիչք','դանակ','կարագ','անհամ','թռիչք','ամրոց','մելիք','սեդան','լապշա','բացատ','կեսօր','ծծումբ','գումար','սրբիչ','վզնոց','երկար','անվախ','հմայք','սնանկ','բացիկ','մռայլ','բիրժա','բացիլ','կլիմա','մրցում','ոհմակ','նարդի','լատտե','մումիա','առնետ','մրրիկ','աղերս','ոչխար','ելևէջ','հերոս','գունատ','կեռիկ','դեղին','կեռաս','ծնունդ','խնամք','արխիվ','երգիչ','հազար','կարապ','պասիվ','տաբատ','ծիրան','դոլար','խուճապ','հավատ','փական','փաթիլ','գուշակ','կախիչ','սակավ','պարեն','ծակող','լուսին','ռադիո','կրծող','հիմար','սերիա','լոլիկ','խաղող','ռեհան','ասույթ','դափնի','ուտեստ','այսօր','զգույշ','դպրոց','բերան','միջին','դոդոշ','ամբար','անտիկ','ծորակ','հաճախ','երաշտ','շաբաթ','պարտք','բախում','աղոթք','գզրոց','անզոր','լիմոն','տնջրի','բռնակ','աուդիտ','սրունք','դդմիկ','ալիբի','տոնուս','լակոտ','մորթի','խրթին','կեֆիր','բարակ','անոնս','սպասք','կանաչ','վրձին','խելոք','ամրակ','ակտիվ','դահիճ','շուշան','մատիտ','պանիր','կոպիտ','տապակ','կակաո','վիճակ','ճնշում','անտառ','արարք','մողես','շերեփ','հովիտ','ֆիլտր','պեպսի','մասոն','անկում','ուզբեկ','եռյակ','ներուժ','արջուկ','թմբիկ','ծծումբ','դիմաց','վանող','կիսատ','լինել','առնել','խոսել','նստել','վազել','թռչել','լողալ','սիրել','հիշել','խաղալ','օգնել','գտնել','բացել','փակել','սկսել','ապրել','ծնվել','փոխել','երգել','պարել','ժպտալ'];
+  const WORDS = ['ֆոտոն','նռնակ','հնդիկ','հեղուկ','արգոն','թրթուռ','կայուն','լուծում','շապիկ','հրշեջ','ընբիշ','մետաղ','ավելի','անզեն','հաշիվ','թափոր','խելառ','լքված','դայակ','ցերեկ','կտրուկ','կճղակ','վրացի','քուռակ','բորսա','ծաղիկ','հատիկ','նիհար','արձակ','թրթուր','տոկուն','եղևնի','սապատ','նեղուց','բժիշկ','ուռենի','չվերթ','մասուր','մեթոդ','թշշոց','քնքուշ','փեթակ','մեդիա','կրունկ','կաթսա','կոալա','գիտակ','կրկես','վարազ','փետուր','կտրիճ','հատուկ','կաղնի','պապիկ','ելույթ','ակամա','բուժում','անկապ','մամուլ','օրգան','արևոտ','դակիչ','թևնոց','պատիվ','մետրո','օթյակ','դրախտ','եռանդ','արկած','դալար','գուլպա','խրոխտ','կաուրի','քանոն','ճաղատ','գնորդ','փխրուն','դրամա','ռետին','զղջում','կապիչ','ապտակ','էկրան','բրդյա','դահուկ','պղտոր','դադար','երշիկ','ձյուդո','ջութակ','լվացք','արծաթ','պուրակ','դեկան','լավաշ','գավաթ','բուլկի','սիրուն','կատակ','զոդում','թեփուկ','անտեր','սափոր','հյուսն','հանում','բյուջե','սեզոն','նիզակ','գրպան','բլղուր','պղպեղ','կնճիռ','սրինգ','եղինջ','հասցե','տզրուկ','սպիրտ','դրվագ','տրվագ','տոկոս','մագիլ','արմավ','վստահ','անցում','չարազ','ամբոխ','պահոց','ակցիա','տիտան','ուրբաթ','անգիր','կենաց','խոռոչ','աղանձ','դարակ','փափուկ','գմբեթ','խոնավ','նախնի','գնդակ','ազդակ','ջոկատ','թենիս','ճահիճ','բնույթ','խրճիթ','թիրախ','տաճար','նշենի','անձրև','հատում','գարուն','խուրմա','ջեռոց','շնորհ','պատիժ','ժողով','դիետա','կանոն','ղազախ','ազնիվ','մոխիր','ճաշակ','բնազդ','անհոգ','ճագար','դուդուկ','խոժոռ','աջլիկ','քոթուկ','անձավ','բմբուլ','խնդիր','սուլոց','բանուկ','կավիճ','հրդեհ','սամբո','հովիվ','առյուծ','կողով','արճիճ','սմբակ','քաղցր','անտաշ','թանձր','երկիր','ատլաս','ժյուրի','ստույգ','խլուրդ','իմաստ','եռակի','կրկին','սրիկա','կաթիլ','թառափ','ճակատ','կոկիկ','սուտակ','կմախք','անբիծ','խխունջ','մտրուկ','կրպակ','աղյուս','մտրակ','հրթիռ','արժեք','էական','ֆիզիկ','վարակ','բացում','առվակ','դոնոր','հուզիչ','կյանք','խնամի','թափուր','կարոտ','համեմ','չնչին','տեսուչ','ուղերձ','շաքար','մալուխ','կոմիկ','հասուն','աղվես','տաքսի','զվարթ','դրոշմ','ծածուկ','մաքուր','օպերա','կուզիկ','կիթառ','ձվաձև','թթենի','էթիկա','չաման','նախիր','բլրակ','բուդդա','աբեղա','հնաոճ','եզակի','դժվար','փաթեթ','պտույտ','արդար','աղցան','առույգ','լրտես','անխնա','ռեգբի','ածելի','հովազ','քարոզ','չամիչ','գրեթե','աղմուկ','դժգոհ','խոշոր','շիտակ','համառ','բանան','միտում','հուժկու','օրենք','զնդան','սողուն','գնացք','փողոց','բոված','քացախ','չմուշկ','ժանիք','ծղրիդ','հասած','թոշակ','անմահ','տարեց','լեմուր','պանդա','մկրատ','խռպոտ','խավիծ','բրդոտ','երդում','չեզոք','նոտար','վտանգ','պիցցա','ֆերմա','ծովափ','ագենտ','մառան','վիպակ','ռուբլի','հուշում','պառավ','խմբակ','սպունգ','թռչուն','ատյան','բեկոր','մատուռ','իներտ','թութակ','անտուն','աբխազ','բոբիկ','չարչի','զգեստ','հուլիս','խավար','գալար','նորեկ','գոռոզ','բազուկ','վզկապ','անամպ','սնդիկ','խուճուճ','լազեր','տափակ','զիջող','ակումբ','կնունք','սալիկ','հնարք','գիշեր','գազան','կաղին','կանեփ','պիտակ','սրճեփ','տավիղ','սամիթ','մորուք','ալևոր','եղունգ','տարազ','գազար','ականջ','սուլիչ','թթվաշ','բացիչ','պատառ','օրրան','օազիս','կորիզ','պարոն','պարեկ','կարիք','պղինձ','թաքուն','ձագար','երեխա','հաշիշ','սխտոր','անհատ','պահակ','վիշապ','շրջան','ծամոն','մածուն','վայրի','ծիծաղ','միջատ','թալան','նամուս','ամուրի','վաղուց','հումոր','ամորֆ','խնոցի','սփռոց','բազում','թափոն','ապրիլ','դելտա','ցնցուղ','զավակ','կայսր','բոլուկ','մենակ','փրկիչ','խղճուկ','չեչեն','սյուժե','աճյուն','կաշվե','ստրուկ','բալետ','թանաք','սանիկ','կշեռք','թմբուկ','վիրուս','բռնիչ','քամիչ','լրատու','գաճաճ','թովիչ','միջոց','մոտիկ','դիմակ','բաժակ','ավարտ','դաժան','բկլիկ','արթուն','մանրէ','կոտեմ','գոմեշ','սիսեռ','սավան','օդաչու','սոխակ','ծիծակ','սոխուկ','ընկեր','ներկա','շլդիկ','ծպտուն','ճկույթ','աքլոր','ակնոց','գնդիկ','ցուցում','ծագում','քննիչ','արշավ','աղջիկ','ունելի','սնունդ','տխմար','տիկին','հպարտ','սթրես','սրվակ','օթևան','բողոք','արմատ','կրքոտ','ծանոթ','արյուն','երանգ','աճուրդ','լյարդ','ամայի','զրույց','սալոր','երկաթ','տոննա','արծիվ','դրույթ','նյարդ','անգետ','կատար','դրացի','լարում','կռունկ','ուղևոր','մանգո','ալբոմ','բեղլու','անուրջ','դուստր','ողորկ','իշխան','ոլորտ','ուլունք','անճար','թոնիր','աուդիո','բիզոն','կողակ','ցորեն','օքսիդ','սմբուկ','սամբա','անկոչ','քանակ','հոկեյ','վահան','խանութ','հրաշք','կոշիկ','անմիտ','զորեղ','արձան','տեսակ','ցողուն','ոսկոր','ըմբիշ','դագաղ','ապակի','դիպուկ','թաթար','մկնիկ','կոկոս','փուչիկ','անդուր','ամփոփ','կոբրա','գագաթ','ապշած','բրինձ','նժույգ','եղնիկ','սենատ','ռեզուս','ջնջոց','շաշկի','կոճակ','ագռավ','իսլամ','դղյակ','մեռած','գերան','զննող','թիթեռ','շեփոր','աքսոր','սելավ','մանուկ','սիբեխ','սպորտ','պնդուկ','երբեք','քիմիկ','պարան','արդուկ','խնձոր','նեխուր','հստակ','միջուկ','ստվեր','գետին','փարոս','հնչեղ','տատիկ','թշվառ','քլունգ','ձավար','պալատ','անջուր','ծղոտե','տանիք','հասակ','խաղաղ','պակաս','կարիճ','հսկիչ','ակունք','երեկո','լուցկի','անսեռ','շարան','հոպոպ','տարիք','համար','կուրծք','անեծք','պաշար','չղջիկ','խորան','վիսկի','անկախ','լուսան','եղյամ','ավանդ','կաքավ','ալյուր','կապար','մորեխ','փրփուր','նամակ','մթերք','անցած','դժոխք','սկիզբ','կապոց','եղեռն','բարդի','բուժիչ','մեխակ','պնդում','րաբբի','սեղան','չափում','ծուղակ','կոպեկ','ծարավ','ցնցում','ակորդ','ոչինչ','քիմիա','ակցիզ','ֆանտա','թավիշ','խշշոց','մոծակ','ավազե','կրճատ','կապիկ','բրոնզ','հարավ','թերաճ','ռեժիմ','ցուցակ','բերրի','բաժին','տոմատ','նվաստ','համեղ','տակառ','զգաստ','գերաճ','շքերթ','լողափ','ապագա','բանակ','հարիչ','զուռնա','ռոբոտ','պարգև','անմեղ','շռայլ','սխեմա','հունիս','այլուր','կամար','արդեն','տաջիկ','խարան','չքնաղ','բարձր','քաղաք','թզենի','բշտիկ','աղքատ','թախիծ','կակաչ','անդամ','խճուղի','ջրվեժ','լորտու','ավյուն','ասպետ','կոչում','սկյուռ','անբան','կացին','տեքստ','խիզախ','ճուռակ','նպաստ','եղեգն','կպչուն','առողջ','մայիս','կնճիթ','կցորդ','զատիկ','դիմում','օսկար','համով','հատակ','խմիչք','դանակ','կարագ','անհամ','թռիչք','ամրոց','մելիք','սեդան','լապշա','բացատ','կեսօր','ծծումբ','գումար','սրբիչ','վզնոց','երկար','անվախ','հմայք','սնանկ','բացիկ','մռայլ','բիրժա','բացիլ','կլիմա','մրցում','ոհմակ','նարդի','լատտե','մումիա','առնետ','մրրիկ','աղերս','ոչխար','ելևէջ','հերոս','գունատ','կեռիկ','դեղին','կեռաս','ծնունդ','խնամք','արխիվ','երգիչ','հազար','կարապ','պասիվ','տաբատ','ծիրան','դոլար','խուճապ','հավատ','փական','փաթիլ','գուշակ','կախիչ','սակավ','պարեն','ծակող','լուսին','ռադիո','կրծող','հիմար','սերիա','լոլիկ','խաղող','ռեհան','ասույթ','դափնի','ուտեստ','այսօր','զգույշ','դպրոց','բերան','միջին','դոդոշ','ամբար','անտիկ','ծորակ','հաճախ','երաշտ','շաբաթ','պարտք','բախում','աղոթք','գզրոց','անզոր','լիմոն','տնջրի','բռնակ','աուդիտ','սրունք','դդմիկ','ալիբի','տոնուս','լակոտ','մորթի','խրթին','կեֆիր','բարակ','անոնս','սպասք','կանաչ','վրձին','խելոք','ամրակ','ակտիվ','դահիճ','շուշան','մատիտ','պանիր','կոպիտ','տապակ','կակաո','վիճակ','ճնշում','անտառ','արարք','մողես','շերեփ','հովիտ','ֆիլտր','պեպսի','մասոն','անկում','ուզբեկ','եռյակ','ներուժ','արջուկ','թմբիկ','ծծումբ','դիմաց','վանող','կիսատ','լինել','առնել','խոսել','նստել','վազել','թռչել','լողալ','սիրել','հիշել','խաղալ','օգնել','գտնել','բացել','փակել','սկսել','ապրել','ծնվել','փոխել','երգել','պարել','ժպտալ'];
 
   if (WORDS.length === 0) {
       console.error("Word list is empty!");
@@ -929,17 +904,7 @@
 
         // 2. Update CUMULATIVE best status for the key highlight
         const currentStoredBest = keyStatuses[letter];
-        /*
-        // Simplified status update: Correct > Present > Absent
-        if (status === 'correct') {
-             keyStatuses[letter] = 'correct';
-        } else if (status === 'present' && currentStoredBest !== 'correct') {
-             keyStatuses[letter] = 'present';
-        } else if (status === 'absent' && !currentStoredBest) { // Only mark absent if no previous status exists
-             keyStatuses[letter] = 'absent';
-        }
-        */
-         // More robust update considering characters like 'ու' and potential duplicates
+
          let nextStatus = currentStoredBest;
          if (status === 'correct') {
             nextStatus = 'correct';
@@ -1008,7 +973,6 @@
          // Handle regular letter input
          // Special case for 'ու' typically typed with 'u' on some keyboards
          // Check if 'u' was pressed AND if 'ու' is in our allowed characters
-         // Note: This relies on typical phonetic input. A user with a different physical layout might need a different mapping.
          if (key === 'u' && allowedChars.has('ու')) {
               if (currentGuess.length < WORD_LENGTH) {
                  handleKeyClick('ու');
@@ -1024,7 +988,7 @@
               't\'': 'թ', // Example for characters needing quotes
               // ... other mappings if your physical layout differs from standard phonetic software layouts
           };
-          const mappedKey = phoneticMapping[key];
+          const mappedKey = phoneticMapping[key]; // Simple direct map lookup
           if (mappedKey && allowedChars.has(mappedKey)) {
               if (currentGuess.length < WORD_LENGTH) {
                  handleKeyClick(mappedKey);
