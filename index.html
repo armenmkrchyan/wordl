@@ -52,11 +52,11 @@
 
         /* Calculate base size for a single key based on the widest row (10 keys in phonetic) fitting within board-max-width */
         /* Calculation: (var(--board-max-width) - (2 * var(--keyboard-padding-x)) - ((num_keys_in_widest_row - 1) * var(--key-gap))) / num_keys_in_widest_row */
-        /* For 350px width, 3px padding, 4px gap, 10 keys: (350 - (2*3) - (10-1)*4) / 10 = (350 - 6 - 9*4) / 10 = (344 - 36) / 10 = 308 / 10 = 30.8px */
+        /* For 350px width, 3px padding, 4px gap, 10 keys: (350 - (2*3) - (10-1)*4) / 10 = (350 - 6 - 36) / 10 = 308 / 10 = 30.8px */
         --key-base-size: 30.8px;
 
         --key-height: var(--key-base-size); /* Key height matches calculated width for square look */
-        --key-min-height: 40px; /* Minimum height on smaller screens to prevent keys from becoming too short */
+        --key-min-height: 40px; /* Minimum height for touch target on smaller screens */
         --key-padding: 2px; /* Padding inside key for letter margin */
     }
 
@@ -151,7 +151,7 @@
         display: flex; /* Use Flexbox for the top row */
         gap: var(--key-gap);
         width: 100%; /* Take full width of #keyboard */
-        justify-content: center; /* Center items in the top row */
+        /* justify-content: center; Removed, flex: 1 on children is enough for equal width */
     }
 
     #keyboard-main-grid {
@@ -167,17 +167,16 @@
          display: flex; /* Use flexbox for keys within the row */
          gap: var(--key-gap); /* Use key-gap variable */
          flex-wrap: nowrap; /* Prevent keys from wrapping */
-         /* width is not 100% here, it's determined by key sizes and gap */
-         /* justify-content: center; This centers keys within the row, we want the *row* centered */
-         /* Aligning the row is handled by align-items: center on #keyboard-main-grid */
+         /* Width is not 100% here, it's determined by key sizes and gap */
+         /* justify-content: center; Removed, parent align-items handles centering the row block */
      }
 
 
     .key {
       /* --- Letter Keys & Placeholders --- */
       width: var(--key-base-size); /* Fixed width based on widest row calculation */
-      height: var(--key-height); /* Set height */
-      min-height: var(--key-min-height); /* Apply min height */
+      height: var(--key-height); /* Set height (might be overridden by min-height) */
+      min-height: var(--key-min-height); /* Apply min height (overrides height if larger) */
       flex: 0 0 auto; /* Fixed size, no shrinking/growing */
       box-sizing: border-box;
       padding: var(--key-padding); /* Add padding inside the key */
@@ -205,7 +204,7 @@
     .key.enter,
     .key.delete {
       /* These are in the top FLEX row */
-      height: var(--key-height); /* Match height of letter keys */
+      height: var(--key-height); /* Match height of letter keys (or min-height) */
       min-height: var(--key-min-height); /* Match min-height */
 
       flex: 1; /* Make both Enter and Delete take equal width */
@@ -388,17 +387,19 @@
         color: #aaa;
     }
 
-    /* Media Query for very small/short screens */
+    /* Media Query for very small screens */
     @media (max-width: 380px) {
         :root {
-           /* Keep board max width at 350px */
+           /* Board max width remains 350px, as requested */
            --board-max-width: 350px;
            --key-gap: 3px; /* Smaller gap */
-           /* Recalculate base size for 350px width, 3px padding, 3px gap, 10 keys: */
-           /* (350 - (2*3) - (10-1)*3) / 10 = (350 - 6 - 9*3) / 10 = (344 - 27) / 10 = 317 / 10 = 31.7px */
-           --key-base-size: 31.7px;
+           --keyboard-padding-x: 2px; /* Smaller padding */
+
+           /* Recalculate base size for 350px width, 2px padding, 3px gap, 10 keys: */
+           /* (350 - (2*2) - (10-1)*3) / 10 = (350 - 4 - 27) / 10 = 319 / 10 = 31.9px */
+           --key-base-size: 31.9px;
            --key-min-height: 36px; /* Adjusted min height */
-           /* Key height is based on base size unless min-height overrides */
+           /* Key height follows the base size unless min-height takes over */
            --key-height: var(--key-base-size);
         }
         h1 {
@@ -416,7 +417,7 @@
         }
         #keyboard {
             gap: var(--key-gap);
-            padding: 0 2px; /* Adjust horizontal padding */
+            padding: 0 var(--keyboard-padding-x); /* Use adjusted padding */
             margin-top: 3px;
         }
         #keyboard-top-row, #keyboard-main-grid .keyboard-row {
@@ -447,16 +448,20 @@
     @media (min-width: 551px) {
         :root {
              --key-gap: 5px; /* Larger gap on desktop */
-             /* Recalculate base size for a potential wider board, e.g., 400px */
-             --board-max-width: 400px; /* Let's make the board and keyboard wider */
-             /* Calculation for 400px width, 3px padding, 5px gap, 10 keys: */
-             /* (400 - (2*3) - (10-1)*5) / 10 = (400 - 6 - 45) / 10 = 349 / 10 = 34.9px */
-             --key-base-size: 34.9px;
+             --keyboard-padding-x: 5px; /* Match padding */
+
+             /* Let's make the board wider on larger screens */
+             --board-max-width: 450px;
+
+             /* Recalculate base size for 450px width, 5px padding, 5px gap, 10 keys: */
+             /* (450 - (2*5) - (10-1)*5) / 10 = (450 - 10 - 45) / 10 = 395 / 10 = 39.5px */
+             --key-base-size: 39.5px;
              --key-height: var(--key-base-size);
              --key-min-height: var(--key-base-size); /* Min height matches height */
         }
         #keyboard {
             max-width: var(--board-max-width); /* Keyboard still matches board width */
+            padding: 0 var(--keyboard-padding-x); /* Use adjusted padding */
         }
     }
 
@@ -511,12 +516,13 @@
 
   // --- Keyboard Layouts ---
   const alphabeticalKeyboardLayout = [
-     ['ա', 'բ', 'գ', 'դ', 'ե', 'զ', 'է', 'ը'],
-     ['թ', 'ժ', 'ի', 'լ', 'խ', 'ծ', 'կ', 'հ'],
-     ['ձ', 'ղ', 'ճ', 'մ', 'յ', 'ն', 'շ', 'ո'],
-     ['չ', 'պ', 'ջ', 'ռ', 'ս', 'վ', 'տ', 'ր'],
-     ['ց', 'ու', 'փ', 'ք', 'և', 'օ', 'ֆ', '']
+     ['ա', 'բ', 'գ', 'դ', 'ե', 'զ', 'է', 'ը'], // 8 keys
+     ['թ', 'ժ', 'ի', 'լ', 'խ', 'ծ', 'կ', 'հ'], // 8 keys
+     ['ձ', 'ղ', 'ճ', 'մ', 'յ', 'ն', 'շ', 'ո'], // 8 keys
+     ['չ', 'պ', 'ջ', 'ռ', 'ս', 'վ', 'տ', 'ր'], // 8 keys
+     ['ց', 'ու', 'փ', 'ք', 'և', 'օ', 'ֆ', ''] // 7 keys + 1 placeholder = 8
   ];
+   const maxKeysAlphabetical = 8; // Widest row in alphabetical layout
 
    // The new phonetic layout based on user's input
   const phoneticKeyboardLayout = [
@@ -525,6 +531,10 @@
     ['ա', 'ս', 'դ', 'ֆ', 'գ', 'հ', 'յ', 'կ', 'լ', 'ծ'], // 10 keys
     ['զ', 'ղ', 'ց', 'վ', 'բ', 'ն', 'մ', 'շ', 'ը'] // 9 keys
   ];
+   const maxKeysPhonetic = 10; // Widest row in phonetic layout
+
+   // Max keys overall
+   const maxKeysOverall = Math.max(maxKeysAlphabetical, maxKeysPhonetic);
 
 
   // --- Daily Word Logic ---
