@@ -46,14 +46,13 @@
         --link-color: #007bff;
 
         /* New CSS Variables for Key Sizing/Spacing */
-        --board-max-width: 350px; /* Target width for the board and widest keyboard row */
+        --board-max-width: 400px; /* Target width for the board and widest keyboard row on medium screens */
         --keyboard-padding-x: 3px; /* Left/right padding on #keyboard */
         --key-gap: 4px; /* Gap between keys */
 
         /* Max keys overall will be set by JS via a CSS variable on #keyboard */
         /* It is needed for the calc() function below */
-        --max-keys-overall: 10; /* Default value - will be updated by JS */
-
+        --max-keys-overall: 10; /* Default value - will be updated by JS (10 for phonetic, 8 for alphabetical) */
 
         /* Calculate base size for a single key based on max keys fitting within board-max-width */
         /* Calculation: (var(--board-max-width) - (2 * var(--keyboard-padding-x)) - ((var(--max-keys-overall) - 1) * var(--key-gap))) / var(--max-keys-overall) */
@@ -73,7 +72,7 @@
         max-width: 550px; /* Max width for the main content container */
         margin-left: auto;
         margin-right: auto;
-        /* padding: 0 5px; Removed padding here */
+        /* padding: 0 5px; Removed padding here, handled by body > main-content */
         position: relative; /* Needed for absolute positioning of buttons */
     }
      /* Add horizontal padding to the body or a container if needed for overall margin */
@@ -106,7 +105,7 @@
         align-items: center;
         width: 100%; /* Take full width of main-content padding */
         max-width: var(--board-max-width); /* Board Max Width */
-        margin: 8px 0;
+        margin: 8px auto; /* Center board-container itself */
     }
 
     .board {
@@ -184,8 +183,9 @@
     .key {
       /* --- Letter Keys & Placeholders --- */
       width: var(--key-base-size); /* Fixed width based on calculation */
-      height: var(--key-height); /* Set height (might be overridden by min-height) */
-      min-height: var(--key-min-height); /* Apply min height (overrides height if larger) */
+      /* Calculate height based on base size or min-height */
+      height: max(var(--key-base-size), var(--key-min-height));
+      /* min-height: var(--key-min-height); Removed as height uses max() */
       flex: 0 0 auto; /* Fixed size, no shrinking/growing */
       box-sizing: border-box;
       padding: var(--key-padding); /* Add padding inside the key */
@@ -213,8 +213,8 @@
     .key.enter,
     .key.delete {
       /* These are in the top FLEX row */
-      height: var(--key-height); /* Match height of letter keys (or min-height) */
-      min-height: var(--key-min-height); /* Match min-height */
+      height: var(--key-height); /* Match height of letter keys (using max calc) */
+      /* min-height: var(--key-min-height); Removed as height uses max() */
 
       flex: 1; /* Make both Enter and Delete take equal width */
       flex-basis: 0; /* Explicitly set flex-basis to 0 for more reliable equal width distribution */
@@ -245,8 +245,8 @@
         visibility: hidden; /* Hide the placeholder key visually */
         /* Placeholders need the same fixed size as letter keys */
         width: var(--key-base-size);
-        height: var(--key-height);
-        min-height: var(--key-min-height);
+        height: var(--key-height); /* Match height calculation */
+        /* min-height: var(--key-min-height); Removed as height uses max() */
         flex: 0 0 auto; /* Fixed size */
         box-sizing: border-box;
         padding: var(--key-padding);
@@ -282,11 +282,18 @@
         transform: translateX(-50%);
         min-height: 30px;
         z-index: 10;
-        width: calc(100% - 10px); /* Match the main content padding */
-        max-width: calc(var(--board-max-width) + (2 * 3px)); /* Adjust max width to match board + its implicit padding */
-        /* Let's make it match the keyboard max-width + padding for consistency */
-        max-width: var(--board-max-width); /* Message container max width aligns with board/keyboard content width */
+        /* Match the content width, accounting for parent padding */
+        width: calc(100% - 10px); /* Default 5px padding on main-content -> 10px total */
+        max-width: var(--board-max-width); /* Match board width */
     }
+     /* Adjust message container width for smaller main-content padding */
+     @media (max-width: 550px) {
+         .message-container {
+             width: calc(100% - 4px); /* 2px padding on main-content -> 4px total */
+         }
+     }
+
+
     .message {
       text-align: center;
       font-size: 1em;
@@ -408,11 +415,9 @@
 
         :root {
            /* Board max width is fluid up to 350px, minus overall padding */
-           /* If main-content has 2px padding, the space is calc(100vw - 4px) up to 350px */
-           /* Let's make board max width relative to screen width */
            /* Use viewport width minus the main-content padding */
-           --dynamic-board-width: calc(100vw - 4px); /* 2px padding left/right */
-           --board-max-width: min(350px, var(--dynamic-board-width)); /* Max width is 350px or screen width minus padding */
+           --dynamic-width-minus-padding: calc(100vw - 4px); /* 2px padding left/right on main-content */
+           --board-max-width: min(400px, var(--dynamic-width-minus-padding)); /* Max width is 350px or screen width minus padding */
 
 
            --key-gap: 3px; /* Smaller gap */
@@ -423,8 +428,8 @@
            --key-base-size: calc( (var(--board-max-width) - (2 * var(--keyboard-padding-x)) - (var(--max-keys-overall) - 1) * var(--key-gap)) / var(--max-keys-overall) );
 
            --key-min-height: 38px; /* Adjusted min height */
-           /* Key height follows the base size unless min-height takes over */
-           --key-height: max(var(--key-base-size), var(--key-min-height)); /* Use max to ensure min-height is respected */
+           /* Key height calculation now happens in the .key rule using max() */
+           /* --key-height: max(var(--key-base-size), var(--key-min-height)); */ /* This definition moved to .key */
         }
         h1 {
             font-size: 1.3rem;
@@ -434,7 +439,7 @@
             margin-bottom: 3px;
         }
         .board-container {
-            margin: 5px 0;
+            margin: 5px auto; /* Center board-container */
         }
         .board, .row {
             grid-gap: 3px;
@@ -448,7 +453,8 @@
             gap: var(--key-gap);
         }
          .key.enter, .key.delete {
-             min-height: 38px; /* Ensure enter/delete match key min-height */
+             height: max(var(--key-base-size), var(--key-min-height)); /* Ensure enter/delete match key height calc */
+             min-height: initial; /* Removed min-height here as it's handled by height calc */
          }
         #toggle-theme, #toggle-keyboard {
             padding: 4px 7px;
@@ -459,10 +465,6 @@
             padding: 5px 0;
             margin-top: 5px;
             font-size: 0.7em;
-        }
-        .message-container {
-            top: 60px;
-            max-width: var(--board-max-width); /* Match board width */
         }
     }
 
@@ -485,12 +487,17 @@
              /* (var(--board-max-width) - (2 * var(--keyboard-padding-x)) - ((var(--max-keys-overall) - 1) * var(--key-gap))) / var(--max-keys-overall) */
              --key-base-size: calc( (var(--board-max-width) - (2 * var(--keyboard-padding-x)) - (var(--max-keys-overall) - 1) * var(--key-gap)) / var(--max-keys-overall) );
 
-             --key-height: var(--key-base-size); /* Key height follows base size */
-             --key-min-height: var(--key-base-size); /* Min height matches height for squares */
+             /* Key height calculation now happens in the .key rule using max() */
+             /* --key-height: var(--key-base-size); */ /* This definition moved to .key */
+             --key-min-height: var(--key-base-size); /* Min height matches base size for squares on desktop */
          }
          #keyboard {
              max-width: var(--board-max-width); /* Keyboard still matches board width */
              padding: 0 var(--keyboard-padding-x); /* Use adjusted padding */
+         }
+          .key.enter, .key.delete {
+             height: max(var(--key-base-size), var(--key-min-height)); /* Ensure enter/delete match key height calc */
+             min-height: initial; /* Removed min-height here as it's handled by height calc */
          }
      }
 
@@ -732,7 +739,7 @@
         const numPlaceholdersNeeded = currentLayoutMaxKeys - rowKeys.length;
 
         // Add placeholders *before* keys for the last row if it's shorter
-        // Otherwise, add placeholders *after* keys for any shorter row
+        // This creates the gap at the start of the last row
         if (rowIndex === layoutData.length - 1 && numPlaceholdersNeeded > 0) {
              for(let i = 0; i < numPlaceholdersNeeded; i++) {
                  const placeholder = document.createElement('button');
@@ -758,7 +765,7 @@
         });
 
          // Add placeholders *after* keys for rows other than the last one if they are shorter
-         // Note: This is only relevant for the alphabetical layout if its last row is shorter than maxKeysOverall
+         // and if placeholder wasn't added before (only for the last row)
          if (rowIndex !== layoutData.length - 1 && numPlaceholdersNeeded > 0) {
               for(let i = 0; i < numPlaceholdersNeeded; i++) {
                  const placeholder = document.createElement('button');
@@ -1017,7 +1024,7 @@
               't\'': 'թ', // Example for characters needing quotes
               // ... other mappings if your physical layout differs from standard phonetic software layouts
           };
-          const mappedKey = phoneticMapping[key]; // Simple direct map lookup
+          const mappedKey = phoneticMapping[key];
           if (mappedKey && allowedChars.has(mappedKey)) {
               if (currentGuess.length < WORD_LENGTH) {
                  handleKeyClick(mappedKey);
@@ -1031,8 +1038,10 @@
             }
           }
           */
+           /*
            // Simplified physical key mapping for standard Armenian letters and 'u' for 'ու'
            // This captures standard physical keys that match Armenian letters directly
+            */
           else if (key.length === 1 && allowedChars.has(key)) {
              if (currentGuess.length < WORD_LENGTH) {
                  handleKeyClick(key);
