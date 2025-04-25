@@ -51,14 +51,16 @@
         --key-gap: 4px; /* Gap between keys */
 
         /* Max keys overall will be set by JS via a CSS variable on #keyboard */
-        --max-keys-overall: 10; /* Default for phonetic layout, will be updated */
+        /* It is needed for the calc() function below */
+        --max-keys-overall: 10; /* Default value - will be updated by JS */
+
 
         /* Calculate base size for a single key based on max keys fitting within board-max-width */
         /* Calculation: (var(--board-max-width) - (2 * var(--keyboard-padding-x)) - ((var(--max-keys-overall) - 1) * var(--key-gap))) / var(--max-keys-overall) */
         --key-base-size: calc( (var(--board-max-width) - (2 * var(--keyboard-padding-x)) - (var(--max-keys-overall) - 1) * var(--key-gap)) / var(--max-keys-overall) );
 
         --key-height: var(--key-base-size); /* Key height matches calculated width for square look */
-        --key-min-height: 40px; /* Minimum height for touch target */
+        --key-min-height: 40px; /* Minimum height for touch target on smaller screens */
         --key-padding: 2px; /* Padding inside key for letter margin */
     }
 
@@ -71,9 +73,14 @@
         max-width: 550px; /* Max width for the main content container */
         margin-left: auto;
         margin-right: auto;
-        padding: 0 5px; /* Add some horizontal padding */
+        /* padding: 0 5px; Removed padding here */
         position: relative; /* Needed for absolute positioning of buttons */
     }
+     /* Add horizontal padding to the body or a container if needed for overall margin */
+     body > .main-content {
+         padding: 0 5px; /* Add the 5px padding here for overall margin */
+     }
+
 
     h1 {
       margin-top: 10px;
@@ -97,7 +104,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        width: 100%;
+        width: 100%; /* Take full width of main-content padding */
         max-width: var(--board-max-width); /* Board Max Width */
         margin: 8px 0;
     }
@@ -106,7 +113,7 @@
       display: grid;
       grid-template-rows: repeat(6, 1fr);
       grid-gap: 4px;
-      width: 100%;
+      width: 100%; /* Fill board-container width */
     }
 
     .row {
@@ -169,7 +176,7 @@
          display: flex; /* Use flexbox for keys within the row */
          gap: var(--key-gap); /* Use key-gap variable */
          flex-wrap: nowrap; /* Prevent keys from wrapping */
-         width: 100%; /* Ensure the row takes full width of main-grid */
+         width: 100%; /* !!! Crucial - Make the row take full width of main-grid */
          /* justify-content: center; Removed - keys stretch, no need to center remaining space */
      }
 
@@ -275,8 +282,10 @@
         transform: translateX(-50%);
         min-height: 30px;
         z-index: 10;
-        width: 90%;
-        max-width: var(--board-max-width); /* Match board width */
+        width: calc(100% - 10px); /* Match the main content padding */
+        max-width: calc(var(--board-max-width) + (2 * 3px)); /* Adjust max width to match board + its implicit padding */
+        /* Let's make it match the keyboard max-width + padding for consistency */
+        max-width: var(--board-max-width); /* Message container max width aligns with board/keyboard content width */
     }
     .message {
       text-align: center;
@@ -389,20 +398,33 @@
         color: #aaa;
     }
 
-    /* Media Query for very small screens */
-    @media (max-width: 380px) {
+    /* Media Query for screens up to 550px (mobile/smaller tablets) */
+    @media (max-width: 550px) {
+        body > .main-content {
+           padding: 0 2px; /* Reduce overall margin on very small screens */
+        }
+         #toggle-theme { right: 2px; } /* Adjust button position */
+         #toggle-keyboard { right: 52px; } /* Adjust button position */
+
         :root {
-           /* Board max width remains 350px, as requested */
-           --board-max-width: 350px;
+           /* Board max width is fluid up to 350px, minus overall padding */
+           /* If main-content has 2px padding, the space is calc(100vw - 4px) up to 350px */
+           /* Let's make board max width relative to screen width */
+           /* Use viewport width minus the main-content padding */
+           --dynamic-board-width: calc(100vw - 4px); /* 2px padding left/right */
+           --board-max-width: min(350px, var(--dynamic-board-width)); /* Max width is 350px or screen width minus padding */
+
+
            --key-gap: 3px; /* Smaller gap */
            --keyboard-padding-x: 2px; /* Smaller padding */
 
-           /* Recalculate base size for 350px width, 2px padding, 3px gap, 10 keys: */
-           /* (350 - (2*2) - (10-1)*3) / 10 = (350 - 4 - 27) / 10 = 319 / 10 = 31.9px */
-           --key-base-size: 31.9px;
-           --key-min-height: 36px; /* Adjusted min height */
+           /* Recalculate base size based on dynamic board width */
+           /* (var(--board-max-width) - (2 * var(--keyboard-padding-x)) - ((var(--max-keys-overall) - 1) * var(--key-gap))) / var(--max-keys-overall) */
+           --key-base-size: calc( (var(--board-max-width) - (2 * var(--keyboard-padding-x)) - (var(--max-keys-overall) - 1) * var(--key-gap)) / var(--max-keys-overall) );
+
+           --key-min-height: 38px; /* Adjusted min height */
            /* Key height follows the base size unless min-height takes over */
-           --key-height: var(--key-base-size);
+           --key-height: max(var(--key-base-size), var(--key-min-height)); /* Use max to ensure min-height is respected */
         }
         h1 {
             font-size: 1.3rem;
@@ -426,16 +448,13 @@
             gap: var(--key-gap);
         }
          .key.enter, .key.delete {
-             min-height: 36px; /* Ensure enter/delete shrink but not too much */
+             min-height: 38px; /* Ensure enter/delete match key min-height */
          }
         #toggle-theme, #toggle-keyboard {
             padding: 4px 7px;
             font-size: 0.8rem;
             top: 5px;
         }
-        #toggle-theme { right: 5px; }
-        #toggle-keyboard { right: 50px; }
-
         footer {
             padding: 5px 0;
             margin-top: 5px;
@@ -446,26 +465,34 @@
             max-width: var(--board-max-width); /* Match board width */
         }
     }
-     /* Media query for wider screens where keys can be larger */
-    @media (min-width: 551px) {
-        :root {
+
+     /* Media query for wider screens (over 550px, where main-content is max-width: 550px) */
+     @media (min-width: 551px) {
+         body > .main-content {
+             padding: 0 5px; /* Restore default padding */
+         }
+          #toggle-theme { right: 10px; }
+          #toggle-keyboard { right: 60px; }
+
+         :root {
+              /* Board max width can be larger on desktop, e.g., 450px */
+             --board-max-width: 450px;
+
              --key-gap: 5px; /* Larger gap on desktop */
              --keyboard-padding-x: 5px; /* Match padding */
 
-             /* Let's make the board wider on larger screens */
-             --board-max-width: 450px;
+             /* Recalculate base size based on desktop board max width */
+             /* (var(--board-max-width) - (2 * var(--keyboard-padding-x)) - ((var(--max-keys-overall) - 1) * var(--key-gap))) / var(--max-keys-overall) */
+             --key-base-size: calc( (var(--board-max-width) - (2 * var(--keyboard-padding-x)) - (var(--max-keys-overall) - 1) * var(--key-gap)) / var(--max-keys-overall) );
 
-             /* Recalculate base size for 450px width, 5px padding, 5px gap, 10 keys: */
-             /* (450 - (2*5) - (10-1)*5) / 10 = (450 - 10 - 45) / 10 = 395 / 10 = 39.5px */
-             --key-base-size: 39.5px;
-             --key-height: var(--key-base-size);
-             --key-min-height: var(--key-base-size); /* Min height matches height */
-        }
-        #keyboard {
-            max-width: var(--board-max-width); /* Keyboard still matches board width */
-            padding: 0 var(--keyboard-padding-x); /* Use adjusted padding */
-        }
-    }
+             --key-height: var(--key-base-size); /* Key height follows base size */
+             --key-min-height: var(--key-base-size); /* Min height matches height for squares */
+         }
+         #keyboard {
+             max-width: var(--board-max-width); /* Keyboard still matches board width */
+             padding: 0 var(--keyboard-padding-x); /* Use adjusted padding */
+         }
+     }
 
 
   </style>
@@ -534,9 +561,6 @@
     ['զ', 'ղ', 'ց', 'վ', 'բ', 'ն', 'մ', 'շ', 'ը'] // 9 keys
   ];
    const maxKeysPhonetic = 10; // Widest row in phonetic layout
-
-   // Determine the maximum number of keys across ALL layouts for base size calculation
-   const maxKeysOverall = Math.max(maxKeysAlphabetical, maxKeysPhonetic);
 
 
   // --- Daily Word Logic ---
@@ -682,6 +706,9 @@
     keyboardTopRowElement.innerHTML = '';
     keyboardMainGridElement.innerHTML = '';
 
+    // Determine the max keys for the *currently building* layout
+    const currentLayoutMaxKeys = layoutData === phoneticKeyboardLayout ? maxKeysPhonetic : maxKeysAlphabetical;
+
     // Top Row (Enter/Delete) - Flexbox
     [ENTER_KEY, DELETE_KEY].forEach(keyText => {
         const keyElement = document.createElement('button');
@@ -702,7 +729,7 @@
         const rowElement = document.createElement('div');
         rowElement.className = 'keyboard-row';
 
-        const numPlaceholdersNeeded = maxKeysOverall - rowKeys.length;
+        const numPlaceholdersNeeded = currentLayoutMaxKeys - rowKeys.length;
 
         // Add placeholders *before* keys for the last row if it's shorter
         // Otherwise, add placeholders *after* keys for any shorter row
@@ -731,6 +758,7 @@
         });
 
          // Add placeholders *after* keys for rows other than the last one if they are shorter
+         // Note: This is only relevant for the alphabetical layout if its last row is shorter than maxKeysOverall
          if (rowIndex !== layoutData.length - 1 && numPlaceholdersNeeded > 0) {
               for(let i = 0; i < numPlaceholdersNeeded; i++) {
                  const placeholder = document.createElement('button');
@@ -748,17 +776,14 @@
   // --- Keyboard Layout Toggle Logic ---
   function toggleKeyboardLayout() {
       currentKeyboardLayoutType = currentKeyboardLayoutType === 'phonetic' ? 'alphabetical' : 'phonetic';
-      // Before updating the layout, update the CSS variable for max keys
-      const currentLayoutMaxKeys = currentKeyboardLayoutType === 'phonetic' ? maxKeysPhonetic : maxKeysAlphabetical;
-      keyboardElement.style.setProperty('--max-keys-overall', currentLayoutMaxKeys);
-
       updateKeyboardLayout(); // Update UI and save preference
   }
 
   function updateKeyboardLayout() {
       const layoutData = currentKeyboardLayoutType === 'phonetic' ? phoneticKeyboardLayout : alphabeticalKeyboardLayout;
-      // Ensure the CSS variable for max keys is correct *before* building
-      const currentLayoutMaxKeys = currentKeyboardLayoutType === 'phonetic' ? maxKeysPhonetic : maxKeysAlphabetical;
+
+      // Update the CSS variable for max keys *before* building
+      const currentLayoutMaxKeys = layoutData === phoneticKeyboardLayout ? maxKeysPhonetic : maxKeysAlphabetical;
       keyboardElement.style.setProperty('--max-keys-overall', currentLayoutMaxKeys);
 
 
@@ -897,28 +922,37 @@
 
         // 2. Update CUMULATIVE best status for the key highlight
         const currentStoredBest = keyStatuses[letter];
-        // 'correct' > 'present' > 'absent' > null
+        /*
+        // Simplified status update: Correct > Present > Absent
         if (status === 'correct') {
-            keyStatuses[letter] = 'correct';
-        } else if (status === 'present') {
-            if (currentStoredBest !== 'correct') {
-                keyStatuses[letter] = 'present';
-            }
-        } else if (status === 'absent') {
-             // Before marking absent, ensure it wasn't correct/present in THIS guess
-            let trulyAbsentInThisGuess = true;
-             for(let item of result) {
-                if(item.letter === letter && (item.status === 'correct' || item.status === 'present')) {
-                   trulyAbsentInThisGuess = false;
-                    break;
-                }
-            }
-             // Mark absent only if it wasn't seen as correct/present anywhere before (cumulative)
-             // AND it was truly absent in this specific guess
-            if (!currentStoredBest && trulyAbsentInThisGuess) {
-                keyStatuses[letter] = 'absent';
-            }
+             keyStatuses[letter] = 'correct';
+        } else if (status === 'present' && currentStoredBest !== 'correct') {
+             keyStatuses[letter] = 'present';
+        } else if (status === 'absent' && !currentStoredBest) { // Only mark absent if no previous status exists
+             keyStatuses[letter] = 'absent';
         }
+        */
+         // More robust update considering characters like 'ու' and potential duplicates
+         let nextStatus = currentStoredBest;
+         if (status === 'correct') {
+            nextStatus = 'correct';
+         } else if (status === 'present') {
+             if (currentStoredBest !== 'correct') { // 'present' overrides 'absent' or null
+                 nextStatus = 'present';
+             }
+         } else if (status === 'absent') {
+             // Only mark a key as absent if it hasn't been marked correct or present *cumulatively*
+             // AND it was truly absent in the *current guess*.
+             // We need to check if the *character value* appeared as correct/present anywhere in the current guess result.
+             let wasCorrectOrPresentInThisGuess = result.some(item => item.letter === letter && (item.status === 'correct' || item.status === 'present'));
+
+             if (!currentStoredBest && !wasCorrectOrPresentInThisGuess) {
+                 nextStatus = 'absent';
+             }
+         }
+         keyStatuses[letter] = nextStatus;
+
+
     });
 
     // 3. Store the temporary guess specific info for potential use in updateKeyboardHighlight
@@ -976,26 +1010,39 @@
          }
           /*
           // Optional: Add more specific phonetic physical key mappings here if needed
+          // This could be more complex to handle 'ու' combinations correctly
           const phoneticMapping = {
               'c': 'ց',
               'v': 'վ',
+              't\'': 'թ', // Example for characters needing quotes
               // ... other mappings if your physical layout differs from standard phonetic software layouts
           };
-          const mappedKey = phoneticMapping[key];
+          const mappedKey = phoneticMapping[key]; // Simple direct map lookup
           if (mappedKey && allowedChars.has(mappedKey)) {
               if (currentGuess.length < WORD_LENGTH) {
                  handleKeyClick(mappedKey);
                  e.preventDefault();
              }
+          } else if (key.length === 1 && allowedChars.has(key)) {
+             // Fallback to simple single character if no special mapping found
+             if (currentGuess.length < WORD_LENGTH) {
+                handleKeyClick(key);
+                 e.preventDefault();
+            }
           }
           */
-          // Handle single letter inputs (only if not handled by special mappings like 'u' for 'ու')
-         else if (key.length === 1 && allowedChars.has(key)) {
-            if (currentGuess.length < WORD_LENGTH) {
-                handleKeyClick(key);
-                 e.preventDefault(); // Prevent typing the character into something else
-            }
-         }
+           // Simplified physical key mapping for standard Armenian letters and 'u' for 'ու'
+           // This captures standard physical keys that match Armenian letters directly
+          else if (key.length === 1 && allowedChars.has(key)) {
+             if (currentGuess.length < WORD_LENGTH) {
+                 handleKeyClick(key);
+                 e.preventDefault(); // Prevent default typing
+             }
+          } else {
+             // Handle more complex phonetic mappings if needed, outside of the simple 'u' or direct key match
+             // This would require a comprehensive mapping logic if your physical layout is different.
+             // For now, we stick to the simple cases handled above.
+          }
      }
   }
 
