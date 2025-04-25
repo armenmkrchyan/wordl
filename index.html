@@ -50,13 +50,15 @@
         --keyboard-padding-x: 3px; /* Left/right padding on #keyboard */
         --key-gap: 4px; /* Gap between keys */
 
-        /* Calculate base size for a single key based on the widest row (10 keys in phonetic) fitting within board-max-width */
-        /* Calculation: (var(--board-max-width) - (2 * var(--keyboard-padding-x)) - ((num_keys_in_widest_row - 1) * var(--key-gap))) / num_keys_in_widest_row */
-        /* For 350px width, 3px padding, 4px gap, 10 keys: (350 - (2*3) - (10-1)*4) / 10 = (350 - 6 - 36) / 10 = 308 / 10 = 30.8px */
-        --key-base-size: 30.8px;
+        /* Max keys overall will be set by JS via a CSS variable on #keyboard */
+        --max-keys-overall: 10; /* Default for phonetic layout, will be updated */
+
+        /* Calculate base size for a single key based on max keys fitting within board-max-width */
+        /* Calculation: (var(--board-max-width) - (2 * var(--keyboard-padding-x)) - ((var(--max-keys-overall) - 1) * var(--key-gap))) / var(--max-keys-overall) */
+        --key-base-size: calc( (var(--board-max-width) - (2 * var(--keyboard-padding-x)) - (var(--max-keys-overall) - 1) * var(--key-gap)) / var(--max-keys-overall) );
 
         --key-height: var(--key-base-size); /* Key height matches calculated width for square look */
-        --key-min-height: 40px; /* Minimum height for touch target on smaller screens */
+        --key-min-height: 40px; /* Minimum height for touch target */
         --key-padding: 2px; /* Padding inside key for letter margin */
     }
 
@@ -158,7 +160,7 @@
         display: flex; /* Use flexbox to stack rows */
         flex-direction: column;
         gap: var(--key-gap); /* Use key-gap variable */
-        align-items: center; /* Center the keyboard rows horizontally */
+        /* align-items: center; Removed - we want rows to stretch/distribute space */
         width: 100%; /* Ensure the main grid takes full width of #keyboard */
     }
 
@@ -167,14 +169,14 @@
          display: flex; /* Use flexbox for keys within the row */
          gap: var(--key-gap); /* Use key-gap variable */
          flex-wrap: nowrap; /* Prevent keys from wrapping */
-         /* Width is not 100% here, it's determined by key sizes and gap */
-         /* justify-content: center; Removed, parent align-items handles centering the row block */
+         width: 100%; /* Ensure the row takes full width of main-grid */
+         /* justify-content: center; Removed - keys stretch, no need to center remaining space */
      }
 
 
     .key {
       /* --- Letter Keys & Placeholders --- */
-      width: var(--key-base-size); /* Fixed width based on widest row calculation */
+      width: var(--key-base-size); /* Fixed width based on calculation */
       height: var(--key-height); /* Set height (might be overridden by min-height) */
       min-height: var(--key-min-height); /* Apply min height (overrides height if larger) */
       flex: 0 0 auto; /* Fixed size, no shrinking/growing */
@@ -520,7 +522,7 @@
      ['թ', 'ժ', 'ի', 'լ', 'խ', 'ծ', 'կ', 'հ'], // 8 keys
      ['ձ', 'ղ', 'ճ', 'մ', 'յ', 'ն', 'շ', 'ո'], // 8 keys
      ['չ', 'պ', 'ջ', 'ռ', 'ս', 'վ', 'տ', 'ր'], // 8 keys
-     ['ց', 'ու', 'փ', 'ք', 'և', 'օ', 'ֆ', ''] // 7 keys + 1 placeholder = 8
+     ['ց', 'ու', 'փ', 'ք', 'և', 'օ', 'ֆ'] // 7 keys
   ];
    const maxKeysAlphabetical = 8; // Widest row in alphabetical layout
 
@@ -533,7 +535,7 @@
   ];
    const maxKeysPhonetic = 10; // Widest row in phonetic layout
 
-   // Max keys overall
+   // Determine the maximum number of keys across ALL layouts for base size calculation
    const maxKeysOverall = Math.max(maxKeysAlphabetical, maxKeysPhonetic);
 
 
@@ -675,7 +677,7 @@
     }
   }
 
-  // --- Modified buildKeyboard to accept layout data and build Flexbox rows ---
+  // --- Modified buildKeyboard to handle placeholders for alignment ---
   function buildKeyboard(layoutData) {
     keyboardTopRowElement.innerHTML = '';
     keyboardMainGridElement.innerHTML = '';
@@ -696,9 +698,24 @@
     });
 
     // Main Grid - Dynamic Flexbox rows
-    layoutData.forEach(rowKeys => {
+    layoutData.forEach((rowKeys, rowIndex) => {
         const rowElement = document.createElement('div');
-        rowElement.className = 'keyboard-row'; // Add a class for the row
+        rowElement.className = 'keyboard-row';
+
+        const numPlaceholdersNeeded = maxKeysOverall - rowKeys.length;
+
+        // Add placeholders *before* keys for the last row if it's shorter
+        // Otherwise, add placeholders *after* keys for any shorter row
+        if (rowIndex === layoutData.length - 1 && numPlaceholdersNeeded > 0) {
+             for(let i = 0; i < numPlaceholdersNeeded; i++) {
+                 const placeholder = document.createElement('button');
+                 placeholder.className = 'key placeholder';
+                 placeholder.disabled = true;
+                 placeholder.style.cursor = 'default';
+                 rowElement.appendChild(placeholder);
+             }
+        }
+
 
         rowKeys.forEach(keyText => {
             const keyElement = document.createElement('button');
@@ -708,14 +725,22 @@
             if (keyText) {
                 keyElement.dataset.key = keyText;
                 keyElement.onclick = () => handleKeyClick(keyText);
-            } else {
-                 // This is a placeholder key
-                 keyElement.classList.add('placeholder');
-                 keyElement.disabled = true; // Disable interaction
-                 keyElement.style.cursor = 'default'; // Change cursor
             }
+             /* Placeholders are handled by the logic above/below */
             rowElement.appendChild(keyElement);
         });
+
+         // Add placeholders *after* keys for rows other than the last one if they are shorter
+         if (rowIndex !== layoutData.length - 1 && numPlaceholdersNeeded > 0) {
+              for(let i = 0; i < numPlaceholdersNeeded; i++) {
+                 const placeholder = document.createElement('button');
+                 placeholder.className = 'key placeholder';
+                 placeholder.disabled = true;
+                 placeholder.style.cursor = 'default';
+                 rowElement.appendChild(placeholder);
+             }
+         }
+
         keyboardMainGridElement.appendChild(rowElement);
     });
   }
@@ -723,11 +748,20 @@
   // --- Keyboard Layout Toggle Logic ---
   function toggleKeyboardLayout() {
       currentKeyboardLayoutType = currentKeyboardLayoutType === 'phonetic' ? 'alphabetical' : 'phonetic';
+      // Before updating the layout, update the CSS variable for max keys
+      const currentLayoutMaxKeys = currentKeyboardLayoutType === 'phonetic' ? maxKeysPhonetic : maxKeysAlphabetical;
+      keyboardElement.style.setProperty('--max-keys-overall', currentLayoutMaxKeys);
+
       updateKeyboardLayout(); // Update UI and save preference
   }
 
   function updateKeyboardLayout() {
       const layoutData = currentKeyboardLayoutType === 'phonetic' ? phoneticKeyboardLayout : alphabeticalKeyboardLayout;
+      // Ensure the CSS variable for max keys is correct *before* building
+      const currentLayoutMaxKeys = currentKeyboardLayoutType === 'phonetic' ? maxKeysPhonetic : maxKeysAlphabetical;
+      keyboardElement.style.setProperty('--max-keys-overall', currentLayoutMaxKeys);
+
+
       buildKeyboard(layoutData); // Build the keyboard with the selected layout
 
       // Update the button text to show the *next* layout
