@@ -80,6 +80,13 @@
     .dark .subtitle {
         color: #aaa;
     }
+     .subtitle a {
+        color: inherit; /* Inherit color from subtitle */
+        text-decoration: none;
+     }
+     .subtitle a:hover {
+        text-decoration: underline;
+     }
 
 
     .board-container {
@@ -440,7 +447,8 @@
 <body>
   <div class="main-content">
       <h1>Wordle <img src="flag.png" alt="🇦🇲" style="height: 0.7em; vertical-align: middle;"></h1>
-      <p class="subtitle">by Armen Mkrtchyan</p>
+      <!-- Updated subtitle to be a link -->
+      <p class="subtitle">by <a href="https://www.armblog.net" target="_blank">Armen Mkrtchyan</a></p>
 
       <button id="toggle-theme">🌗</button>
       <button id="toggle-layout"></button> <!-- Added Layout Toggle Button -->
@@ -510,8 +518,8 @@
    ];
 
    const LAYOUT_NAMES = {
-       'alphabetical': 'ԱԲԳ',
-       'phonetic': 'ՔՈԵ'
+       'alphabetical': 'ԱԲԳ', /* Changed name */
+       'phonetic': 'ՔՈԵ' /* Changed name */
    };
 
   // --- Daily Word Logic ---
@@ -578,7 +586,8 @@
 
   function loadState() {
     // Theme
-    const savedTheme = localStorage.getItem('theme') || 'light';
+    // Changed default theme from 'light' to 'dark'
+    const savedTheme = localStorage.getItem('theme') || 'dark';
     document.body.classList.toggle('dark', savedTheme === 'dark');
     toggleBtnTheme.textContent = savedTheme === 'dark' ? '☀️' : '🌗';
 
@@ -587,7 +596,7 @@
     if (savedLayoutName && LAYOUT_NAMES[savedLayoutName]) { // Validate saved name
         currentLayoutName = savedLayoutName;
     } else {
-        currentLayoutName = 'phonetic'; // Default
+        currentLayoutName = 'phonetic'; // Default layout is phonetic
     }
     currentLayout = (currentLayoutName === 'phonetic') ? keyboardPhoneticLayout : keyboardAlphabeticalLayout;
     // Update button text to reflect the loaded layout
@@ -887,7 +896,7 @@
      } else if (key === 'backspace' || key === 'delete') {
          handleDelete();
      } else {
-         // Check if the pressed key is a valid Armenian letter or 'ու' from the `allLetters` array.
+         // Check if the pressed key is a valid Armenian letter or ' ու' from the `allLetters` array.
          // This validates physical input based on accepted characters, not the virtual layout.
          if (allLetters.includes(key)) {
              if (currentGuess.length < WORD_LENGTH) {
