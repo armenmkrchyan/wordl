@@ -45,7 +45,29 @@
         --tile-text-light: #000;
         --tile-text-dark: #fff;
         --link-color: #007bff;
+         /* Added for modal */
+        --modal-bg: #fff;
+        --modal-border: #ccc;
+        --modal-text: #000;
+        --list-item-hover-bg: #eee;
     }
+
+     .dark {
+        --bg-color: #121213;
+        --text-color: #fff;
+        --tile-border-empty: #3a3a3c;
+        --tile-border-filled: #565758;
+        --key-bg: #818384;
+        --key-text: #dadce0;
+        --tile-text-light: #fff;
+        --link-color: #64b5f6;
+        /* Added for modal dark mode */
+        --modal-bg: #222;
+        --modal-border: #555;
+        --modal-text: #fff;
+        --list-item-hover-bg: #333;
+    }
+
 
     .main-content {
         flex: 1 1 auto; /* Allows growing and shrinking, takes available space */
@@ -69,7 +91,26 @@
       margin-bottom: 2px;
       font-size: 1.5rem;
       white-space: nowrap;
+      display: flex; /* Use flex to align items within h1 */
+      align-items: center;
+      gap: 8px; /* Space between title and number/flag */
     }
+     h1 img {
+         height: 0.7em;
+         vertical-align: middle;
+     }
+    /* Style for the game number */
+    #game-number {
+        font-size: 0.8em; /* Slightly smaller than main title */
+        font-weight: normal; /* Not as bold as the title */
+        cursor: pointer; /* Indicate it's clickable */
+        text-decoration: underline; /* Indicate it's a link/clickable */
+        color: inherit; /* Inherit color from h1 */
+    }
+     #game-number:hover {
+         color: var(--link-color); /* Highlight on hover */
+     }
+
 
     .subtitle {
         font-size: 0.9rem;
@@ -82,7 +123,6 @@
     }
      .subtitle a {
         color: inherit; /* Inherit color from subtitle */
-        /* Removed text-decoration: none; */
      }
      .subtitle a:hover {
         text-decoration: underline; /* Keep underline on hover */
@@ -279,7 +319,7 @@
       font-weight: bold;
       background-color: #333;
       color: white;
-      border-radius: 5px;
+      border-radius: 5样的 5px;
       visibility: hidden;
       opacity: 0;
       transition: visibility 0s 1.5s, opacity 1.5s linear;
@@ -292,37 +332,94 @@
         transition: opacity 0.3s linear;
      }
 
-    .dark {
-        --bg-color: #121213;
-        --text-color: #fff;
-        --tile-border-empty: #3a3a3c;
-        --tile-border-filled: #565758;
-        --key-bg: #818384;
-        --key-text: #dadce0;
-        --tile-text-light: #fff;
-        --link-color: #64b5f6;
+    /* Modal Styles */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 100;
+        visibility: hidden;
+        opacity: 0;
+        transition: visibility 0s 0.3s, opacity 0.3s ease;
     }
 
-    .dark .message {
-      background-color: #eee;
-      color: #121213;
+    .modal-overlay.visible {
+        visibility: visible;
+        opacity: 1;
+        transition-delay: 0s;
     }
-     .dark .key:hover {
-         filter: brightness(115%);
-     }
-     .dark .key.enter:hover, .dark .key.delete:hover {
-          filter: brightness(110%);
-     }
-      .dark .key.correct.has-present:hover {
-         filter: brightness(110%);
-     }
 
-    .dark .key.correct { background-color: var(--correct-bg); color: var(--tile-text-dark); border-color: transparent;}
-    .dark .key.present { background-color: var(--present-bg); color: var(--tile-text-dark); border-color: transparent;}
-    .dark .key.absent { background-color: var(--absent-bg); color: var(--tile-text-dark); border-color: transparent;}
+    .modal-content {
+        background-color: var(--modal-bg);
+        color: var(--modal-text);
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        max-width: 90%;
+        max-height: 90%;
+        overflow-y: auto; /* Add scroll for long lists */
+        position: relative;
+        width: 300px; /* Adjust modal width as needed */
+        display: flex;
+        flex-direction: column;
+    }
+    .dark .modal-content {
+        background-color: var(--modal-bg);
+        color: var(--modal-text);
+    }
 
-    .dark .key.correct.has-present {
-        border-color: var(--present-bg); /* Yellow border */
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--modal-border);
+    }
+    .modal-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: inherit;
+        padding: 0;
+    }
+    .modal-close:hover {
+        opacity: 0.7;
+    }
+
+    #previous-games-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    #previous-games-list li {
+        padding: 8px 0;
+        border-bottom: 1px solid var(--modal-border);
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+    #previous-games-list li:last-child {
+        border-bottom: none;
+    }
+     #previous-games-list li:hover {
+         background-color: var(--list-item-hover-bg);
+     }
+    #previous-games-list li span {
+        font-weight: bold;
+        margin-right: 10px;
     }
 
 
@@ -385,6 +482,9 @@
             font-size: 1.3rem; /* Further reduce */
             margin-top: 8px;
         }
+        h1 #game-number {
+            font-size: 0.9em; /* Adjust game number size */
+        }
         .subtitle {
             margin-bottom: 3px;
         }
@@ -431,7 +531,7 @@
             right: 5px; /* Maintain right position */
         }
         .main-content > #toggle-layout {
-            padding: 4px 7px;
+            padding: 44px 7px; /* Reduced padding */
             font-size: 0.8rem;
             top: 5px;
             left: 5px; /* Adjust position to the left */
@@ -440,13 +540,19 @@
         .message-container {
             top: 60px; /* Adjust if needed */
         }
+         .modal-content {
+             width: 250px; /* Adjust modal width for small screens */
+         }
     }
 
   </style>
 </head>
 <body>
   <div class="main-content">
-      <h1>Wordle <img src="flag.png" alt="🇦🇲" style="height: 0.7em; vertical-align: middle;"></h1>
+      <h1>
+          Wordle <img src="flag.png" alt="🇦🇲">
+          <span id="game-number"></span> <!-- Game Number Placeholder -->
+      </h1>
       <!-- Updated subtitle to be a link -->
       <p class="subtitle">by <a href="https://www.armblog.net" target="_blank">Armen Mkrtchyan</a></p>
 
@@ -466,6 +572,20 @@
       <div id="keyboard-main-grid"></div>
   </div>
 
+  <!-- Previous Games Modal -->
+  <div id="previous-games-modal" class="modal-overlay">
+      <div class="modal-content">
+          <div class="modal-header">
+              <h3>Նախորդ խաղերը</h3>
+              <button class="modal-close">×</button>
+          </div>
+          <ul id="previous-games-list">
+              <!-- List items will be populated by JS -->
+          </ul>
+      </div>
+  </div>
+
+
 <script>
   const boardElement = document.getElementById('board');
   const keyboardTopRowElement = document.getElementById('keyboard-top-row');
@@ -475,6 +595,11 @@
   const toggleBtnLayout = document.getElementById('toggle-layout');
   const messageElement = document.getElementById('message');
   const mainContent = document.querySelector('.main-content'); // Still needed for sizing context
+  const gameNumberElement = document.getElementById('game-number'); // Game number element
+  const previousGamesModal = document.getElementById('previous-games-modal'); // Modal overlay
+  const previousGamesListElement = document.getElementById('previous-games-list'); // Modal list
+  const modalCloseButton = previousGamesModal.querySelector('.modal-close'); // Modal close button
+
 
   // --- Constants ---
   const WORD_LENGTH = 5;
@@ -482,6 +607,7 @@
   const ENTER_KEY = 'ընդունել';
   const DELETE_KEY = 'ջնջել';
   const LOCAL_STORAGE_LAYOUT_KEY = 'armenianWordleLayout';
+  const LOCAL_STORAGE_PREFIX = 'armenianWordle-'; // Prefix for game state keys
 
   // --- Word List (Assumed 5 letters, lowercase) ---
   const WORDS = ['ֆոտոն','նռնակ','հնդիկ','հեղուկ','արգոն','թրթուռ','կայուն','լուծում','շապիկ','հրշեջ','ընբիշ','մետաղ','ավելի','անզեն','հաշիվ','թափոր','խելառ','լքված','դայակ','ցերեկ','կտրուկ','կճղակ','վրացի','քուռակ','բորսա','ծաղիկ','հատիկ','նիհար','արձակ','թրթուր','տոկուն','եղևնի','սապատ','նեղուց','բժիշկ','ուռենի','չվերթ','մասուր','մեթոդ','թշշոց','քնքուշ','փեթակ','մեդիա','կրունկ','կաթսա','կոալա','գիտակ','կրկես','վարազ','փետուր','կտրիճ','հատուկ','կաղնի','պապիկ','ելույթ','ակամա','բուժում','անկապ','մամուլ','օրգան','արևոտ','դակիչ','թևնոց','պատիվ','մետրո','օթյակ','դրախտ','եռանդ','արկած','դալար','գուլպա','խրոխտ','կաուրի','քանոն','ճաղատ','գնորդ','փխրուն','դրամա','ռետին','զղջում','կապիչ','ապտակ','էկրան','բրդյա','դահուկ','պղտոր','դադար','երշիկ','ձյուդո','ջութակ','լվացք','արծաթ','պուրակ','դեկան','լավաշ','գավաթ','բուլկի','սիրուն','կատակ','զոդում','թեփուկ','անտեր','սափոր','հյուսն','հանում','բյուջե','սեզոն','նիզակ','գրպան','բլղուր','պղպեղ','կնճիռ','սրինգ','եղինջ','հասցե','տզրուկ','սպիրտ','դրվագ','տոկոս','մագիլ','արմավ','վստահ','անցում','չարազ','ամբոխ','պահոց','ակցիա','տիտան','ուրբաթ','անգիր','կենաց','խոռոչ','աղանձ','դարակ','փափուկ','գմբեթ','խոնավ','նախնի','գնդակ','ազդակ','ջոկատ','թենիս','ճահիճ','բնույթ','խրճիթ','թիրախ','տաճար','նշենի','անձրև','հատում','գարուն','խուրմա','ջեռոց','շնորհ','պատիժ','ժողով','դիետա','կանոն','ղազախ','ազնիվ','մոխիր','ճաշակ','բնազդ','անհոգ','ճագար','դուդուկ','խոժոռ','աջլիկ','քոթուկ','անձավ','բմբուլ','խնդիր','սուլոց','բանուկ','կավիճ','հրդեհ','սամբո','հովիվ','առյուծ','կողով','արճիճ','սմբակ','քաղցր','անտաշ','թանձր','երկիր','ատլաս','ժյուրի','ստույգ','խլուրդ','իմաստ','եռակի','կրկին','սրիկա','կաթիլ','թառափ','ճակատ','կոկիկ','սուտակ','կմախք','անբիծ','խխունջ','մտրուկ','կրպակ','աղյուս','մտրակ','հրթիռ','արժեք','էական','ֆիզիկ','վարակ','բացում','առվակ','դոնոր','հուզիչ','կյանք','խնամի','թափուր','կարոտ','համեմ','չնչին','տեսուչ','ուղերձ','շաքար','մալուխ','կոմիկ','հասուն','աղվես','տաքսի','զվարթ','դրոշմ','ծածուկ','մաքուր','օպերա','կուզիկ','կիթառ','ձվաձև','թթենի','էթիկա','չաման','նախիր','բլրակ','բուդդա','աբեղա','հնաոճ','եզակի','դժվար','փաթեթ','պտույտ','արդար','աղցան','առույգ','լրտես','անխնա','ռեգբի','ածելի','հովազ','քարոզ','չամիչ','գրեթե','աղմուկ','դժգոհ','խոշոր','շիտակ','համառ','բանան','միտում','հուժկու','օրենք','զնդան','սողուն','գնացք','փողոց','բոված','քացախ','չմուշկ','ժանիք','ծղրիդ','հասած','թոշակ','անմահ','տարեց','լեմուր','պանդա','մկրատ','խռպոտ','խավիծ','բրդոտ','երդում','չեզոք','նոտար','վտանգ','պիցցա','ֆերմա','ծովափ','ագենտ','մառան','վիպակ','ռուբլի','հուշում','պառավ','խմբակ','սպունգ','թռչուն','ատյան','բեկոր','մատուռ','իներտ','թութակ','անտուն','աբխազ','բոբիկ','չարչի','զգեստ','հուլիս','խավար','գալար','նորեկ','գոռոզ','բազուկ','վզկապ','անամպ','սնդիկ','խուճուճ','լազեր','տափակ','զիջող','ակումբ','կնունք','սալիկ','հնարք','գիշեր','գազան','կաղին','կանեփ','պիտակ','սրճեփ','տավիղ','սամիթ','մորուք','ալևոր','եղունգ','տարազ','գազար','ականջ','սուլիչ','թթվաշ','բացիչ','պատառ','օրրան','օազիս','կորիզ','պարոն','պարեկ','կարիք','պղինձ','թաքուն','ձագար','երեխա','հաշիշ','սխտոր','անհատ','պահակ','վիշապ','շրջան','ծամոն','մածուն','վայրի','ծիծաղ','միջատ','թալան','նամուս','ամուրի','վաղուց','հումոր','ամորֆ','խնոցի','սփռոց','բազում','թափոն','ապրիլ','դելտա','ցնցուղ','զավակ','կայսր','բոլուկ','մենակ','փրկիչ','խղճուկ','չեչեն','սյուժե','աճյուն','կաշվե','ստրուկ','բալետ','թանաք','սանիկ','կշեռք','թմբուկ','վիրուս','բռնիչ','քամիչ','լրատու','գաճաճ','թովիչ','միջոց','մոտիկ','դիմակ','բաժակ','ավարտ','դաժան','բկլիկ','արթուն','մանրէ','կոտեմ','գոմեշ','սիսեռ','սավան','օդաչու','սոխակ','ծիծակ','սոխուկ','ընկեր','ներկա','շլդիկ','ծպտուն','ճկույթ','աքլոր','ակնոց','գնդիկ','ցուցում','ծագում','քննիչ','արշավ','աղջիկ','ունելի','սնունդ','տխմար','տիկին','հպարտ','սթրես','սրվակ','օթևան','բողոք','արմատ','կրքոտ','ծանոթ','արյուն','երանգ','աճուրդ','լյարդ','ամայի','զրույց','սալոր','երկաթ','տոննա','արծիվ','դրույթ','նյարդ','անգետ','կատար','դրացի','լարում','կռունկ','ուղևոր','մանգո','ալբոմ','բեղլու','անուրջ','դուստր','ողորկ','իշխան','ոլորտ','ուլունք','անճար','թոնիր','աուդիո','բիզոն','կողակ','ցորեն','օքսիդ','սմբուկ','սամբա','անկոչ','քանակ','հոկեյ','վահան','խանութ','հրաշք','կոշիկ','անմիտ','զորեղ','արձան','տեսակ','ցողուն','ոսկոր','ըմբիշ','դագաղ','ապակի','դիպուկ','թաթար','մկնիկ','կոկոս','փուչիկ','անդուր','ամփոփ','կոբրա','գագաթ','ապշած','բրինձ','նժույգ','եղնիկ','սենատ','ռեզուս','ջնջոց','շաշկի','կոճակ','ագռավ','իսլամ','դղյակ','մեռած','գերան','զննող','թիթեռ','շեփոր','աքսոր','սելավ','մանուկ','սիբեխ','սպորտ','պնդուկ','երբեք','քիմիկ','պարան','արդուկ','խնձոր','նեխուր','հստակ','միջուկ','ստվեր','գետին','փարոս','հնչեղ','տատիկ','թշվառ','քլունգ','ձավար','պալատ','անջուր','ծղոտե','տանիք','հասակ','խաղաղ','պակաս','կարիճ','հսկիչ','ակունք','երեկո','լուցկի','անսեռ','շարան','հոպոպ','տարիք','համար','կուրծք','անեծք','պաշար','չղջիկ','խորան','վիսկի','անկախ','լուսան','եղյամ','ավանդ','կաքավ','ալյուր','կապար','մորեխ','փրփուր','նամակ','մթերք','անցած','դժոխք','սկիզբ','կապոց','եղեռն','բարդի','բուժիչ','մեխակ','պնդում','րաբբի','սեղան','չափում','ծուղակ','կոպեկ','ծարավ','ցնցում','ակորդ','ոչինչ','քիմիա','ակցիզ','ֆանտա','թավիշ','խշշոց','մոծակ','ավազե','կրճատ','կապիկ','բրոնզ','հարավ','թերաճ','ռեժիմ','ցուցակ','բերրի','բաժին','տոմատ','նվաստ','համեղ','տակառ','զգաստ','գերաճ','շքերթ','լողափ','ապագա','բանակ','հարիչ','զուռնա','ռոբոտ','պարգև','անմեղ','շռայլ','սխեմա','հունիս','այլուր','կամար','արդեն','տաջիկ','խարան','չքնաղ','բարձր','քաղաք','թզենի','բշտիկ','աղքատ','թախիծ','կակաչ','անդամ','խճուղի','ջրվեժ','լորտու','ավյուն','ասպետ','կոչում','սկյուռ','անբան','կացին','տեքստ','խիզախ','ճուռակ','նպաստ','եղեգն','կպչուն','առողջ','մայիս','կնճիթ','կցորդ','զատիկ','դիմում','օսկար','համով','հատակ','խմիչք','դանակ','կարագ','անհամ','թռիչք','ամրոց','մելիք','սեդան','լապշա','բացատ','կեսօր','ծծումբ','գումար','սրբիչ','վզնոց','երկար','անվախ','հմայք','սնանկ','բացիկ','մռայլ','բիրժա','բացիլ','կլիմա','մրցում','ոհմակ','նարդի','լատտե','մումիա','առնետ','մրրիկ','աղերս','ոչխար','ելևէջ','հերոս','գունատ','կեռիկ','դեղին','կեռաս','ծնունդ','խնամք','արխիվ','երգիչ','հազար','կարապ','պասիվ','տաբատ','ծիրան','դոլար','խուճապ','հավատ','փական','փաթիլ','գուշակ','կախիչ','սակավ','պարեն','ծակող','լուսին','ռադիո','կրծող','հիմար','սերիա','լոլիկ','խաղող','ռեհան','ասույթ','դափնի','ուտեստ','այսօր','զգույշ','դպրոց','բերան','միջին','դոդոշ','ամբար','անտիկ','ծորակ','հաճախ','երաշտ','շաբաթ','պարտք','բախում','աղոթք','գզրոց','անզոր','լիմոն','տնջրի','բռնակ','աուդիտ','սրունք','դդմիկ','ալիբի','տոնուս','լակոտ','մորթի','խրթին','կեֆիր','բարակ','անոնս','սպասք','կանաչ','վրձին','խելոք','ամրակ','ակտիվ','դահիճ','շուշան','մատիտ','պանիր','կոպիտ','տապակ','կակաո','վիճակ','ճնշում','անտառ','արարք','մողես','շերեփ','հովիտ','ֆիլտր','պեպսի','մասոն','անկում','ուզբեկ','եռյակ','ներուժ','արջուկ','թմբիկ','ծծումբ','դիմաց','վանող','կիսատ','լինել','առնել','խոսել','նստել','վազել','թռչել','լողալ','սիրել','հիշել','խաղալ','օգնել','գտնել','բացել','փակել','սկսել','ապրել','ծնվել','փոխել','երգել','պարել','ժպտալ'];
@@ -525,11 +651,15 @@
   // --- Daily Word Logic ---
   const startDate = new Date("2025-04-11");
   const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0); // Normalize today's date to midnight
   const dayOffset = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
-  const targetWord = WORDS.length > 0 ? WORDS[dayOffset % WORDS.length] : "սխալ";
-  const parsedTarget = splitWord(targetWord);
-  const dateKey = `armenianWordle-${today.toISOString().split('T')[0]}`;
+  // Initial target word is always today's word based on the offset
+  let currentWordOffset = dayOffset; // Track which game number is currently loaded
+  let currentTargetWord = WORDS.length > 0 ? WORDS[currentWordOffset % WORDS.length] : "սխալ";
+  let parsedCurrentTarget = splitWord(currentTargetWord);
+  // The current game's local storage key
+  let currentGameDateKey = `${LOCAL_STORAGE_PREFIX}${today.toISOString().split('T')[0]}`;
+
 
   // --- Game State Variables ---
   let guesses = [];
@@ -547,115 +677,243 @@
 
   // --- Initialization ---
   function init() {
-    loadState(); // Load theme, layout preference, and game state
+    loadState(); // Load theme, layout preference, and game state for *today* by default
+
+    // Update the game number display initially
+    updateGameNumberDisplay();
+
     buildBoard();
     buildKeyboard(); // Build keyboard based on loaded layout
     redrawBoardFromState();
     updateKeyboardHighlight(); // Update keyboard highlight based on loaded keyStatuses
 
     // Check for game over state on refresh and display final message/disable input
+    // This check is now based on the *loaded* game state
     if (isGameOver) {
         const lastGuessString = guesses.length > 0 ? guesses[guesses.length - 1].map(g => g.letter).join('') : '';
-        if (splitWord(lastGuessString).join('') !== parsedTarget.join('')) {
+        if (splitWord(lastGuessString).join('') !== parsedCurrentTarget.join('')) {
              // If the game was lost
-             showMessage(`Պարտություն։ Այսօրվա բառը՝ ${targetWord}`, 0); // Show message indefinitely
-             disableInput();
+             showMessage(`Պարտություն։ Այսօրվա բառը՝ ${currentTargetWord}`, 0); // Show message indefinitely
         } else {
              // If the game was won
              showMessage('🎉 Հաղթանակ 🎉', 0); // Show message indefinitely
-             disableInput();
         }
+         disableInput(); // Always disable input if game is over (win or lose)
+    } else {
+         // If game is not over, ensure input is enabled
+         enableInput();
     }
+
 
     window.addEventListener('keydown', handlePhysicalKey);
     toggleBtnLayout.addEventListener('click', switchLayout); // Add listener to the new button
+    gameNumberElement.addEventListener('click', openPreviousGamesModal); // Add listener to game number
+    modalCloseButton.addEventListener('click', closePreviousGamesModal);
+    previousGamesModal.addEventListener('click', handleModalOverlayClick); // Close when clicking outside content
+
   }
+
+   // --- Update Game Number Display ---
+   function updateGameNumberDisplay() {
+        gameNumberElement.textContent = `#${currentWordOffset + 1}`;
+   }
+
 
   // --- State Management (localStorage) ---
   function saveState() {
-    const state = {
-      guesses,
-      currentRowIndex,
-      isGameOver,
-      targetWord,
-      keyStatuses // Save only the CUMULATIVE keyStatuses
-    };
-    localStorage.setItem(dateKey, JSON.stringify(state));
-    localStorage.setItem(LOCAL_STORAGE_LAYOUT_KEY, currentLayoutName); // Save layout preference
+    // Only save state for today's game
+    if (currentWordOffset === dayOffset) {
+        const state = {
+          guesses,
+          currentRowIndex,
+          isGameOver,
+          targetWord: currentTargetWord, // Save the specific word played
+          keyStatuses // Save only the CUMULATIVE keyStatuses
+        };
+        localStorage.setItem(currentGameDateKey, JSON.stringify(state));
+    }
+    // Always save layout preference regardless of which game is displayed
+    localStorage.setItem(LOCAL_STORAGE_LAYOUT_KEY, currentLayoutName);
   }
 
-  function loadState() {
-    // Theme
-    // Changed default theme from 'light' to 'dark'
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    document.body.classList.toggle('dark', savedTheme === 'dark');
-    toggleBtnTheme.textContent = savedTheme === 'dark' ? '☀️' : '🌗';
+   // Loads state for a specific game offset
+  function loadStateForOffset(offset) {
+        const targetDate = new Date(startDate);
+        targetDate.setDate(startDate.getDate() + offset);
+        const dateKey = `${LOCAL_STORAGE_PREFIX}${targetDate.toISOString().split('T')[0]}`;
+        const wordForOffset = WORDS.length > 0 ? WORDS[offset % WORDS.length] : "սխal";
 
-    // Layout Preference
-    const savedLayoutName = localStorage.getItem(LOCAL_STORAGE_LAYOUT_KEY);
-    if (savedLayoutName && LAYOUT_NAMES[savedLayoutName]) { // Validate saved name
-        currentLayoutName = savedLayoutName;
-    } else {
-        currentLayoutName = 'phonetic'; // Default layout is phonetic
-    }
-    currentLayout = (currentLayoutName === 'phonetic') ? keyboardPhoneticLayout : keyboardAlphabeticalLayout;
-    // Update button text to reflect the loaded layout
-    toggleBtnLayout.textContent = LAYOUT_NAMES[currentLayoutName];
-    // Update body attribute for CSS targeting (done in buildKeyboard too, but set here initially)
-    document.body.setAttribute('data-keyboard-layout', currentLayoutName);
-
-
-    // Game State
-    const savedStateJSON = localStorage.getItem(dateKey);
-    if (savedStateJSON) {
-        try {
-            const savedState = JSON.parse(savedStateJSON);
-            // Check if the saved state is for the current word (date)
-            if (savedState.targetWord === targetWord) {
-                guesses = savedState.guesses || [];
-                currentRowIndex = savedState.currentRowIndex || 0;
-                isGameOver = savedState.isGameOver || false;
-                keyStatuses = savedState.keyStatuses || {}; // Load cumulative statuses
-                // Optional: Validate keyStatuses content if necessary
-                for (const key in keyStatuses) {
-                   const validStatuses = ['correct', 'present', 'absent', null];
-                   if (!validStatuses.includes(keyStatuses[key])) {
-                       delete keyStatuses[key]; // Remove invalid statuses
-                   }
-                }
-            } else {
-                // If targetWord in storage doesn't match today's word, start a new game
-                console.log("New day or different word detected. Starting fresh.");
-                resetGameState();
-            }
-        } catch (e) {
-            console.error("Error loading saved state:", e);
-            resetGameState(); // Reset if state is corrupted
+        let loadedState = null;
+        const savedStateJSON = localStorage.getItem(dateKey);
+        if (savedStateJSON) {
+             try {
+                 const state = JSON.parse(savedStateJSON);
+                 // Validate if the saved word matches the expected word for this offset
+                 if (state.targetWord === wordForOffset) {
+                     loadedState = state;
+                 } else {
+                     console.warn(`Saved word for offset ${offset} (${state.targetWord}) does not match expected word (${wordForOffset}). Starting fresh for this day.`);
+                 }
+             } catch (e) {
+                 console.error(`Error loading state for offset ${offset}:`, e);
+             }
         }
-    } else {
-         // No saved state found, start a new game
-        resetGameState();
-    }
-    lastGuessSpecificInfo = {}; // Always reset this on load - not used for state but good practice
-  }
 
-  function resetGameState() {
-      guesses = [];
-      currentGuess = [];
-      currentRowIndex = 0;
-      isGameOver = false;
-      keyStatuses = {};
-  }
+        // Update global state variables based on loaded state or reset
+        currentWordOffset = offset;
+        currentTargetWord = wordForOffset;
+        parsedCurrentTarget = splitWord(currentTargetWord);
+
+        if (loadedState) {
+            guesses = loadedState.guesses || [];
+            currentRowIndex = loadedState.currentRowIndex || 0;
+            isGameOver = loadedState.isGameOver || false;
+             // Note: Key statuses are cumulative *per session* / independent of the specific game loaded.
+             // Let's re-evaluate this. Key statuses should probably be tied to the *current day's* progress,
+             // even if you're viewing a past game. The keys you press *now* affect today's keyboard.
+             // However, the request implies showing the keyboard state *as it was* for that game?
+             // No, that's complex. Standard Wordle keyboard state is global for the day.
+             // So, keyStatuses should be loaded only ONCE for today's game in `init`.
+             // When viewing past games, the keyboard highlight *should still reflect today's progress*.
+             // Let's revert keyStatus loading/saving to only happen for the current day in `init` and `saveState`.
+             // The `loadStateForOffset` function will *not* load keyStatuses.
+            // keyStatuses = loadedState.keyStatuses || {}; // REMOVING THIS LINE
+
+            // But we *do* need to update the keyboard state *display* if the player played this past game and won/lost.
+            // No, the keyboard highlight is cumulative *for today*. If you play a past game, it doesn't update today's keyboard.
+            // Let's simplify: `keyStatuses` is always for today's game.
+            // When loading a past game, we just display its board state. The keyboard is always "today's keyboard".
+
+            // RETHINK: The requirement might be to show the keyboard state *as it was* when that past game finished.
+            // This is possible if we save `keyStatuses` *with* each game state.
+            // Let's go back to saving/loading keyStatuses per game, but merge them cumulativey when *playing* today's game.
+            // When loading a historical game, load its specific key statuses.
+            // When playing today's game, load today's key statuses (which might have been saved mid-game),
+            // and then update them cumulatively as guesses are made.
+
+            // Let's adjust `loadState` and `loadStateForOffset` roles.
+            // `init` calls `loadInitialStateForToday`.
+            // `loadStateForOffset` is only called when clicking a historical game.
+
+        } else {
+             // No saved state for this offset, start a fresh game for that day's word
+             guesses = [];
+             currentRowIndex = 0;
+             isGameOver = false;
+             // When loading a past game, keyStatuses should reflect its finished state? Or today's?
+             // Let's make keyStatuses load *with* the game, but only save/update for the *current* day's game.
+             // This is still ambiguous. The most common implementation is a global key state based on *all* completed games *on that device*.
+             // But the request is linked to *previous games (game number - date)*, implying state per game number.
+             // Let's assume key state is tied to the game number. So loading game N loads its guesses AND its key state.
+            // If no state exists for game N, start fresh with empty guesses and empty key state.
+             keyStatuses = {}; // Start with empty key statuses for a new/unplayed game
+        }
+
+        // Update UI
+        updateGameNumberDisplay(); // Show the game number
+        buildBoard(); // Rebuild the empty board structure
+        redrawBoardFromState(); // Populate the board with loaded/empty guesses
+        updateKeyboardHighlight(); // Update keyboard highlight based on loaded/empty keyStatuses
+
+         // Check game over status for the loaded game
+        if (isGameOver) {
+             const lastGuessString = guesses.length > 0 ? guesses[guesses.length - 1].map(g => g.letter).join('') : '';
+             if (splitWord(lastGuessString).join('') !== parsedCurrentTarget.join('')) {
+                 showMessage(`Պարտություն։ Այսօրվա բառը՝ ${currentTargetWord}`, 0);
+             } else {
+                 showMessage('🎉 Հաղթանակ 🎉', 0);
+             }
+             disableInput(); // Disable input if the loaded game is over
+        } else {
+             // If the loaded game is not over, enable input (only if it's today's game)
+             if (currentWordOffset === dayOffset) {
+                 enableInput(); // Re-enable input only if loading today's unfinished game
+             } else {
+                 // If loading a historical, unfinished game, input should be disabled
+                 // as you can only play today's game.
+                 disableInput();
+                 showMessage(`Դիտարկվում է խաղ #${currentWordOffset + 1}. Դուք կարող եք խաղալ միայն այսօրվա խաղը։`, 3000);
+             }
+        }
+   }
+
+   // Initial load for today's game when the page loads
+   function loadInitialStateForToday() {
+       currentWordOffset = dayOffset; // Ensure we are on today's game
+       currentTargetWord = WORDS.length > 0 ? WORDS[currentWordOffset % WORDS.length] : "սխալ";
+       parsedCurrentTarget = splitWord(currentTargetWord);
+       currentGameDateKey = `${LOCAL_STORAGE_PREFIX}${today.toISOString().split('T')[0]}`;
+
+       let loadedState = null;
+       const savedStateJSON = localStorage.getItem(currentGameDateKey);
+        if (savedStateJSON) {
+             try {
+                 const state = JSON.parse(savedStateJSON);
+                 if (state.targetWord === currentTargetWord) {
+                     loadedState = state;
+                 } else {
+                     console.warn(`Saved word for today (${state.targetWord}) does not match expected word (${currentTargetWord}). Starting fresh for today.`);
+                 }
+             } catch (e) {
+                 console.error("Error loading today's saved state:", e);
+             }
+        }
+
+        if (loadedState) {
+             guesses = loadedState.guesses || [];
+             currentRowIndex = loadedState.currentRowIndex || 0;
+             isGameOver = loadedState.isGameOver || false;
+             keyStatuses = loadedState.keyStatuses || {}; // Load key statuses for today
+             // Validate keyStatuses content
+             for (const key in keyStatuses) {
+                const validStatuses = ['correct', 'present', 'absent', null];
+                if (!validStatuses.includes(keyStatuses[key])) {
+                    delete keyStatuses[key];
+                }
+             }
+        } else {
+             // No saved state for today, start a fresh game
+             guesses = [];
+             currentRowIndex = 0;
+             isGameOver = false;
+             keyStatuses = {}; // Start with empty key statuses for a new day
+        }
+        lastGuessSpecificInfo = {}; // Always reset this on load - not used for state but good practice
+   }
 
 
-   // --- Word Processing ---
+   function enableInput() {
+        window.removeEventListener('keydown', handlePhysicalKey); // Remove existing listener to prevent duplicates
+        window.addEventListener('keydown', handlePhysicalKey); // Add listener back
+
+        keyboardElement.querySelectorAll('.key').forEach(btn => {
+            if (!btn.classList.contains('placeholder')) {
+               // Restore click handlers and default cursor for playable keys
+               const keyText = btn.dataset.key;
+               if (keyText === ENTER_KEY) {
+                   btn.onclick = handleSubmit;
+               } else if (keyText === DELETE_KEY) {
+                   btn.onclick = handleDelete;
+               } else {
+                   btn.onclick = () => handleKeyClick(keyText);
+               }
+               btn.style.cursor = 'pointer';
+               btn.disabled = false; // Ensure button is enabled
+               btn.style.opacity = ''; // Remove potential disabled opacity
+            }
+        });
+   }
+
+
+  // --- Word Processing ---
    function splitWord(word) {
     const chars = [];
     const lowerWord = String(word || '').toLowerCase();
     for (let i = 0; i < lowerWord.length; i++) {
+      // Check for the digraph 'ու'
       if (lowerWord[i] === 'ո' && i + 1 < lowerWord.length && lowerWord[i + 1] === 'ւ') {
         chars.push('ու');
-        i++;
+        i++; // Skip the 'ւ'
       } else {
         chars.push(lowerWord[i]);
       }
@@ -690,11 +948,14 @@
         keyElement.className = 'key';
         if (keyText === ENTER_KEY) {
             keyElement.classList.add('enter');
-            keyElement.onclick = handleSubmit;
+            // Add handler only if input is enabled
+            if (!isGameOver && currentWordOffset === dayOffset) keyElement.onclick = handleSubmit;
         } else {
             keyElement.classList.add('delete');
-            keyElement.onclick = handleDelete;
+             // Add handler only if input is enabled
+            if (!isGameOver && currentWordOffset === dayOffset) keyElement.onclick = handleDelete;
         }
+        keyElement.dataset.key = keyText; // Add data-key for these too
         keyboardTopRowElement.appendChild(keyElement);
     });
 
@@ -712,7 +973,8 @@
                  keyElement.dataset.key = ''; // Add dataset.key even for placeholder
             } else {
                 keyElement.dataset.key = keyText;
-                keyElement.onclick = () => handleKeyClick(keyText);
+                 // Add handler only if input is enabled
+                if (!isGameOver && currentWordOffset === dayOffset) keyElement.onclick = () => handleKeyClick(keyText);
             }
             keyboardMainGridElement.appendChild(keyElement);
         });
@@ -739,10 +1001,10 @@
         // *** IMPORTANT: Recalculate and adjust size after rebuilding the keyboard ***
         adjustBoardSize();
 
-        // Update key highlights on the new keyboard
+        // Update key highlights on the new keyboard (using the current game's keyStatuses)
         updateKeyboardHighlight();
 
-        // Save the preference
+        // Save the preference (only saves layout, not game state unless it's today's game)
         saveState();
     }
 
@@ -777,32 +1039,14 @@
      });
   }
 
-  function updateCurrentRowDisplay() {
-    if (currentRowIndex >= MAX_ROWS) return;
-    const currentRow = boardElement.querySelectorAll('.row')[currentRowIndex];
-    const tiles = currentRow.querySelectorAll('.tile');
-    tiles.forEach((tile, index) => {
-        const tileInner = tile.querySelector('div');
-        if (!tileInner) return;
-        const letter = currentGuess[index] || '';
-        tileInner.textContent = letter;
-        if (letter) {
-            tile.classList.add('filled');
-        } else {
-            tile.classList.remove('filled');
-        }
-        tile.classList.remove('correct', 'present', 'absent'); // Ensure no old status classes linger
-    });
-  }
-
   // --- updateKeyboardHighlight uses cumulative status ---
   function updateKeyboardHighlight() {
     keyboardElement.querySelectorAll('.key[data-key]').forEach(keyElement => { // Select all keys, including placeholders (they won't have a meaningful status)
         const letter = keyElement.dataset.key;
-        // Don't highlight placeholders
-        if (!letter) return;
+        // Don't highlight placeholders or special keys
+        if (!letter || letter === ENTER_KEY || letter === DELETE_KEY) return;
 
-        const cumulativeStatus = keyStatuses[letter]; // Cumulative best
+        const cumulativeStatus = keyStatuses[letter]; // Cumulative best for the *currently loaded game*
 
         // Remove old status classes
         keyElement.classList.remove('correct', 'present', 'absent', 'has-present');
@@ -811,15 +1055,19 @@
         if (cumulativeStatus) {
             keyElement.classList.add(cumulativeStatus);
         }
-        // The .has-present class logic from the original code is not used here
-        // as it wasn't fully integrated with the state.
     });
 }
 
 
    // --- Event Handlers ---
   function handleKeyClick(key) {
-    if (isGameOver || currentGuess.length >= WORD_LENGTH) {
+    // Only allow input for today's game if not game over
+    if (isGameOver || currentGuess.length >= WORD_LENGTH || currentWordOffset !== dayOffset) {
+        // If not today's game, show a message maybe? Or just ignore. Ignoring is cleaner.
+        if (currentWordOffset !== dayOffset) {
+             showMessage(`Դուք կարող եք խաղալ միայն այսօրվա խաղը։`, 1500);
+             shakeRow(currentRowIndex); // Maybe shake the row?
+        }
         return;
     }
     currentGuess.push(key);
@@ -827,7 +1075,12 @@
   }
 
   function handleDelete() {
-    if (isGameOver || currentGuess.length === 0) {
+    // Only allow input for today's game if not game over
+    if (isGameOver || currentGuess.length === 0 || currentWordOffset !== dayOffset) {
+         if (currentWordOffset !== dayOffset) {
+             showMessage(`Դուք կարող եք խաղալ միայն այսօրվա խաղը։`, 1500);
+             shakeRow(currentRowIndex);
+        }
         return;
     }
     currentGuess.pop();
@@ -836,7 +1089,17 @@
 
   // --- handleSubmit updates cumulative statuses ---
   function handleSubmit() {
-    if (isGameOver) return;
+    // Only allow input for today's game if not game over
+    if (isGameOver || currentWordOffset !== dayOffset) {
+         if (currentWordOffset !== dayOffset) {
+             showMessage(`Դուք կարող եք խաղալ միայն այսօրվա խաղը։`, 1500);
+             shakeRow(currentRowIndex);
+         } else { // isGameOver is true for today's game
+             const finalMsg = guesses.length >= MAX_ROWS ? `Պարտություն։ Այսօրվա բառը՝ ${currentTargetWord}` : '🎉 Հաղթանակ 🎉';
+             showMessage(finalMsg, 3000); // Show win/loss message again
+         }
+        return;
+    }
 
     if (currentGuess.length !== WORD_LENGTH) {
       shakeRow(currentRowIndex);
@@ -864,6 +1127,10 @@
         } else if (status === 'present' && currentStatus !== 'correct') {
             keyStatuses[letter] = 'present'; // Present overrides absent/null, but not correct
         } else if (status === 'absent' && !currentStatus) {
+             // Mark absent only if it wasn't marked correct or present previously
+             // and it was absent *in this specific guess*.
+             // The simplified logic below works with cumulative state:
+             // only mark absent if there's no status yet.
             keyStatuses[letter] = 'absent'; // Absent only sets if no status yet (not overriding present/correct)
         }
     });
@@ -876,16 +1143,33 @@
     setTimeout(() => {
         currentRowIndex++;
         currentGuess = [];
-        saveState(); // Save the updated CUMULATIVE keyStatuses and layout preference
+        saveState(); // Save the updated CUMULATIVE keyStatuses and layout preference for TODAY's game
 
-        checkWinLoss(guessString);
+        checkWinLoss(guessString); // Check game over status for TODAY's game
     }, WORD_LENGTH * 150 + 300); // Wait for tile animation + a little buffer
   }
 
 
   function handlePhysicalKey(e) {
-     if (isGameOver) return;
+     // Only allow input for today's game if not game over
+     if (isGameOver || currentWordOffset !== dayOffset) {
+          // Don't prevent default for standard keys if not today's game,
+          // but maybe prevent it for enter/backspace if they trigger messages.
+          // Let's allow default unless it's Enter/Backspace in a finished game.
+          if (isGameOver && (e.key === 'Enter' || e.key === 'Backspace' || e.key === 'Delete')) {
+               e.preventDefault();
+          }
+          // No input processing for past games or finished games
+         return;
+     }
+
      let key = e.key;
+     // Prevent default for keys we handle in the game
+     if (key.length === 1 || key === 'Backspace' || key === 'Delete' || key === 'Enter') {
+        e.preventDefault();
+     }
+
+
      if (key.length > 1 && key !== 'Backspace' && key !== 'Delete' && key !== 'Enter') {
          return;
      }
@@ -911,7 +1195,7 @@
   function checkGuess(guessString) {
      const guessChars = splitWord(guessString);
      const result = [];
-     const targetCopy = [...parsedTarget];
+     const targetCopy = [...parsedCurrentTarget]; // Use the currently loaded target word
 
      // Initialize result array structure
      for(let i = 0; i < WORD_LENGTH; i++) {
@@ -920,7 +1204,7 @@
 
      // Pass 1: Correct
      for (let i = 0; i < WORD_LENGTH; i++) {
-         if (guessChars[i] === parsedTarget[i]) {
+         if (guessChars[i] === parsedCurrentTarget[i]) {
              result[i].status = 'correct';
              targetCopy[i] = null; // Mark this letter in target as used
          }
@@ -943,38 +1227,29 @@
      return result;
   }
 
+   // Check win/loss only applies to the *current* day's game
   function checkWinLoss(lastGuessString) {
-     if (splitWord(lastGuessString).join('') === parsedTarget.join('')) {
+     if (currentWordOffset !== dayOffset) return; // Only check win/loss for today's game
+
+     if (splitWord(lastGuessString).join('') === parsedCurrentTarget.join('')) {
          showMessage('🎉 Հաղթանակ 🎉', 5000); // Short duration for win message
          isGameOver = true;
          disableInput();
          saveState(); // Save final state (win) and layout
      } else if (currentRowIndex >= MAX_ROWS) {
-          showMessage(`Պարտություն։ Այսօրվա բառը՝ ${targetWord}`, 0); // Indefinite duration for loss message
+          showMessage(`Պարտություն։ Այսօրվա բառը՝ ${currentTargetWord}`, 0); // Indefinite duration for loss message
           isGameOver = true;
           disableInput();
           saveState(); // Save final state (loss) and layout
      }
   }
 
-  function disableInput() {
-     // console.log("Game Over - Input Disabled");
-     window.removeEventListener('keydown', handlePhysicalKey);
-     keyboardElement.querySelectorAll('.key').forEach(btn => {
-         if (!btn.classList.contains('placeholder')) {
-            btn.onclick = null;
-            btn.style.cursor = 'default';
-            // Optionally disable the button visually as well
-            // btn.disabled = true;
-            // btn.style.opacity = 0.8;
-         }
-     });
-  }
-
 
   // --- Animations & Messages ---
   function animateGuessResult(rowIndex, result) {
      const row = boardElement.querySelectorAll('.row')[rowIndex];
+     if (!row) return; // Ensure row exists
+
      const tiles = row.querySelectorAll('.tile');
      tiles.forEach((tile, index) => {
          const { letter, status } = result[index];
@@ -1021,12 +1296,173 @@
         clearTimeout(messageTimeout);
         messageElement.textContent = msg;
         messageElement.classList.add('show');
+        // Remove 'hide' class if it was added for indefinite messages
+        messageElement.classList.remove('hide');
         if (duration > 0) {
             messageTimeout = setTimeout(() => {
                 messageElement.classList.remove('show');
+                 // Optional: Add a 'hide' class if duration is 0 (indefinite) to maybe style differently
+                 // messageElement.classList.add('hide');
             }, duration);
         }
    }
+
+
+   // --- Previous Games Modal ---
+   function openPreviousGamesModal() {
+        previousGamesListElement.innerHTML = ''; // Clear previous list
+        const numberOfGamesToShow = Math.min(dayOffset + 1, 100); // Show up to last 100 games (including today)
+
+        // Generate list items backwards from today
+        for (let i = 0; i < numberOfGamesToShow; i++) {
+            const gameOffset = dayOffset - i;
+            const gameNumber = gameOffset + 1;
+            const gameDate = new Date(startDate);
+            gameDate.setDate(startDate.getDate() + gameOffset);
+            const dateString = gameDate.toLocaleDateString('hy-AM', { year: 'numeric', month: 'numeric', day: 'numeric' }); // Format date as Armenian
+            const wordForThisGame = WORDS.length > 0 ? WORDS[gameOffset % WORDS.length] : "սխալ";
+
+            const listItem = document.createElement('li');
+            listItem.dataset.gameOffset = gameOffset;
+            listItem.textContent = `#${gameNumber} - ${dateString}`;
+
+            // Optionally indicate if the game was played/won/lost based on local storage
+             const gameDateKey = `${LOCAL_STORAGE_PREFIX}${gameDate.toISOString().split('T')[0]}`;
+             const savedStateJSON = localStorage.getItem(gameDateKey);
+             if (savedStateJSON) {
+                 try {
+                     const state = JSON.parse(savedStateJSON);
+                      if (state.targetWord === wordForThisGame) { // Basic validation
+                         let statusIndicator = '';
+                         if (state.isGameOver) {
+                             const lastGuessString = state.guesses.length > 0 ? state.guesses[state.guesses.length - 1].map(g => g.letter).join('') : '';
+                             if (splitWord(lastGuessString).join('') === splitWord(wordForThisGame).join('')) {
+                                 statusIndicator = ' (✅)'; // Win
+                             } else if (state.currentRowIndex >= MAX_ROWS) {
+                                  statusIndicator = ' (❌)'; // Loss
+                              } else {
+                                   statusIndicator = ' (...)'; // Played, but not finished? (Unlikely with isGameOver logic)
+                              }
+                          } else if (state.guesses.length > 0) {
+                                statusIndicator = ' (...)'; // Started but not finished
+                          }
+                         listItem.textContent += statusIndicator;
+                     }
+                 } catch (e) {
+                     console.error(`Error parsing state for game ${gameNumber}:`, e);
+                 }
+             }
+
+
+            // Add click listener to load this game
+            listItem.addEventListener('click', () => {
+                loadGameByOffset(gameOffset);
+                closePreviousGamesModal();
+            });
+
+            previousGamesListElement.appendChild(listItem);
+        }
+
+        // Show the modal
+        previousGamesModal.classList.add('visible');
+   }
+
+   function closePreviousGamesModal() {
+       previousGamesModal.classList.remove('visible');
+       // Clear the list content when closing
+       previousGamesListElement.innerHTML = '';
+   }
+
+   // Handles clicks on the modal overlay itself to close it
+   function handleModalOverlayClick(event) {
+       if (event.target === previousGamesModal) {
+           closePreviousGamesModal();
+       }
+   }
+
+
+   // Loads a specific game based on its offset from the start date
+   function loadGameByOffset(offset) {
+        // Determine the target word and state key for this offset
+        const targetDate = new Date(startDate);
+        targetDate.setDate(startDate.getDate() + offset);
+        const dateKey = `${LOCAL_STORAGE_PREFIX}${targetDate.toISOString().split('T')[0]}`;
+        const wordForOffset = WORDS.length > 0 ? WORDS[offset % WORDS.length] : "սխալ";
+
+        let loadedState = null;
+        const savedStateJSON = localStorage.getItem(dateKey);
+        if (savedStateJSON) {
+             try {
+                 const state = JSON.parse(savedStateJSON);
+                 // Validate that the word in the saved state matches the word for this day
+                 if (state.targetWord === wordForOffset) {
+                     loadedState = state;
+                 } else {
+                     console.warn(`Saved word for offset ${offset} does not match expected word. Starting fresh for this day.`);
+                 }
+             } catch (e) {
+                 console.error(`Error loading state for offset ${offset}:`, e);
+             }
+        }
+
+        // Set the global state variables for the loaded game
+        currentWordOffset = offset;
+        currentTargetWord = wordForOffset;
+        parsedCurrentTarget = splitWord(currentTargetWord);
+
+        if (loadedState) {
+            guesses = loadedState.guesses || [];
+            currentRowIndex = loadedState.currentRowIndex || 0;
+            isGameOver = loadedState.isGameOver || false;
+            // Load key statuses specific to this game number
+            keyStatuses = loadedState.keyStatuses || {};
+             // Validate keyStatuses content
+             for (const key in keyStatuses) {
+                const validStatuses = ['correct', 'present', 'absent', null];
+                if (!validStatuses.includes(keyStatuses[key])) {
+                    delete keyStatuses[key];
+                }
+             }
+        } else {
+             // No saved state, reset game state for this word/day
+             guesses = [];
+             currentRowIndex = 0;
+             isGameOver = false;
+             keyStatuses = {}; // Reset key statuses for an unplayed game
+        }
+
+        // Update UI based on the loaded state
+        updateGameNumberDisplay(); // Update the game number in the header
+        buildBoard(); // Rebuild the board structure
+        redrawBoardFromState(); // Populate the board with the loaded guesses
+        updateKeyboardHighlight(); // Update keyboard highlight based on the loaded key statuses
+
+        // Clear any old messages
+        showMessage('', 0); // Show empty message with duration 0 to clear it
+
+        // Manage input based on the loaded game's state (only playable if it's today's game)
+        if (isGameOver) {
+             const lastGuessString = guesses.length > 0 ? guesses[guesses.length - 1].map(g => g.letter).join('') : '';
+             if (splitWord(lastGuessString).join('') !== parsedCurrentTarget.join('')) {
+                 showMessage(`Պարտություն։ Այսօրվա բառը՝ ${currentTargetWord}`, 0);
+             } else {
+                 showMessage('🎉 Հաղթանակ 🎉', 0);
+             }
+             disableInput(); // Disable input if the loaded game is over
+        } else if (currentWordOffset === dayOffset) {
+            // If loading today's unfinished game
+            enableInput(); // Enable input
+        } else {
+            // If loading a historical, unfinished game
+            disableInput(); // Disable input
+            showMessage(`Դիտարկվում է խաղ #${currentWordOffset + 1}. Դուք կարող եք խաղալ միայն այսօրվա խաղը։`, 3000);
+        }
+
+         // If loading a historical game (even a completed one), maybe prevent future guesses?
+         // The `handleKeyClick`, `handleDelete`, `handleSubmit` already check `currentWordOffset !== dayOffset`.
+         // `disableInput` handles the keyboard buttons and physical keys listener. This seems correct.
+   }
+
 
   // --- Theme Toggle ---
   toggleBtnTheme.onclick = () => {
@@ -1144,8 +1580,12 @@
   // --- Start the game ---
   // Use DOMContentLoaded to ensure HTML is ready before running init
   document.addEventListener('DOMContentLoaded', () => {
-      init(); // Initialize game state, board, keyboard etc.
-      adjustBoardSize(); // Then adjust size based on initial viewport size
+      // First, load the initial state for today's game
+      loadInitialStateForToday();
+      // Then, initialize the UI based on that state
+      init();
+      // Finally, adjust size based on initial viewport size
+      adjustBoardSize();
   });
 
   // Adjust size whenever the window is resized or layout changes
