@@ -82,10 +82,10 @@
     }
      .subtitle a {
         color: inherit; /* Inherit color from subtitle */
-        text-decoration: none;
+        /* Removed text-decoration: none; */
      }
      .subtitle a:hover {
-        text-decoration: underline;
+        text-decoration: underline; /* Keep underline on hover */
      }
 
 
@@ -195,7 +195,7 @@
 
     .key {
       min-height: 40px;
-      /* Adjusted font-size clamp to allow letters to be larger */
+      /* Adjusted font-size clamp to allow single letters to be larger */
       font-size: clamp(1.2rem, 5vw, 1.8rem);
       font-weight: bold;
       border: 3px solid transparent;
@@ -219,8 +219,8 @@
 
     .key.enter,
     .key.delete {
-      /* Font size for Enter/Delete keys remains smaller as they have longer text */
-      font-size: clamp(0.7rem, 2.5vw, 0.9rem);
+      /* Increased font size for Enter/Delete keys */
+      font-size: clamp(0.9rem, 3.5vw, 1.2rem); /* Adjusted clamp values */
       color: white;
       border-width: 3px;
       border-style: solid;
@@ -420,8 +420,8 @@
             font-size: clamp(1rem, 3.5vw, 1.3rem); /* Adjusted clamp values */
         }
         .key.enter, .key.delete {
-             /* Keep smaller font size for Enter/Delete on small screens */
-            font-size: clamp(0.65rem, 2.3vw, 0.8rem);
+             /* Increased font size for Enter/Delete on small screens */
+            font-size: clamp(0.8rem, 3vw, 1.1rem); /* Adjusted clamp values */
         }
         /* Adjust button positions relative to main-content padding/width */
         .main-content > #toggle-theme {
@@ -1066,7 +1066,21 @@
        // Also account for padding on the main content div
        nonBoardHeight += parseFloat(mainContentStyle.paddingTop) || 0;
        nonBoardHeight += parseFloat(mainContentStyle.paddingBottom) || 0;
-       // Note: messageContainer is fixed position, its height doesn't affect flow space
+       /* Message container is fixed position, its height doesn't affect flow space
+          unless we need to ensure there's space below it, but standard flow should
+          push things down correctly if it's positioned fixed.
+          Let's re-evaluate if its height should be factored in.
+          If it's fixed, it's out of flow. The space it covers *visually* might obscure
+          content, but doesn't affect the calculation of available space *between*
+          flow elements.
+          However, if the message is very tall, it might overlay the top of the board.
+          The current fixed position means it doesn't contribute to pushing the board down.
+          Let's keep it out of the `nonBoardHeight` calculation for now, as it's common
+          for fixed elements to be outside the normal layout calculation.
+          If issues arise, we might need to add padding-top to main-content dynamically
+          or increase the buffer.
+       */
+
 
       // Account for the board container's own vertical margins
       const boardContainerStyle = getComputedStyle(boardContainer);
