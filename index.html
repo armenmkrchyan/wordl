@@ -704,8 +704,7 @@
         });
     });
 
-    // Re-apply grid columns based on the current layout
-    // We do this by setting a data attribute on the body and using CSS
+    // Set body attribute for CSS targeting
     document.body.setAttribute('data-keyboard-layout', currentLayoutName);
   }
 
@@ -722,6 +721,9 @@
 
         // Rebuild the keyboard with the new layout
         buildKeyboard();
+
+        // *** IMPORTANT: Recalculate and adjust size after rebuilding the keyboard ***
+        adjustBoardSize();
 
         // Update key highlights on the new keyboard
         updateKeyboardHighlight();
@@ -1072,46 +1074,28 @@
       const buffer = 8;
       const maxTileSizeBasedOnHeight = (availableBoardHeight - (MAX_ROWS - 1) * rowGap - buffer) / MAX_ROWS;
 
-      // Calculate the required board width based on the max tile size from height
+      // Calculate the required board width to fit this max tile size horizontally
       const requiredBoardWidthFromHeight = (WORD_LENGTH * maxTileSizeBasedOnHeight) + (WORD_LENGTH - 1) * columnGap;
 
-      // Get the default max width defined in CSS for the board container
-      // We can get this from the element's computed style *before* we set an inline style
-      const tempMaxWidth = boardContainer.style.maxWidth; // Save current inline style
-      boardContainer.style.maxWidth = ''; // Temporarily remove inline style
-      const cssMaxWidth = parseFloat(getComputedStyle(boardContainer).maxWidth);
-      // If cssMaxWidth is NaN or 0 (e.g. not set), fall back to a default or ignore it if we only want to grow
-      const finalCssMaxWidth = isNaN(cssMaxWidth) || cssMaxWidth === 0 ? Infinity : cssMaxWidth;
-      boardContainer.style.maxWidth = tempMaxWidth; // Restore inline style
+
+      // Determine the effective max width for the board.
+      // This should be the minimum of the width needed to fit vertically
+      // AND the max width allowed by the main content container.
+      // The max width of the board container itself is handled by the CSS.
+      // The JS calculation is primarily to *shrink* the board when vertical space is limited,
+      // ensuring it fits without scroll. If vertical space is ample, we let CSS max-width take over.
+
+       // Get the computed CSS max-width of the board container
+       const tempMaxWidth = boardContainer.style.maxWidth; // Save current inline style
+       boardContainer.style.maxWidth = ''; // Temporarily remove inline style to get CSS value
+       const cssMaxWidthForBoardContainer = parseFloat(getComputedStyle(boardContainer).maxWidth);
+       const finalCssMaxWidth = isNaN(cssMaxWidthForBoardContainer) ? Infinity : cssMaxWidthForBoardContainer; // Treat NaN as no CSS limit
+       boardContainer.style.maxWidth = tempMaxWidth; // Restore inline style
 
 
-      // The desired width is the maximum of the width required by vertical fit
-      // and the standard CSS max width (when we want it to grow beyond its default on large screens).
-      // Or, if we only want it to shrink on small screens but respect the CSS max-width on large screens,
-      // then the logic is slightly different. The previous logic (`Math.min(requiredBoardWidthFromHeight, cssMaxWidth)`)
-      // was for shrinking *or* staying at CSS max.
-      // If the request is "if there is a space available, make board larger", this implies
-      // the board container might need a `max-width` *larger* than the CSS default.
-      // However, the current `max-width: 550px;` on `.main-content` (which contains the board)
-      // effectively limits the board's width anyway, as it's `width: 100%;` of its container.
-      // So, the board's actual maximum possible width is `min(requiredBoardWidthFromHeight, main-content's width)`.
-
-      // Let's calculate the maximum available horizontal space for the board within main-content
-      const mainContentPaddingHorizontal = parseFloat(mainContentStyle.paddingLeft) + parseFloat(mainContentStyle.paddingRight);
-      const availableBoardWidthHorizontal = parseFloat(mainContentStyle.width) - mainContentPaddingHorizontal;
-
-
-      // The tile size is constrained by BOTH vertical space and horizontal space.
-      // maxTileSizeBasedOnHeight is calculated based on vertical space.
-      // maxTileSizeBasedOnWidth is calculated based on the available horizontal space within main-content.
-      const maxTileSizeBasedOnWidth = (availableBoardWidthHorizontal - (WORD_LENGTH - 1) * columnGap) / WORD_LENGTH;
-
-
-      // The effective max tile size is the smaller of the two constraints.
-      const effectiveMaxTileSize = Math.min(maxTileSizeBasedOnHeight, maxTileSizeBasedOnWidth);
-
-      // Calculate the board width based on the effective max tile size
-      const finalBoardWidth = (WORD_LENGTH * effectiveMaxTileSize) + (WORD_LENGTH - 1) * columnGap;
+      // The target width is the smaller of the width required for vertical fit
+      // and the CSS max-width defined for the board-container.
+      const targetWidth = Math.min(requiredBoardWidthFromHeight, finalCssMaxWidth);
 
 
       // Apply the calculated width as max-width to the board container
@@ -1119,43 +1103,12 @@
       const minReasonableTileSize = 30;
       const minReasonableBoardWidth = (WORD_LENGTH * minReasonableTileSize) + (WORD_LENGTH - 1) * columnGap;
 
-
-      if (effectiveMaxTileSize > minReasonableTileSize && finalBoardWidth > 0) {
-          // Apply the calculated width to the board container
-          // boardContainer.style.maxWidth = `${finalBoardWidth}px`; // This might conflict with main-content max-width
-          // Instead, let's just let the board take 100% of its container and rely on
-          // making the *container* (board-container) grow up to the calculated size,
-          // but constrained by main-content's max-width.
-
-          // The calculation already respects horizontal limits implicitly because we used
-          // mainContentStyle.width for `availableBoardWidthHorizontal`.
-
-          // Let's simplify: The calculated `requiredBoardWidthFromHeight` tells us
-          // how wide the board *needs* to be to fit vertically.
-          // If this needed width is *less* than the current max width of the board container,
-          // then we *must* shrink it to fit vertically.
-          // If this needed width is *more* than the current max width, we can let it grow,
-          // but it's still capped by the `main-content`'s max width.
-          // Let's go back to the min logic, but use the CSS max-width of the board container
-          // as the upper limit for shrinking/growing within.
-
-           // Recalculate using the CSS max-width correctly
-           const cssMaxWidthForBoardContainer = parseFloat(getComputedStyle(boardContainer).maxWidth) || Infinity; // Get CSS max-width
-           const targetWidth = Math.min(requiredBoardWidthFromHeight, cssMaxWidthForBoardContainer); // Target is minimum of vertical need and CSS limit
-
-           // Apply the width if it's reasonable
-           if (targetWidth > minReasonableBoardWidth && targetWidth > 0) {
-               boardContainer.style.maxWidth = `${targetWidth}px`;
-               // console.log(`Adjusted: Viewport H=${viewportHeight.toFixed(1)}, Needed W (Vert)=${requiredBoardWidthFromHeight.toFixed(1)}, CSS MaxW=${cssMaxWidthForBoardContainer.toFixed(1)}, Target W=${targetWidth.toFixed(1)}`);
-           } else {
-                boardContainer.style.maxWidth = ''; // Revert to CSS
-                // console.log(`Default: Viewport H=${viewportHeight.toFixed(1)}, Needed W (Vert)=${requiredBoardWidthFromHeight.toFixed(1)}, CSS MaxW=${cssMaxWidthForBoardContainer.toFixed(1)}, Target W=${targetWidth.toFixed(1)} (Reverted)`);
-           }
-
+      if (targetWidth > minReasonableBoardWidth && targetWidth > 0) {
+          boardContainer.style.maxWidth = `${targetWidth}px`;
+          // console.log(`Adjusted: Viewport H=${viewportHeight.toFixed(1)}, Needed W (Vert)=${requiredBoardWidthFromHeight.toFixed(1)}, CSS MaxW=${finalCssMaxWidth.toFixed(1)}, Target W=${targetWidth.toFixed(1)}`);
       } else {
-          // If calculated width is too small or invalid, revert to CSS
-          boardContainer.style.maxWidth = ''; // Revert to CSS value
-           // console.log(`Default: Viewport H=${viewportHeight.toFixed(1)}, Non-Board H=${nonBoardHeight.toFixed(1)}, Board H=${availableBoardHeight.toFixed(1)}, Tile=${effectiveMaxTileSize.toFixed(1)}, Board W=${finalBoardWidth.toFixed(1)} (Reverted)`);
+           boardContainer.style.maxWidth = ''; // Revert to CSS
+           // console.log(`Default: Viewport H=${viewportHeight.toFixed(1)}, Needed W (Vert)=${requiredBoardWidthFromHeight.toFixed(1)}, CSS MaxW=${finalCssMaxWidth.toFixed(1)}, Target W=${targetWidth.toFixed(1)} (Reverted)`);
       }
   }
 
