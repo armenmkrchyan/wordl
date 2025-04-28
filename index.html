@@ -319,7 +319,7 @@
       font-weight: bold;
       background-color: #333;
       color: white;
-      border-radius: 5样的 5px;
+      border-radius: 5px;
       visibility: hidden;
       opacity: 0;
       transition: visibility 0s 1.5s, opacity 1.5s linear;
@@ -531,7 +531,7 @@
             right: 5px; /* Maintain right position */
         }
         .main-content > #toggle-layout {
-            padding: 44px 7px; /* Reduced padding */
+            padding: 4px 7px; /* Reduced padding */
             font-size: 0.8rem;
             top: 5px;
             left: 5px; /* Adjust position to the left */
@@ -653,64 +653,37 @@
   const today = new Date();
   today.setHours(0, 0, 0, 0); // Normalize today's date to midnight
   const dayOffset = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
-  // Initial target word is always today's word based on the offset
-  let currentWordOffset = dayOffset; // Track which game number is currently loaded
-  let currentTargetWord = WORDS.length > 0 ? WORDS[currentWordOffset % WORDS.length] : "սխալ";
-  let parsedCurrentTarget = splitWord(currentTargetWord);
-  // The current game's local storage key
-  let currentGameDateKey = `${LOCAL_STORAGE_PREFIX}${today.toISOString().split('T')[0]}`;
+  // Initial values (will be set by loadGameByOffset)
+  let currentWordOffset;
+  let currentTargetWord;
+  let parsedCurrentTarget;
+  let currentGameDateKey; // Local storage key for the currently loaded game
 
 
   // --- Game State Variables ---
-  let guesses = [];
-  let currentGuess = [];
-  let currentRowIndex = 0;
-  let isGameOver = false;
+  let guesses;
+  let currentGuess;
+  let currentRowIndex;
+  let isGameOver;
   let messageTimeout;
-  // Stores CUMULATIVE best status: {'letter': 'correct' | 'present' | 'absent'}
-  let keyStatuses = {};
+  // Stores CUMULATIVE best status: {'letter': 'correct' | 'present' | 'absent'} for the *currently loaded game*
+  let keyStatuses;
   // Track current layout state
-  // Use the saved layout preference as default, if not found, use 'phonetic'
-  let currentLayoutName = localStorage.getItem(LOCAL_STORAGE_LAYOUT_KEY) || 'phonetic';
+  let currentLayoutName = localStorage.getItem(LOCAL_STORAGE_LAYOUT_KEY) || 'phonetic'; // Default layout is phonetic
   let currentLayout = (currentLayoutName === 'phonetic') ? keyboardPhoneticLayout : keyboardAlphabeticalLayout;
 
 
   // --- Initialization ---
   function init() {
-    loadState(); // Load theme, layout preference, and game state for *today* by default
-
-    // Update the game number display initially
-    updateGameNumberDisplay();
-
-    buildBoard();
-    buildKeyboard(); // Build keyboard based on loaded layout
-    redrawBoardFromState();
-    updateKeyboardHighlight(); // Update keyboard highlight based on loaded keyStatuses
-
-    // Check for game over state on refresh and display final message/disable input
-    // This check is now based on the *loaded* game state
-    if (isGameOver) {
-        const lastGuessString = guesses.length > 0 ? guesses[guesses.length - 1].map(g => g.letter).join('') : '';
-        if (splitWord(lastGuessString).join('') !== parsedCurrentTarget.join('')) {
-             // If the game was lost
-             showMessage(`Պարտություն։ Այսօրվա բառը՝ ${currentTargetWord}`, 0); // Show message indefinitely
-        } else {
-             // If the game was won
-             showMessage('🎉 Հաղթանակ 🎉', 0); // Show message indefinitely
-        }
-         disableInput(); // Always disable input if game is over (win or lose)
-    } else {
-         // If game is not over, ensure input is enabled
-         enableInput();
-    }
-
-
+    // Set up global event listeners (only once)
     window.addEventListener('keydown', handlePhysicalKey);
-    toggleBtnLayout.addEventListener('click', switchLayout); // Add listener to the new button
-    gameNumberElement.addEventListener('click', openPreviousGamesModal); // Add listener to game number
+    toggleBtnLayout.addEventListener('click', switchLayout);
+    gameNumberElement.addEventListener('click', openPreviousGamesModal);
     modalCloseButton.addEventListener('click', closePreviousGamesModal);
-    previousGamesModal.addEventListener('click', handleModalOverlayClick); // Close when clicking outside content
+    previousGamesModal.addEventListener('click', handleModalOverlayClick);
+    // Theme toggle is already set up in loadState
 
+    // The initial game load and UI build happen outside init() in DOMContentLoaded
   }
 
    // --- Update Game Number Display ---
@@ -721,14 +694,14 @@
 
   // --- State Management (localStorage) ---
   function saveState() {
-    // Only save state for today's game
+    // Only save state if the currently loaded game is today's game
     if (currentWordOffset === dayOffset) {
         const state = {
           guesses,
           currentRowIndex,
           isGameOver,
           targetWord: currentTargetWord, // Save the specific word played
-          keyStatuses // Save only the CUMULATIVE keyStatuses
+          keyStatuses // Save key statuses for this game number
         };
         localStorage.setItem(currentGameDateKey, JSON.stringify(state));
     }
@@ -736,12 +709,15 @@
     localStorage.setItem(LOCAL_STORAGE_LAYOUT_KEY, currentLayoutName);
   }
 
-   // Loads state for a specific game offset
-  function loadStateForOffset(offset) {
+
+   // Loads a specific game based on its offset from the start date
+   // This function now handles state loading AND UI building/updating
+   function loadGameByOffset(offset) {
+        // Determine the target word and state key for this offset
         const targetDate = new Date(startDate);
         targetDate.setDate(startDate.getDate() + offset);
         const dateKey = `${LOCAL_STORAGE_PREFIX}${targetDate.toISOString().split('T')[0]}`;
-        const wordForOffset = WORDS.length > 0 ? WORDS[offset % WORDS.length] : "սխal";
+        const wordForOffset = WORDS.length > 0 ? WORDS[offset % WORDS.length] : "սխալ";
 
         let loadedState = null;
         const savedStateJSON = localStorage.getItem(dateKey);
@@ -752,118 +728,25 @@
                  if (state.targetWord === wordForOffset) {
                      loadedState = state;
                  } else {
-                     console.warn(`Saved word for offset ${offset} (${state.targetWord}) does not match expected word (${wordForOffset}). Starting fresh for this day.`);
+                     console.warn(`Saved word for game ${offset + 1} (${state.targetWord}) does not match expected word (${wordForOffset}). Starting fresh for this day.`);
                  }
              } catch (e) {
-                 console.error(`Error loading state for offset ${offset}:`, e);
+                 console.error(`Error loading state for game ${offset + 1}:`, e);
              }
         }
 
-        // Update global state variables based on loaded state or reset
+        // Set the global state variables for the loaded game
         currentWordOffset = offset;
         currentTargetWord = wordForOffset;
-        parsedCurrentTarget = splitWord(currentTargetWord);
+        parsedCurrentTarget = splitWord(currentTargetWord); // Update parsed target
+        currentGameDateKey = dateKey; // Update the current game's LS key
 
         if (loadedState) {
             guesses = loadedState.guesses || [];
             currentRowIndex = loadedState.currentRowIndex || 0;
             isGameOver = loadedState.isGameOver || false;
-             // Note: Key statuses are cumulative *per session* / independent of the specific game loaded.
-             // Let's re-evaluate this. Key statuses should probably be tied to the *current day's* progress,
-             // even if you're viewing a past game. The keys you press *now* affect today's keyboard.
-             // However, the request implies showing the keyboard state *as it was* for that game?
-             // No, that's complex. Standard Wordle keyboard state is global for the day.
-             // So, keyStatuses should be loaded only ONCE for today's game in `init`.
-             // When viewing past games, the keyboard highlight *should still reflect today's progress*.
-             // Let's revert keyStatus loading/saving to only happen for the current day in `init` and `saveState`.
-             // The `loadStateForOffset` function will *not* load keyStatuses.
-            // keyStatuses = loadedState.keyStatuses || {}; // REMOVING THIS LINE
-
-            // But we *do* need to update the keyboard state *display* if the player played this past game and won/lost.
-            // No, the keyboard highlight is cumulative *for today*. If you play a past game, it doesn't update today's keyboard.
-            // Let's simplify: `keyStatuses` is always for today's game.
-            // When loading a past game, we just display its board state. The keyboard is always "today's keyboard".
-
-            // RETHINK: The requirement might be to show the keyboard state *as it was* when that past game finished.
-            // This is possible if we save `keyStatuses` *with* each game state.
-            // Let's go back to saving/loading keyStatuses per game, but merge them cumulativey when *playing* today's game.
-            // When loading a historical game, load its specific key statuses.
-            // When playing today's game, load today's key statuses (which might have been saved mid-game),
-            // and then update them cumulatively as guesses are made.
-
-            // Let's adjust `loadState` and `loadStateForOffset` roles.
-            // `init` calls `loadInitialStateForToday`.
-            // `loadStateForOffset` is only called when clicking a historical game.
-
-        } else {
-             // No saved state for this offset, start a fresh game for that day's word
-             guesses = [];
-             currentRowIndex = 0;
-             isGameOver = false;
-             // When loading a past game, keyStatuses should reflect its finished state? Or today's?
-             // Let's make keyStatuses load *with* the game, but only save/update for the *current* day's game.
-             // This is still ambiguous. The most common implementation is a global key state based on *all* completed games *on that device*.
-             // But the request is linked to *previous games (game number - date)*, implying state per game number.
-             // Let's assume key state is tied to the game number. So loading game N loads its guesses AND its key state.
-            // If no state exists for game N, start fresh with empty guesses and empty key state.
-             keyStatuses = {}; // Start with empty key statuses for a new/unplayed game
-        }
-
-        // Update UI
-        updateGameNumberDisplay(); // Show the game number
-        buildBoard(); // Rebuild the empty board structure
-        redrawBoardFromState(); // Populate the board with loaded/empty guesses
-        updateKeyboardHighlight(); // Update keyboard highlight based on loaded/empty keyStatuses
-
-         // Check game over status for the loaded game
-        if (isGameOver) {
-             const lastGuessString = guesses.length > 0 ? guesses[guesses.length - 1].map(g => g.letter).join('') : '';
-             if (splitWord(lastGuessString).join('') !== parsedCurrentTarget.join('')) {
-                 showMessage(`Պարտություն։ Այսօրվա բառը՝ ${currentTargetWord}`, 0);
-             } else {
-                 showMessage('🎉 Հաղթանակ 🎉', 0);
-             }
-             disableInput(); // Disable input if the loaded game is over
-        } else {
-             // If the loaded game is not over, enable input (only if it's today's game)
-             if (currentWordOffset === dayOffset) {
-                 enableInput(); // Re-enable input only if loading today's unfinished game
-             } else {
-                 // If loading a historical, unfinished game, input should be disabled
-                 // as you can only play today's game.
-                 disableInput();
-                 showMessage(`Դիտարկվում է խաղ #${currentWordOffset + 1}. Դուք կարող եք խաղալ միայն այսօրվա խաղը։`, 3000);
-             }
-        }
-   }
-
-   // Initial load for today's game when the page loads
-   function loadInitialStateForToday() {
-       currentWordOffset = dayOffset; // Ensure we are on today's game
-       currentTargetWord = WORDS.length > 0 ? WORDS[currentWordOffset % WORDS.length] : "սխալ";
-       parsedCurrentTarget = splitWord(currentTargetWord);
-       currentGameDateKey = `${LOCAL_STORAGE_PREFIX}${today.toISOString().split('T')[0]}`;
-
-       let loadedState = null;
-       const savedStateJSON = localStorage.getItem(currentGameDateKey);
-        if (savedStateJSON) {
-             try {
-                 const state = JSON.parse(savedStateJSON);
-                 if (state.targetWord === currentTargetWord) {
-                     loadedState = state;
-                 } else {
-                     console.warn(`Saved word for today (${state.targetWord}) does not match expected word (${currentTargetWord}). Starting fresh for today.`);
-                 }
-             } catch (e) {
-                 console.error("Error loading today's saved state:", e);
-             }
-        }
-
-        if (loadedState) {
-             guesses = loadedState.guesses || [];
-             currentRowIndex = loadedState.currentRowIndex || 0;
-             isGameOver = loadedState.isGameOver || false;
-             keyStatuses = loadedState.keyStatuses || {}; // Load key statuses for today
+            // Load key statuses specific to this game number
+            keyStatuses = loadedState.keyStatuses || {};
              // Validate keyStatuses content
              for (const key in keyStatuses) {
                 const validStatuses = ['correct', 'present', 'absent', null];
@@ -872,40 +755,49 @@
                 }
              }
         } else {
-             // No saved state for today, start a fresh game
+             // No saved state, reset game state for this word/day
              guesses = [];
              currentRowIndex = 0;
              isGameOver = false;
-             keyStatuses = {}; // Start with empty key statuses for a new day
+             keyStatuses = {}; // Reset key statuses for an unplayed game
         }
-        lastGuessSpecificInfo = {}; // Always reset this on load - not used for state but good practice
+
+        // --- Update UI based on the loaded state ---
+        updateGameNumberDisplay(); // Update the game number in the header
+        buildBoard(); // Rebuild the board structure
+        redrawBoardFromState(); // Populate the board with the loaded/empty guesses
+        buildKeyboard(); // Rebuild keyboard to ensure correct handlers are attached/removed
+        updateKeyboardHighlight(); // Update keyboard highlight based on the loaded/empty keyStatuses
+
+
+        // Clear any old messages
+        showMessage('', 0); // Show empty message with duration 0 to clear it
+
+        // Manage input based on the loaded game's state (only playable if it's today's game)
+        if (isGameOver) {
+             const lastGuessString = guesses.length > 0 ? guesses[guesses.length - 1].map(g => g.letter).join('') : '';
+             if (splitWord(lastGuessString).join('') !== parsedCurrentTarget.join('')) {
+                 showMessage(`Պարտություն։ Խաղ #${currentWordOffset + 1}-ի բառը՝ ${currentTargetWord}`, 0); // Show word on loss
+             } else {
+                 showMessage('🎉 Հաղթանակ 🎉', 0);
+             }
+             disableInput(); // Disable input if the loaded game is over
+        } else if (currentWordOffset === dayOffset) {
+            // If loading today's unfinished game
+            enableInput(); // Enable input
+             // No message needed for ongoing game
+        } else {
+            // If loading a historical, unfinished game
+            disableInput(); // Disable input
+            showMessage(`Դիտարկվում է խաղ #${currentWordOffset + 1}. Դուք կարող եք խաղալ միայն այսօրվա խաղը։`, 3000);
+        }
+
+         // Recalculate board size as keyboard size might change depending on game state/input enabled/disabled
+         adjustBoardSize();
    }
 
 
-   function enableInput() {
-        window.removeEventListener('keydown', handlePhysicalKey); // Remove existing listener to prevent duplicates
-        window.addEventListener('keydown', handlePhysicalKey); // Add listener back
-
-        keyboardElement.querySelectorAll('.key').forEach(btn => {
-            if (!btn.classList.contains('placeholder')) {
-               // Restore click handlers and default cursor for playable keys
-               const keyText = btn.dataset.key;
-               if (keyText === ENTER_KEY) {
-                   btn.onclick = handleSubmit;
-               } else if (keyText === DELETE_KEY) {
-                   btn.onclick = handleDelete;
-               } else {
-                   btn.onclick = () => handleKeyClick(keyText);
-               }
-               btn.style.cursor = 'pointer';
-               btn.disabled = false; // Ensure button is enabled
-               btn.style.opacity = ''; // Remove potential disabled opacity
-            }
-        });
-   }
-
-
-  // --- Word Processing ---
+   // --- Word Processing ---
    function splitWord(word) {
     const chars = [];
     const lowerWord = String(word || '').toLowerCase();
@@ -922,67 +814,9 @@
    }
 
   // --- UI Building ---
-  function buildBoard() {
-    boardElement.innerHTML = '';
-    for (let i = 0; i < MAX_ROWS; i++) {
-        const row = document.createElement('div');
-        row.className = 'row';
-        for (let j = 0; j < WORD_LENGTH; j++) {
-            const tile = document.createElement('div');
-            tile.className = 'tile';
-            tile.innerHTML = '<div></div>';
-            row.appendChild(tile);
-        }
-        boardElement.appendChild(row);
-    }
-  }
+  // buildBoard is now called within loadGameByOffset
+  // buildKeyboard is now called within loadGameByOffset and switchLayout
 
-  function buildKeyboard() {
-    keyboardTopRowElement.innerHTML = '';
-    keyboardMainGridElement.innerHTML = '';
-
-    // Top Row
-    [ENTER_KEY, DELETE_KEY].forEach(keyText => {
-        const keyElement = document.createElement('button');
-        keyElement.textContent = keyText;
-        keyElement.className = 'key';
-        if (keyText === ENTER_KEY) {
-            keyElement.classList.add('enter');
-            // Add handler only if input is enabled
-            if (!isGameOver && currentWordOffset === dayOffset) keyElement.onclick = handleSubmit;
-        } else {
-            keyElement.classList.add('delete');
-             // Add handler only if input is enabled
-            if (!isGameOver && currentWordOffset === dayOffset) keyElement.onclick = handleDelete;
-        }
-        keyElement.dataset.key = keyText; // Add data-key for these too
-        keyboardTopRowElement.appendChild(keyElement);
-    });
-
-    // Main Grid - Use the currentLayout
-    currentLayout.forEach(rowKeys => {
-        rowKeys.forEach(keyText => {
-            const keyElement = document.createElement('button');
-            keyElement.textContent = keyText;
-            keyElement.className = 'key';
-             // Handle placeholder keys
-            if (!keyText) {
-                 keyElement.classList.add('placeholder');
-                 keyElement.disabled = true;
-                 keyElement.style.cursor = 'default';
-                 keyElement.dataset.key = ''; // Add dataset.key even for placeholder
-            } else {
-                keyElement.dataset.key = keyText;
-                 // Add handler only if input is enabled
-                if (!isGameOver && currentWordOffset === dayOffset) keyElement.onclick = () => handleKeyClick(keyText);
-            }
-            keyboardMainGridElement.appendChild(keyElement);
-        });
-    });
-
-    // Set body attribute for CSS targeting
-    document.body.setAttribute('data-keyboard-layout', currentLayoutName);
-  }
 
     // --- Keyboard Layout Switcher ---
     function switchLayout() {
@@ -1010,36 +844,30 @@
 
 
   // --- UI Updating & State Restoration ---
-  function redrawBoardFromState() {
-     const rows = boardElement.querySelectorAll('.row');
-     rows.forEach((row, rowIndex) => {
-        const tiles = row.querySelectorAll('.tile');
-        if (rowIndex < guesses.length) {
-             const guessData = guesses[rowIndex];
-             tiles.forEach((tile, tileIndex) => {
-                const tileInner = tile.querySelector('div');
-                if (!tileInner) return;
-                const letterData = guessData[tileIndex] || { letter: '', status: '' };
-                tileInner.textContent = letterData.letter;
-                tile.classList.remove('correct', 'present', 'absent', 'filled');
-                if (letterData.letter) {
-                     tile.classList.add('filled');
-                     if (letterData.status) {
-                         tile.classList.add(letterData.status);
-                     }
-                }
-             });
+  // redrawBoardFromState is now called within loadGameByOffset
+
+  function updateCurrentRowDisplay() {
+    if (currentRowIndex >= MAX_ROWS) return;
+    const currentRow = boardElement.querySelectorAll('.row')[currentRowIndex];
+    if (!currentRow) return; // Ensure row exists
+
+    const tiles = currentRow.querySelectorAll('.tile');
+    tiles.forEach((tile, index) => {
+        const tileInner = tile.querySelector('div');
+        if (!tileInner) return;
+        const letter = currentGuess[index] || '';
+        tileInner.textContent = letter;
+        if (letter) {
+            tile.classList.add('filled');
         } else {
-              tiles.forEach(tile => {
-                 const tileInner = tile.querySelector('div');
-                 if (tileInner) tileInner.textContent = '';
-                 tile.classList.remove('correct', 'present', 'absent', 'filled');
-              });
+            tile.classList.remove('filled');
         }
-     });
+        tile.classList.remove('correct', 'present', 'absent'); // Ensure no old status classes linger
+    });
   }
 
   // --- updateKeyboardHighlight uses cumulative status ---
+  // updateKeyboardHighlight is now called within loadGameByOffset and switchLayout
   function updateKeyboardHighlight() {
     keyboardElement.querySelectorAll('.key[data-key]').forEach(keyElement => { // Select all keys, including placeholders (they won't have a meaningful status)
         const letter = keyElement.dataset.key;
@@ -1055,6 +883,8 @@
         if (cumulativeStatus) {
             keyElement.classList.add(cumulativeStatus);
         }
+        // The .has-present class logic from the original code is not used here
+        // as it wasn't fully integrated with the state.
     });
 }
 
@@ -1095,7 +925,7 @@
              showMessage(`Դուք կարող եք խաղալ միայն այսօրվա խաղը։`, 1500);
              shakeRow(currentRowIndex);
          } else { // isGameOver is true for today's game
-             const finalMsg = guesses.length >= MAX_ROWS ? `Պարտություն։ Այսօրվա բառը՝ ${currentTargetWord}` : '🎉 Հաղթանակ 🎉';
+             const finalMsg = guesses.length >= MAX_ROWS ? `Պարտություն։ Խաղ #${currentWordOffset + 1}-ի բառը՝ ${currentTargetWord}` : '🎉 Հաղթանակ 🎉';
              showMessage(finalMsg, 3000); // Show win/loss message again
          }
         return;
@@ -1121,6 +951,9 @@
 
     // Update CUMULATIVE keyStatuses based on the current guess result
     result.forEach(({ letter, status }) => {
+        // Only update keyStatuses for standard letters
+        if (letter === ENTER_KEY || letter === DELETE_KEY) return;
+
         const currentStatus = keyStatuses[letter];
         if (status === 'correct') {
             keyStatuses[letter] = 'correct'; // Correct always overrides
@@ -1153,9 +986,8 @@
   function handlePhysicalKey(e) {
      // Only allow input for today's game if not game over
      if (isGameOver || currentWordOffset !== dayOffset) {
-          // Don't prevent default for standard keys if not today's game,
-          // but maybe prevent it for enter/backspace if they trigger messages.
-          // Let's allow default unless it's Enter/Backspace in a finished game.
+          // Prevent default for Enter/Backspace/Delete if the game is over (prevents unexpected scrolling or other browser actions)
+          // Allow default for other keys so browser shortcuts still work
           if (isGameOver && (e.key === 'Enter' || e.key === 'Backspace' || e.key === 'Delete')) {
                e.preventDefault();
           }
@@ -1164,15 +996,21 @@
      }
 
      let key = e.key;
-     // Prevent default for keys we handle in the game
+     // Prevent default for keys we handle in the game to avoid native browser input actions (like scrolling with space)
      if (key.length === 1 || key === 'Backspace' || key === 'Delete' || key === 'Enter') {
-        e.preventDefault();
+         // Only prevent default if it's a key we might handle AND the game is playable (not over and is today's game)
+         if (!isGameOver && currentWordOffset === dayOffset) {
+             e.preventDefault();
+         } else if (isGameOver && (key === 'Enter' || key === 'Backspace' || key === 'Delete')) {
+            // Also prevent default for Enter/Backspace/Delete if game is over
+            e.preventDefault();
+         } else if (isGameOver) {
+             // Allow default for other keys if game is over
+             return;
+         }
      }
 
 
-     if (key.length > 1 && key !== 'Backspace' && key !== 'Delete' && key !== 'Enter') {
-         return;
-     }
      key = key.toLowerCase();
 
      if (key === 'enter') {
@@ -1237,12 +1075,50 @@
          disableInput();
          saveState(); // Save final state (win) and layout
      } else if (currentRowIndex >= MAX_ROWS) {
-          showMessage(`Պարտություն։ Այսօրվա բառը՝ ${currentTargetWord}`, 0); // Indefinite duration for loss message
+          showMessage(`Պարտություն։ Խաղ #${currentWordOffset + 1}-ի բառը՝ ${currentTargetWord}`, 0); // Indefinite duration for loss message
           isGameOver = true;
           disableInput();
           saveState(); // Save final state (loss) and layout
      }
   }
+
+   // Disables user input (keyboard buttons and physical keys)
+  function disableInput() {
+     // console.log("Game Over - Input Disabled");
+     // Keep physical keyboard listener for Enter/Backspace even when disabled,
+     // but let their handlers check `isGameOver` and `currentWordOffset`.
+     // Remove onclick handlers from virtual keyboard buttons
+     keyboardElement.querySelectorAll('.key').forEach(btn => {
+         if (!btn.classList.contains('placeholder')) {
+            btn.onclick = null; // Remove click handler
+            btn.style.cursor = 'default';
+            // Optionally disable the button visually as well
+             // btn.disabled = true;
+             // btn.style.opacity = 0.8;
+         }
+     });
+  }
+
+    // Enables user input (keyboard buttons and physical keys)
+   function enableInput() {
+        // Re-add onclick handlers for virtual keyboard buttons
+        keyboardElement.querySelectorAll('.key').forEach(btn => {
+            if (!btn.classList.contains('placeholder')) {
+               const keyText = btn.dataset.key;
+               if (keyText === ENTER_KEY) {
+                   btn.onclick = handleSubmit;
+               } else if (keyText === DELETE_KEY) {
+                   btn.onclick = handleDelete;
+               } else {
+                   btn.onclick = () => handleKeyClick(keyText);
+               }
+               btn.style.cursor = 'pointer';
+                btn.disabled = false; // Ensure button is enabled
+                btn.style.opacity = ''; // Remove potential disabled opacity
+            }
+        });
+        // Physical keyboard listener remains active, but handlers check state
+   }
 
 
   // --- Animations & Messages ---
@@ -1301,8 +1177,6 @@
         if (duration > 0) {
             messageTimeout = setTimeout(() => {
                 messageElement.classList.remove('show');
-                 // Optional: Add a 'hide' class if duration is 0 (indefinite) to maybe style differently
-                 // messageElement.classList.add('hide');
             }, duration);
         }
    }
@@ -1314,8 +1188,8 @@
         const numberOfGamesToShow = Math.min(dayOffset + 1, 100); // Show up to last 100 games (including today)
 
         // Generate list items backwards from today
-        for (let i = 0; i < numberOfGamesToShow; i++) {
-            const gameOffset = dayOffset - i;
+        for (let i = 0; i <= dayOffset; i++) { // Iterate from start date up to today
+            const gameOffset = i;
             const gameNumber = gameOffset + 1;
             const gameDate = new Date(startDate);
             gameDate.setDate(startDate.getDate() + gameOffset);
@@ -1363,6 +1237,11 @@
             previousGamesListElement.appendChild(listItem);
         }
 
+         // Reverse the list to show the most recent games first (today at the top)
+        const items = Array.from(previousGamesListElement.children);
+        items.reverse().forEach(item => previousGamesListElement.appendChild(item));
+
+
         // Show the modal
         previousGamesModal.classList.add('visible');
    }
@@ -1370,7 +1249,8 @@
    function closePreviousGamesModal() {
        previousGamesModal.classList.remove('visible');
        // Clear the list content when closing
-       previousGamesListElement.innerHTML = '';
+       // previousGamesListElement.innerHTML = ''; // Keep content until next open for faster display? Or clear to save memory? Let's clear.
+        previousGamesListElement.innerHTML = '';
    }
 
    // Handles clicks on the modal overlay itself to close it
@@ -1378,89 +1258,6 @@
        if (event.target === previousGamesModal) {
            closePreviousGamesModal();
        }
-   }
-
-
-   // Loads a specific game based on its offset from the start date
-   function loadGameByOffset(offset) {
-        // Determine the target word and state key for this offset
-        const targetDate = new Date(startDate);
-        targetDate.setDate(startDate.getDate() + offset);
-        const dateKey = `${LOCAL_STORAGE_PREFIX}${targetDate.toISOString().split('T')[0]}`;
-        const wordForOffset = WORDS.length > 0 ? WORDS[offset % WORDS.length] : "սխալ";
-
-        let loadedState = null;
-        const savedStateJSON = localStorage.getItem(dateKey);
-        if (savedStateJSON) {
-             try {
-                 const state = JSON.parse(savedStateJSON);
-                 // Validate that the word in the saved state matches the word for this day
-                 if (state.targetWord === wordForOffset) {
-                     loadedState = state;
-                 } else {
-                     console.warn(`Saved word for offset ${offset} does not match expected word. Starting fresh for this day.`);
-                 }
-             } catch (e) {
-                 console.error(`Error loading state for offset ${offset}:`, e);
-             }
-        }
-
-        // Set the global state variables for the loaded game
-        currentWordOffset = offset;
-        currentTargetWord = wordForOffset;
-        parsedCurrentTarget = splitWord(currentTargetWord);
-
-        if (loadedState) {
-            guesses = loadedState.guesses || [];
-            currentRowIndex = loadedState.currentRowIndex || 0;
-            isGameOver = loadedState.isGameOver || false;
-            // Load key statuses specific to this game number
-            keyStatuses = loadedState.keyStatuses || {};
-             // Validate keyStatuses content
-             for (const key in keyStatuses) {
-                const validStatuses = ['correct', 'present', 'absent', null];
-                if (!validStatuses.includes(keyStatuses[key])) {
-                    delete keyStatuses[key];
-                }
-             }
-        } else {
-             // No saved state, reset game state for this word/day
-             guesses = [];
-             currentRowIndex = 0;
-             isGameOver = false;
-             keyStatuses = {}; // Reset key statuses for an unplayed game
-        }
-
-        // Update UI based on the loaded state
-        updateGameNumberDisplay(); // Update the game number in the header
-        buildBoard(); // Rebuild the board structure
-        redrawBoardFromState(); // Populate the board with the loaded guesses
-        updateKeyboardHighlight(); // Update keyboard highlight based on the loaded key statuses
-
-        // Clear any old messages
-        showMessage('', 0); // Show empty message with duration 0 to clear it
-
-        // Manage input based on the loaded game's state (only playable if it's today's game)
-        if (isGameOver) {
-             const lastGuessString = guesses.length > 0 ? guesses[guesses.length - 1].map(g => g.letter).join('') : '';
-             if (splitWord(lastGuessString).join('') !== parsedCurrentTarget.join('')) {
-                 showMessage(`Պարտություն։ Այսօրվա բառը՝ ${currentTargetWord}`, 0);
-             } else {
-                 showMessage('🎉 Հաղթանակ 🎉', 0);
-             }
-             disableInput(); // Disable input if the loaded game is over
-        } else if (currentWordOffset === dayOffset) {
-            // If loading today's unfinished game
-            enableInput(); // Enable input
-        } else {
-            // If loading a historical, unfinished game
-            disableInput(); // Disable input
-            showMessage(`Դիտարկվում է խաղ #${currentWordOffset + 1}. Դուք կարող եք խաղալ միայն այսօրվա խաղը։`, 3000);
-        }
-
-         // If loading a historical game (even a completed one), maybe prevent future guesses?
-         // The `handleKeyClick`, `handleDelete`, `handleSubmit` already check `currentWordOffset !== dayOffset`.
-         // `disableInput` handles the keyboard buttons and physical keys listener. This seems correct.
    }
 
 
@@ -1580,11 +1377,25 @@
   // --- Start the game ---
   // Use DOMContentLoaded to ensure HTML is ready before running init
   document.addEventListener('DOMContentLoaded', () => {
-      // First, load the initial state for today's game
-      loadInitialStateForToday();
-      // Then, initialize the UI based on that state
+      // Load layout preference first as it affects keyboard height
+      const savedLayoutName = localStorage.getItem(LOCAL_STORAGE_LAYOUT_KEY);
+      if (savedLayoutName && LAYOUT_NAMES[savedLayoutName]) {
+          currentLayoutName = savedLayoutName;
+      } else {
+          currentLayoutName = 'phonetic'; // Default layout
+      }
+      currentLayout = (currentLayoutName === 'phonetic') ? keyboardPhoneticLayout : keyboardAlphabeticalLayout;
+      toggleBtnLayout.textContent = LAYOUT_NAMES[currentLayoutName];
+      document.body.setAttribute('data-keyboard-layout', currentLayoutName);
+
+
+      // Load today's game state and build UI
+      loadGameByOffset(dayOffset);
+
+      // Initialize global listeners
       init();
-      // Finally, adjust size based on initial viewport size
+
+      // Adjust size based on initial viewport size (now accounts for correct keyboard height)
       adjustBoardSize();
   });
 
