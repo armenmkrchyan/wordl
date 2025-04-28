@@ -673,131 +673,9 @@
   let currentLayout = (currentLayoutName === 'phonetic') ? keyboardPhoneticLayout : keyboardAlphabeticalLayout;
 
 
-  // --- Initialization ---
-  function init() {
-    // Set up global event listeners (only once)
-    window.addEventListener('keydown', handlePhysicalKey);
-    toggleBtnLayout.addEventListener('click', switchLayout);
-    gameNumberElement.addEventListener('click', openPreviousGamesModal);
-    modalCloseButton.addEventListener('click', closePreviousGamesModal);
-    previousGamesModal.addEventListener('click', handleModalOverlayClick);
-    // Theme toggle is already set up in loadState
+  // --- Function Definitions (All of them defined here) ---
 
-    // The initial game load and UI build happen outside init() in DOMContentLoaded
-  }
-
-   // --- Update Game Number Display ---
-   function updateGameNumberDisplay() {
-        gameNumberElement.textContent = `#${currentWordOffset + 1}`;
-   }
-
-
-  // --- State Management (localStorage) ---
-  function saveState() {
-    // Only save state if the currently loaded game is today's game
-    if (currentWordOffset === dayOffset) {
-        const state = {
-          guesses,
-          currentRowIndex,
-          isGameOver,
-          targetWord: currentTargetWord, // Save the specific word played
-          keyStatuses // Save key statuses for this game number
-        };
-        localStorage.setItem(currentGameDateKey, JSON.stringify(state));
-    }
-    // Always save layout preference regardless of which game is displayed
-    localStorage.setItem(LOCAL_STORAGE_LAYOUT_KEY, currentLayoutName);
-  }
-
-
-   // Loads a specific game based on its offset from the start date
-   // This function now handles state loading AND UI building/updating
-   function loadGameByOffset(offset) {
-        // Determine the target word and state key for this offset
-        const targetDate = new Date(startDate);
-        targetDate.setDate(startDate.getDate() + offset);
-        const dateKey = `${LOCAL_STORAGE_PREFIX}${targetDate.toISOString().split('T')[0]}`;
-        const wordForOffset = WORDS.length > 0 ? WORDS[offset % WORDS.length] : "սխալ";
-
-        let loadedState = null;
-        const savedStateJSON = localStorage.getItem(dateKey);
-        if (savedStateJSON) {
-             try {
-                 const state = JSON.parse(savedStateJSON);
-                 // Validate if the saved word matches the expected word for this offset
-                 if (state.targetWord === wordForOffset) {
-                     loadedState = state;
-                 } else {
-                     console.warn(`Saved word for game ${offset + 1} (${state.targetWord}) does not match expected word (${wordForOffset}). Starting fresh for this day.`);
-                 }
-             } catch (e) {
-                 console.error(`Error loading state for game ${offset + 1}:`, e);
-             }
-        }
-
-        // Set the global state variables for the loaded game
-        currentWordOffset = offset;
-        currentTargetWord = wordForOffset;
-        parsedCurrentTarget = splitWord(currentTargetWord); // Update parsed target
-        currentGameDateKey = dateKey; // Update the current game's LS key
-
-        if (loadedState) {
-            guesses = loadedState.guesses || [];
-            currentRowIndex = loadedState.currentRowIndex || 0;
-            isGameOver = loadedState.isGameOver || false;
-            // Load key statuses specific to this game number
-            keyStatuses = loadedState.keyStatuses || {};
-             // Validate keyStatuses content
-             for (const key in keyStatuses) {
-                const validStatuses = ['correct', 'present', 'absent', null];
-                if (!validStatuses.includes(keyStatuses[key])) {
-                    delete keyStatuses[key];
-                }
-             }
-        } else {
-             // No saved state, reset game state for this word/day
-             guesses = [];
-             currentRowIndex = 0;
-             isGameOver = false;
-             keyStatuses = {}; // Reset key statuses for an unplayed game
-        }
-
-        // --- Update UI based on the loaded state ---
-        updateGameNumberDisplay(); // Update the game number in the header
-        buildBoard(); // Rebuild the board structure
-        redrawBoardFromState(); // Populate the board with the loaded/empty guesses
-        buildKeyboard(); // Rebuild keyboard to ensure correct handlers are attached/removed
-        updateKeyboardHighlight(); // Update keyboard highlight based on the loaded/empty keyStatuses
-
-
-        // Clear any old messages
-        showMessage('', 0); // Show empty message with duration 0 to clear it
-
-        // Manage input based on the loaded game's state (only playable if it's today's game)
-        if (isGameOver) {
-             const lastGuessString = guesses.length > 0 ? guesses[guesses.length - 1].map(g => g.letter).join('') : '';
-             if (splitWord(lastGuessString).join('') !== parsedCurrentTarget.join('')) {
-                 showMessage(`Պարտություն։ Խաղ #${currentWordOffset + 1}-ի բառը՝ ${currentTargetWord}`, 0); // Show word on loss
-             } else {
-                 showMessage('🎉 Հաղթանակ 🎉', 0);
-             }
-             disableInput(); // Disable input if the loaded game is over
-        } else if (currentWordOffset === dayOffset) {
-            // If loading today's unfinished game
-            enableInput(); // Enable input
-             // No message needed for ongoing game
-        } else {
-            // If loading a historical, unfinished game
-            disableInput(); // Disable input
-            showMessage(`Դիտարկվում է խաղ #${currentWordOffset + 1}. Դուք կարող եք խաղալ միայն այսօրվա խաղը։`, 3000);
-        }
-
-         // Recalculate board size as keyboard size might change depending on game state/input enabled/disabled
-         adjustBoardSize();
-   }
-
-
-   // --- Word Processing ---
+   // Parses a word into an array of characters, handling the 'ու' digraph.
    function splitWord(word) {
     const chars = [];
     const lowerWord = String(word || '').toLowerCase();
@@ -813,43 +691,109 @@
      return chars;
    }
 
-  // --- UI Building ---
-  // buildBoard is now called within loadGameByOffset
-  // buildKeyboard is now called within loadGameByOffset and switchLayout
-
-
-    // --- Keyboard Layout Switcher ---
-    function switchLayout() {
-        // Toggle layout name
-        currentLayoutName = (currentLayoutName === 'phonetic') ? 'alphabetical' : 'phonetic';
-
-        // Set the corresponding layout array
-        currentLayout = (currentLayoutName === 'phonetic') ? keyboardPhoneticLayout : keyboardAlphabeticalLayout;
-
-        // Update button text
-        toggleBtnLayout.textContent = LAYOUT_NAMES[currentLayoutName];
-
-        // Rebuild the keyboard with the new layout
-        buildKeyboard();
-
-        // *** IMPORTANT: Recalculate and adjust size after rebuilding the keyboard ***
-        adjustBoardSize();
-
-        // Update key highlights on the new keyboard (using the current game's keyStatuses)
-        updateKeyboardHighlight();
-
-        // Save the preference (only saves layout, not game state unless it's today's game)
-        saveState();
+    // Builds the visual board grid in the DOM.
+   function buildBoard() {
+    boardElement.innerHTML = '';
+    for (let i = 0; i < MAX_ROWS; i++) {
+        const row = document.createElement('div');
+        row.className = 'row';
+        for (let j = 0; j < WORD_LENGTH; j++) {
+            const tile = document.createElement('div');
+            tile.className = 'tile';
+            tile.innerHTML = '<div></div>';
+            row.appendChild(tile);
+        }
+        boardElement.appendChild(row);
     }
+   }
 
+    // Builds the visual keyboard in the DOM based on the current layout.
+   function buildKeyboard() {
+    keyboardTopRowElement.innerHTML = '';
+    keyboardMainGridElement.innerHTML = '';
 
-  // --- UI Updating & State Restoration ---
-  // redrawBoardFromState is now called within loadGameByOffset
+    // Top Row (Enter, Delete)
+    [ENTER_KEY, DELETE_KEY].forEach(keyText => {
+        const keyElement = document.createElement('button');
+        keyElement.textContent = keyText;
+        keyElement.className = 'key';
+        if (keyText === ENTER_KEY) {
+            keyElement.classList.add('enter');
+            // Handlers are added/removed by enableInput/disableInput
+        } else {
+            keyElement.classList.add('delete');
+            // Handlers are added/removed by enableInput/disableInput
+        }
+        keyElement.dataset.key = keyText; // Add data-key for these too
+        keyboardTopRowElement.appendChild(keyElement);
+    });
 
-  function updateCurrentRowDisplay() {
+    // Main Grid (Letters) - Use the currentLayout
+    currentLayout.forEach(rowKeys => {
+        rowKeys.forEach(keyText => {
+            const keyElement = document.createElement('button');
+            keyElement.textContent = keyText;
+            keyElement.className = 'key';
+             // Handle placeholder keys
+            if (!keyText) {
+                 keyElement.classList.add('placeholder');
+                 keyElement.disabled = true;
+                 keyElement.style.cursor = 'default';
+                 keyElement.dataset.key = ''; // Add dataset.key even for placeholder
+            } else {
+                keyElement.dataset.key = keyText;
+                 // Handlers are added/removed by enableInput/disableInput
+            }
+            keyboardMainGridElement.appendChild(keyElement);
+        });
+    });
+
+    // Set body attribute for CSS targeting
+    document.body.setAttribute('data-keyboard-layout', currentLayoutName);
+
+     // Re-attach handlers based on current game state AFTER building
+     if (!isGameOver && currentWordOffset === dayOffset) {
+         enableInput();
+     } else {
+         disableInput();
+     }
+   }
+
+    // Redraws the board based on the current state of `guesses`.
+   function redrawBoardFromState() {
+     const rows = boardElement.querySelectorAll('.row');
+     rows.forEach((row, rowIndex) => {
+        const tiles = row.querySelectorAll('.tile');
+        if (rowIndex < guesses.length) {
+             const guessData = guesses[rowIndex];
+             tiles.forEach((tile, tileIndex) => {
+                const tileInner = tile.querySelector('div');
+                if (!tileInner) return;
+                const letterData = guessData[tileIndex] || { letter: '', status: '' };
+                tileInner.textContent = letterData.letter;
+                tile.classList.remove('correct', 'present', 'absent', 'filled');
+                if (letterData.letter) {
+                     tile.classList.add('filled');
+                     if (letterData.status) {
+                         tile.classList.add(letterData.status);
+                     }
+                }
+             });
+        } else {
+              tiles.forEach(tile => {
+                 const tileInner = tile.querySelector('div');
+                 if (tileInner) tileInner.textContent = '';
+                 tile.classList.remove('correct', 'present', 'absent', 'filled');
+              });
+        }
+     });
+   }
+
+    // Updates the display of the current guess row.
+   function updateCurrentRowDisplay() {
     if (currentRowIndex >= MAX_ROWS) return;
     const currentRow = boardElement.querySelectorAll('.row')[currentRowIndex];
-    if (!currentRow) return; // Ensure row exists
+     if (!currentRow) return; // Ensure row exists
 
     const tiles = currentRow.querySelectorAll('.tile');
     tiles.forEach((tile, index) => {
@@ -864,14 +808,13 @@
         }
         tile.classList.remove('correct', 'present', 'absent'); // Ensure no old status classes linger
     });
-  }
+   }
 
-  // --- updateKeyboardHighlight uses cumulative status ---
-  // updateKeyboardHighlight is now called within loadGameByOffset and switchLayout
-  function updateKeyboardHighlight() {
+    // Updates the highlighting of the virtual keyboard keys based on `keyStatuses`.
+   function updateKeyboardHighlight() {
     keyboardElement.querySelectorAll('.key[data-key]').forEach(keyElement => { // Select all keys, including placeholders (they won't have a meaningful status)
         const letter = keyElement.dataset.key;
-        // Don't highlight placeholders or special keys
+        // Don't highlight placeholders or special keys like Enter/Delete
         if (!letter || letter === ENTER_KEY || letter === DELETE_KEY) return;
 
         const cumulativeStatus = keyStatuses[letter]; // Cumulative best for the *currently loaded game*
@@ -886,11 +829,11 @@
         // The .has-present class logic from the original code is not used here
         // as it wasn't fully integrated with the state.
     });
-}
+   }
 
 
-   // --- Event Handlers ---
-  function handleKeyClick(key) {
+    // Handles clicks on virtual keyboard letter keys.
+   function handleKeyClick(key) {
     // Only allow input for today's game if not game over
     if (isGameOver || currentGuess.length >= WORD_LENGTH || currentWordOffset !== dayOffset) {
         // If not today's game, show a message maybe? Or just ignore. Ignoring is cleaner.
@@ -902,9 +845,10 @@
     }
     currentGuess.push(key);
     updateCurrentRowDisplay();
-  }
+   }
 
-  function handleDelete() {
+    // Handles clicks on the virtual keyboard Delete key.
+   function handleDelete() {
     // Only allow input for today's game if not game over
     if (isGameOver || currentGuess.length === 0 || currentWordOffset !== dayOffset) {
          if (currentWordOffset !== dayOffset) {
@@ -915,10 +859,10 @@
     }
     currentGuess.pop();
     updateCurrentRowDisplay();
-  }
+   }
 
-  // --- handleSubmit updates cumulative statuses ---
-  function handleSubmit() {
+    // Handles clicks on the virtual keyboard Enter key.
+   function handleSubmit() {
     // Only allow input for today's game if not game over
     if (isGameOver || currentWordOffset !== dayOffset) {
          if (currentWordOffset !== dayOffset) {
@@ -980,10 +924,19 @@
 
         checkWinLoss(guessString); // Check game over status for TODAY's game
     }, WORD_LENGTH * 150 + 300); // Wait for tile animation + a little buffer
-  }
+   }
 
+    // Handles physical keyboard input.
+   function handlePhysicalKey(e) {
+     // Check if modal is open - if so, only allow Escape to close it
+     if (previousGamesModal.classList.contains('visible')) {
+         if (e.key === 'Escape') {
+             e.preventDefault(); // Prevent default browser action for Escape
+             closePreviousGamesModal();
+         }
+         return; // Ignore other key presses when modal is open
+     }
 
-  function handlePhysicalKey(e) {
      // Only allow input for today's game if not game over
      if (isGameOver || currentWordOffset !== dayOffset) {
           // Prevent default for Enter/Backspace/Delete if the game is over (prevents unexpected scrolling or other browser actions)
@@ -1026,11 +979,11 @@
              }
          }
      }
-  }
+   }
 
 
-  // --- Game Logic ---
-  function checkGuess(guessString) {
+    // Checks the user's guess against the target word.
+   function checkGuess(guessString) {
      const guessChars = splitWord(guessString);
      const result = [];
      const targetCopy = [...parsedCurrentTarget]; // Use the currently loaded target word
@@ -1063,10 +1016,10 @@
          }
      }
      return result;
-  }
+   }
 
-   // Check win/loss only applies to the *current* day's game
-  function checkWinLoss(lastGuessString) {
+    // Checks for win/loss condition. Only applies to today's game.
+   function checkWinLoss(lastGuessString) {
      if (currentWordOffset !== dayOffset) return; // Only check win/loss for today's game
 
      if (splitWord(lastGuessString).join('') === parsedCurrentTarget.join('')) {
@@ -1080,14 +1033,12 @@
           disableInput();
           saveState(); // Save final state (loss) and layout
      }
-  }
+   }
 
-   // Disables user input (keyboard buttons and physical keys)
-  function disableInput() {
+    // Disables user input (keyboard buttons and physical keys).
+   function disableInput() {
      // console.log("Game Over - Input Disabled");
-     // Keep physical keyboard listener for Enter/Backspace even when disabled,
-     // but let their handlers check `isGameOver` and `currentWordOffset`.
-     // Remove onclick handlers from virtual keyboard buttons
+     // Virtual keyboard: Remove click handlers
      keyboardElement.querySelectorAll('.key').forEach(btn => {
          if (!btn.classList.contains('placeholder')) {
             btn.onclick = null; // Remove click handler
@@ -1097,11 +1048,12 @@
              // btn.style.opacity = 0.8;
          }
      });
-  }
+      // Physical keyboard: Handled by checking isGameOver and currentWordOffset in handlePhysicalKey
+   }
 
-    // Enables user input (keyboard buttons and physical keys)
+    // Enables user input (keyboard buttons and physical keys).
    function enableInput() {
-        // Re-add onclick handlers for virtual keyboard buttons
+        // Virtual keyboard: Re-add onclick handlers
         keyboardElement.querySelectorAll('.key').forEach(btn => {
             if (!btn.classList.contains('placeholder')) {
                const keyText = btn.dataset.key;
@@ -1117,12 +1069,12 @@
                 btn.style.opacity = ''; // Remove potential disabled opacity
             }
         });
-        // Physical keyboard listener remains active, but handlers check state
+        // Physical keyboard: Handled by checking isGameOver and currentWordOffset in handlePhysicalKey
    }
 
 
-  // --- Animations & Messages ---
-  function animateGuessResult(rowIndex, result) {
+    // Animates the tiles in a row after a guess.
+   function animateGuessResult(rowIndex, result) {
      const row = boardElement.querySelectorAll('.row')[rowIndex];
      if (!row) return; // Ensure row exists
 
@@ -1155,10 +1107,11 @@
      });
      // Optional: Add event listener for animation end if using CSS animations
      // row.addEventListener('animationend', handleAnimationEnd, { once: true });
-  }
+   }
 
 
-  function shakeRow(rowIndex) {
+    // Adds a shake animation to a specified row.
+   function shakeRow(rowIndex) {
     const row = boardElement.querySelectorAll('.row')[rowIndex];
     if (row) {
         row.classList.add('shake');
@@ -1166,8 +1119,9 @@
             row.classList.remove('shake');
         }, { once: true });
     }
-  }
+   }
 
+    // Displays a temporary or permanent message.
    function showMessage(msg, duration = 2000) {
         clearTimeout(messageTimeout);
         messageElement.textContent = msg;
@@ -1177,18 +1131,19 @@
         if (duration > 0) {
             messageTimeout = setTimeout(() => {
                 messageElement.classList.remove('show');
+                 // Optional: Add a 'hide' class if duration is 0 (indefinite) to maybe style differently
+                 // messageElement.classList.add('hide');
             }, duration);
         }
    }
 
 
-   // --- Previous Games Modal ---
+    // Opens the modal listing previous games.
    function openPreviousGamesModal() {
         previousGamesListElement.innerHTML = ''; // Clear previous list
-        const numberOfGamesToShow = Math.min(dayOffset + 1, 100); // Show up to last 100 games (including today)
 
         // Generate list items backwards from today
-        for (let i = 0; i <= dayOffset; i++) { // Iterate from start date up to today
+        for (let i = 0; i <= dayOffset; i++) { // Iterate from game 1 (offset 0) up to today's game (offset dayOffset)
             const gameOffset = i;
             const gameNumber = gameOffset + 1;
             const gameDate = new Date(startDate);
@@ -1199,6 +1154,13 @@
             const listItem = document.createElement('li');
             listItem.dataset.gameOffset = gameOffset;
             listItem.textContent = `#${gameNumber} - ${dateString}`;
+
+            // Indicate if this is the currently viewed game
+             if (gameOffset === currentWordOffset) {
+                 listItem.style.fontWeight = 'bold';
+                 listItem.style.backgroundColor = 'var(--list-item-hover-bg)'; /* Highlight color */
+             }
+
 
             // Optionally indicate if the game was played/won/lost based on local storage
              const gameDateKey = `${LOCAL_STORAGE_PREFIX}${gameDate.toISOString().split('T')[0]}`;
@@ -1215,7 +1177,7 @@
                              } else if (state.currentRowIndex >= MAX_ROWS) {
                                   statusIndicator = ' (❌)'; // Loss
                               } else {
-                                   statusIndicator = ' (...)'; // Played, but not finished? (Unlikely with isGameOver logic)
+                                   // This case should ideally not happen if isGameOver is true
                               }
                           } else if (state.guesses.length > 0) {
                                 statusIndicator = ' (...)'; // Started but not finished
@@ -1230,8 +1192,8 @@
 
             // Add click listener to load this game
             listItem.addEventListener('click', () => {
-                loadGameByOffset(gameOffset);
-                closePreviousGamesModal();
+                loadGameByOffset(gameOffset); // Load the selected game
+                closePreviousGamesModal(); // Close the modal
             });
 
             previousGamesListElement.appendChild(listItem);
@@ -1246,14 +1208,14 @@
         previousGamesModal.classList.add('visible');
    }
 
+    // Closes the previous games modal.
    function closePreviousGamesModal() {
        previousGamesModal.classList.remove('visible');
        // Clear the list content when closing
-       // previousGamesListElement.innerHTML = ''; // Keep content until next open for faster display? Or clear to save memory? Let's clear.
         previousGamesListElement.innerHTML = '';
    }
 
-   // Handles clicks on the modal overlay itself to close it
+    // Handles clicks on the modal overlay itself to close it.
    function handleModalOverlayClick(event) {
        if (event.target === previousGamesModal) {
            closePreviousGamesModal();
@@ -1261,7 +1223,7 @@
    }
 
 
-  // --- Theme Toggle ---
+    // Toggles the theme (light/dark).
   toggleBtnTheme.onclick = () => {
     const isDark = document.body.classList.toggle('dark');
     const theme = isDark ? 'dark' : 'light';
@@ -1269,8 +1231,8 @@
     localStorage.setItem('theme', theme);
   };
 
-  // --- Dynamic Board Sizing for Small Screens (and large screens too) ---
-  function adjustBoardSize() {
+    // Handles resizing the board based on available vertical space.
+   function adjustBoardSize() {
       const viewportHeight = window.innerHeight;
 
       // Get references to non-board elements that occupy vertical space
@@ -1280,7 +1242,7 @@
       const mainContentStyle = getComputedStyle(mainContent); // Get style for main content padding
       const boardContainer = document.querySelector('.board-container'); // Need this to get its margins
 
-      // Check if all required elements exist
+      // Check if all required elements exist (should be true after DOMContentLoaded)
       if (!h1 || !subtitle || !keyboard || !boardContainer || !boardElement || !mainContent) {
           console.warn("adjustBoardSize: One or more elements not found.");
           return; // Exit if critical elements are missing
@@ -1371,11 +1333,10 @@
            boardContainer.style.maxWidth = ''; // Revert to CSS
            // console.log(`Default: Viewport H=${viewportHeight.toFixed(1)}, Needed W (Vert)=${requiredBoardWidthFromHeight.toFixed(1)}, CSS MaxW=${finalCssMaxWidth.toFixed(1)}, Target W=${targetWidth.toFixed(1)} (Reverted)`);
       }
-  }
+   }
 
 
-  // --- Start the game ---
-  // Use DOMContentLoaded to ensure HTML is ready before running init
+  // --- Initial Setup (run after DOM Ready) ---
   document.addEventListener('DOMContentLoaded', () => {
       // Load layout preference first as it affects keyboard height
       const savedLayoutName = localStorage.getItem(LOCAL_STORAGE_LAYOUT_KEY);
@@ -1389,14 +1350,25 @@
       document.body.setAttribute('data-keyboard-layout', currentLayoutName);
 
 
-      // Load today's game state and build UI
+      // Load today's game state and build/update UI
+      // This function also calls buildBoard, buildKeyboard, redrawBoard, updateKeyboardHighlight, adjustBoardSize, and manages input state.
       loadGameByOffset(dayOffset);
 
-      // Initialize global listeners
-      init();
+      // Attach global listeners after the initial load and UI build are done
+      window.addEventListener('keydown', handlePhysicalKey);
+      toggleBtnLayout.addEventListener('click', switchLayout);
+      gameNumberElement.addEventListener('click', openPreviousGamesModal);
+      modalCloseButton.addEventListener('click', closePreviousGamesModal);
+      previousGamesModal.addEventListener('click', handleModalOverlayClick);
+      toggleBtnTheme.onclick = () => {
+          const isDark = document.body.classList.toggle('dark');
+          const theme = isDark ? 'dark' : 'light';
+          toggleBtnTheme.textContent = isDark ? '☀️' : '🌗';
+          localStorage.setItem('theme', theme);
+      };
 
-      // Adjust size based on initial viewport size (now accounts for correct keyboard height)
-      adjustBoardSize();
+
+      // Resize listener (outside DOMContentLoaded) is already correctly placed.
   });
 
   // Adjust size whenever the window is resized or layout changes
