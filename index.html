@@ -9,6 +9,7 @@
     html {
         box-sizing: border-box;
         height: 100%; /* Ensure html takes full height */
+        overflow-y: auto; /* Allow scrolling if content exceeds viewport */
     }
     *, *:before, *:after {
         box-sizing: inherit;
@@ -44,17 +45,6 @@
         --tile-text-light: #000;
         --tile-text-dark: #fff;
         --link-color: #007bff;
-
-        /* New CSS Variables for Layout & Sizing */
-        --keyboard-padding-x: 3px; /* Left/right padding *inside* keyboard block */
-        --key-gap: 4px; /* Gap between keys */
-
-        /* Max keys overall will be set by JS via a CSS variable on #keyboard */
-        --max-keys-overall: 10; /* Default value - will be updated by JS */
-
-        /* Default min-height for touch target */
-        --key-min-height-base: 40px;
-        --key-padding: 2px; /* Padding inside key for letter margin */
     }
 
     .main-content {
@@ -63,27 +53,13 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        max-width: 550px; /* Max width for the main content container (titles, etc.) */
-        margin: auto; /* Center the main content block */
-        padding: 0; /* Padding handled by media queries */
-        position: relative; /* Needed for absolute positioning of buttons */
+        max-width: 550px;
+        margin-left: auto;
+        margin-right: auto;
+        padding-left: 5px;
+        padding-right: 5px;
+        padding-bottom: 10px; /* Added some padding to the bottom of main-content */
     }
-     /* Add horizontal padding to the main-content based on screen size for overall margin */
-     @media (max-width: 550px) {
-          body > .main-content {
-              padding: 0 5px; /* Use small margin on mobile */
-          }
-          #toggle-theme { right: 5px; } /* Position buttons relative to padding */
-          #toggle-keyboard { right: 55px; } /* Position to the left */
-     }
-      @media (min-width: 551px) {
-          body > .main-content {
-              padding: 0 10px; /* Slightly larger padding on wider screens if needed */
-          }
-           #toggle-theme { right: 10px; }
-           #toggle-keyboard { right: 60px; }
-      }
-
 
     h1 {
       margin-top: 10px;
@@ -102,21 +78,22 @@
         color: #aaa;
     }
 
-    /* Board and Keyboard Wrapper Widths */
-    .board-container, #keyboard {
-        width: 100%; /* Take available space within main-content's padding */
-        margin: 8px auto; /* Center the blocks */
-        box-sizing: border-box; /* Include padding/border in width */
-    }
-     .board-container { margin-bottom: 5px; /* Less space between board and keyboard */ }
 
+    .board-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        /* Default max-width */
+        max-width: 350px;
+        margin: 8px 0;
+    }
 
     .board {
       display: grid;
       grid-template-rows: repeat(6, 1fr);
       grid-gap: 4px;
-      width: 100%; /* Fill board-container width */
-      /* Max width handled by board-container */
+      width: 100%; /* Board takes full width of its container */
     }
 
     .row {
@@ -131,15 +108,21 @@
       border: 2px solid var(--tile-border-empty);
       font-size: clamp(1.5rem, 6vw, 2rem);
       font-weight: bold;
-      display: flex; /* Use flex for centering content */
+      display: inline-flex;
       align-items: center;
       justify-content: center;
       text-transform: lowercase;
       color: var(--tile-text-light);
       background-color: var(--bg-color);
       transition: background-color 0.3s, border-color 0.3s;
-      padding: 2px; /* Add padding around the letter */
-      box-sizing: border-box; /* Ensure padding is included in the tile size */
+    }
+    .tile > div {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        color: inherit;
     }
     .tile.filled {
         border-color: var(--tile-border-filled);
@@ -151,61 +134,43 @@
     #keyboard {
       display: flex;
       flex-direction: column;
-      gap: var(--key-gap); /* Use key-gap variable */
-      /* Max width handled by the general .board-container, #keyboard rule */
-      padding: 0 var(--keyboard-padding-x); /* Apply horizontal padding *inside* keyboard */
-      margin-top: 5px; /* Space above keyboard */
-      margin-bottom: 0; /* No bottom margin */
+      gap: 4px;
+      width: 100%;
+      padding: 0 3px;
+      margin: 5px auto 0;
     }
 
+    /* Separate grid styles for different layouts if needed, though often similar gap/structure */
     #keyboard-top-row {
-        display: flex; /* Use Flexbox for the top row */
-        gap: var(--key-gap);
-        width: 100%; /* Take full width of #keyboard (minus its padding) */
-        /* justify-content: center; Removed, flex: 1 on children is enough for equal width */
+        display: grid;
+        grid-template-columns: 1.5fr 1fr;
+        gap: 3px;
     }
 
     #keyboard-main-grid {
-        display: flex; /* Use flexbox to stack rows */
-        flex-direction: column;
-        gap: var(--key-gap); /* Use key-gap variable */
-        width: 100%; /* Ensure the main grid takes full width of #keyboard */
+        display: grid;
+        /* Default to Alphabetical grid columns */
+        grid-template-columns: repeat(8, 1fr);
+        gap: 3px;
     }
 
-     /* Each row within the main grid */
-     #keyboard-main-grid .keyboard-row {
-         display: flex; /* Use flexbox for keys within the row */
-         gap: var(--key-gap); /* Use key-gap variable */
-         flex-wrap: nowrap; /* Prevent keys from wrapping */
-         width: 100%; /* !!! Crucial - Make the row take full width of main-grid (which is #keyboard's inner width) */
-         /* justify-content: center; Removed - keys stretch, no need to center remaining space */
-     }
-
-    /* Calculate key size responsively */
-    /* Default calculation (desktop and general fallback) */
-    :root {
-        --board-keyboard-area-width: 400px; /* Target max width */
-         /* Calculation: (Available width - total gap) / total items (keys + placeholders) */
-         /* Available width = --board-keyboard-area-width - (2 * --keyboard-padding-x) */
-         /* Total gap = (--max-keys-overall - 1) * --key-gap */
-         --key-calculated-size: calc( (var(--board-keyboard-area-width) - (2 * var(--keyboard-padding-x)) - (var(--max-keys-overall) - 1) * var(--key-gap)) / var(--max-keys-overall) );
+    /* Specific grid columns for Phonetic layout main grid */
+    body[data-keyboard-layout="phonetic"] #keyboard-main-grid {
+         grid-template-columns: repeat(10, 1fr); /* Phonetic layout has rows of 10 */
+         gap: 3px; /* Maintain consistent gap */
     }
-     .board-container, #keyboard {
-         max-width: var(--board-keyboard-area-width);
+     body[data-keyboard-layout="phonetic"] #keyboard-main-grid .key.placeholder {
+        /* Make placeholder keys visible but inactive for alignment if needed */
+         visibility: visible;
+         background: rgba(0,0,0,0.05); /* Light background to see empty space */
+         pointer-events: none;
+         border-color: transparent;
      }
 
 
     .key {
-      /* --- Letter Keys & Placeholders --- */
-      /* Key width is calculated to make them fit and be equal */
-      width: var(--key-calculated-size);
-      /* Key height is the maximum of calculated size (for square) and min-height (for touch target) */
-      height: max(var(--key-calculated-size), var(--key-min-height-base));
-      flex: 0 0 auto; /* Fixed size, no shrinking/growing */
-      box-sizing: border-box;
-      padding: var(--key-padding); /* Add padding inside the key */
-
-      font-size: clamp(0.9rem, 3.5vw, 1.2rem); /* Adjusted font size slightly */
+      min-height: 40px;
+      font-size: clamp(0.8rem, 3vw, 1.1rem);
       font-weight: bold;
       border: 3px solid transparent;
       border-radius: 4px;
@@ -214,56 +179,44 @@
       cursor: pointer;
       transition: background-color 0.2s, color 0.2s, border-color 0.2s;
       display: flex;
-      justify-content: center; /* Center letter horizontally */
-      align-items: center; /* Center letter vertically */
+      justify-content: center;
+      align-items: center;
       user-select: none;
       touch-action: manipulation;
       text-transform: lowercase;
+      padding: 0;
+      min-width: 0;
     }
     .key:hover {
         filter: brightness(90%);
     }
 
-    /* --- Enter/Delete Keys --- */
     .key.enter,
     .key.delete {
-      /* These are in the top FLEX row */
-      height: var(--key-height); /* Match height of letter keys (using max calc) */
-
-      flex: 1; /* Make both Enter and Delete take equal width */
-      flex-basis: 0; /* Explicitly set flex-basis to 0 for more reliable equal width distribution */
-
-
       font-size: clamp(0.7rem, 2.5vw, 0.9rem);
       color: white;
       border-width: 3px;
       border-style: solid;
-      padding: var(--key-padding); /* Add padding */
-      white-space: nowrap; /* Prevent text wrap */
-      min-width: 0; /* Allow shrinking */
     }
     .key.enter {
         background-color: var(--enter-key-bg);
         border-color: var(--enter-key-bg);
+        white-space: nowrap;
     }
     .key.delete {
          background-color: var(--delete-key-bg);
          border-color: var(--delete-key-bg);
+         white-space: nowrap;
     }
 
-
+    /* Placeholder key styling - Adjusted slightly */
     .key.placeholder {
         background: transparent;
         pointer-events: none;
         border-color: transparent;
-        visibility: hidden; /* Hide the placeholder key visually */
-        /* Placeholders need the same fixed size as letter keys */
-        width: var(--key-calculated-size);
-        height: var(--key-height); /* Match height calculation */
-        flex: 0 0 auto; /* Fixed size */
-        box-sizing: border-box;
-        padding: var(--key-padding);
+        visibility: hidden; /* Keep hidden in alphabetical layout */
     }
+
 
     .key.correct {
       background-color: var(--correct-bg);
@@ -284,7 +237,8 @@
     .key.correct.has-present {
         border-width: 3px;
         border-style: solid;
-        border-color: var(--present-bg); /* Yellow border for correct + present */
+        /* Using a different color for visibility, you might adjust this */
+        border-color: #ffff00; /* Example: Yellow border */
     }
 
 
@@ -295,12 +249,9 @@
         transform: translateX(-50%);
         min-height: 30px;
         z-index: 10;
-        /* Match the content width */
-        width: calc(100% - (2 * var(--overall-screen-margin))); /* Fluid width minus margin */
-        max-width: var(--board-keyboard-area-width); /* Match board/keyboard max width */
+        width: 90%;
+        max-width: 350px;
     }
-
-
     .message {
       text-align: center;
       font-size: 1em;
@@ -352,13 +303,16 @@
     .dark .key.absent { background-color: var(--absent-bg); color: var(--tile-text-dark); border-color: transparent;}
 
     .dark .key.correct.has-present {
-        border-color: var(--present-bg);
+        border-color: var(--present-bg); /* Yellow border */
     }
 
-    /* Styles for the toggle buttons */
-    #toggle-theme, #toggle-keyboard {
+
+    /* Theme and Layout Button Positioning */
+    #toggle-theme {
       position: absolute;
       top: 10px;
+      right: 10px; /* Position Theme button */
+      margin-bottom: 10px;
       padding: 6px 10px;
       font-size: 0.9rem;
       border-radius: 5px;
@@ -368,7 +322,33 @@
       color: #333;
       z-index: 20;
     }
-    /* Position relative to main-content padding now */
+    .dark #toggle-theme {
+        background-color: #333;
+        color: white;
+        border-color: #555;
+    }
+
+    #toggle-layout {
+      position: absolute;
+      top: 10px;
+      right: 65px; /* Position Layout button to the left of Theme */
+      margin-bottom: 10px;
+      padding: 6px 10px;
+      font-size: 0.9rem;
+      border-radius: 5px;
+      cursor: pointer;
+      border: 1px solid #ccc;
+      background-color: #eee;
+      color: #333;
+      z-index: 20;
+       /* Added min-width to prevent text wrap */
+       min-width: 80px;
+    }
+     .dark #toggle-layout {
+        background-color: #333;
+        color: white;
+        border-color: #555;
+    }
 
 
     @keyframes shake {
@@ -378,97 +358,66 @@
     }
     .shake { animation: shake 0.6s ease-in-out; }
 
-    footer {
-        flex-shrink: 0; /* Keep footer from shrinking vertically */
-        width: 100%;
-        text-align: center;
-        padding: 8px 0;
-        margin-top: 3px;
-        font-size: 0.8em;
-        color: #555;
-    }
-    footer a {
-        color: var(--link-color);
-        text-decoration: none;
-    }
-    footer a:hover {
-        text-decoration: underline;
-    }
-    .dark footer {
-        color: #aaa;
-    }
 
-    /* --- Responsive Design --- */
-
-    /* Default styles (for screens > 550px and as base) */
-    :root {
-        --board-keyboard-area-width: 400px; /* Target max width for board & keyboard */
-        --key-gap: 5px; /* Larger gap on desktop */
-        --keyboard-padding-x: 5px; /* Match padding */
-        --key-min-height-base: 45px; /* Base min height on desktop */
-
-         /* key-calculated-size recalculates based on these variables */
-         --key-calculated-size: calc( (var(--board-keyboard-area-width) - (2 * var(--keyboard-padding-x)) - (var(--max-keys-overall) - 1) * var(--key-gap)) / var(--max-keys-overall) );
-    }
-     /* Overall screen margin for desktop */
-     body > .main-content {
-         padding: 0 10px; /* Default large margin */
-     }
-      #toggle-theme { right: 10px; }
-      #toggle-keyboard { right: 60px; }
-
-
-    /* Media Query for screens up to 550px (mobile/smaller tablets) */
-    @media (max-width: 550px) {
-        :root {
-           --overall-screen-margin: 5px; /* Smaller margin on mobile */
-           /* Board/keyboard width is 70% of viewport, limited by a max */
-           --board-keyboard-area-width: min(400px, 70vw); /* 70% fluid up to 400px */
-
-           --key-gap: 3px; /* Smaller gap */
-           --keyboard-padding-x: 2px; /* Smaller padding inside keyboard */
-            --key-min-height-base: 38px; /* Adjusted min height for touch */
-
-           /* Recalculate base size based on dynamic board width */
-           --key-calculated-size: calc( (var(--board-keyboard-area-width) - (2 * var(--keyboard-padding-x)) - (var(--max-keys-overall) - 1) * var(--key-gap)) / var(--max-keys-overall) );
-
-           /* Key height calculation now happens in the .key rule using max() */
+    /* Media Query for very small/short screens */
+    @media (max-width: 340px), (max-height: 600px) {
+        h1 {
+            font-size: 1.3rem; /* Further reduce */
+            margin-top: 8px;
         }
-         /* Overall screen margin for mobile */
-         body > .main-content {
-              padding: 0 var(--overall-screen-margin);
-         }
-         #toggle-theme { right: var(--overall-screen-margin); }
-         #toggle-keyboard { right: calc(var(--overall-screen-margin) + 50px); } /* Adjust pos relative to margin */
-
-    }
-
-     /* Media query for very small screens (adjust margin further) */
-    @media (max-width: 380px) {
-        :root {
-           --overall-screen-margin: 2px; /* Even smaller margin on very small mobile */
-           /* Board/keyboard width takes more space on tiny screens */
-           --board-keyboard-area-width: calc(100vw - (2 * var(--overall-screen-margin))); /* Fill almost all screen */
-
-           --key-gap: 2px; /* Even smaller gap */
-           --keyboard-padding-x: 1px; /* Even smaller padding */
-           --key-min-height-base: 36px; /* Minimum key height */
-
-            /* key-calculated-size recalculates automatically */
+        .subtitle {
+            margin-bottom: 3px;
         }
-         body > .main-content {
-             padding: 0 var(--overall-screen-margin);
+         .main-content {
+            padding-bottom: 5px; /* Reduce bottom padding for very short screens */
          }
-          #toggle-theme { right: var(--overall-screen-margin); }
-          #toggle-keyboard { right: calc(var(--overall-screen-margin) + 50px); } /* Adjust pos relative to new margin */
-         .key.enter, .key.delete {
-             font-size: clamp(0.6rem, 2vw, 0.8rem); /* Smaller font for tiny keys */
-         }
-           .message-container {
-             top: 55px; /* Adjust message position */
-         }
-    }
+        .board-container {
+            margin: 5px 0;
+            /* This max-width can be overridden by JS if screen height is smaller */
+            max-width: 300px;
+        }
+        .board, .row {
+            grid-gap: 3px; /* Further reduce */
+        }
+        #keyboard {
+            gap: 3px;
+            padding: 0 2px;
+            margin-top: 3px;
+        }
+        /* Adjust gaps/columns for smaller screens if needed, though JS might handle size */
+         #keyboard-main-grid, #keyboard-top-row {
+            gap: 2px; /* Further reduce default gap */
+        }
+        body[data-keyboard-layout="phonetic"] #keyboard-main-grid {
+             grid-template-columns: repeat(10, 1fr); /* Maintain 10 columns */
+             gap: 2px; /* Use the smaller gap */
+        }
 
+
+        .key {
+            min-height: 36px; /* Further reduce */
+            font-size: clamp(0.7rem, 2.8vw, 1rem);
+        }
+        .key.enter, .key.delete {
+            font-size: clamp(0.65rem, 2.3vw, 0.8rem);
+        }
+        #toggle-theme {
+            padding: 4px 7px;
+            font-size: 0.8rem;
+            top: 5px;
+            right: 5px; /* Adjust position */
+        }
+        #toggle-layout {
+            padding: 4px 7px;
+            font-size: 0.8rem;
+            top: 5px;
+            right: 55px; /* Adjust position relative to theme button */
+             min-width: 70px; /* Adjust min-width */
+        }
+        .message-container {
+            top: 60px; /* Adjust if needed */
+        }
+    }
 
   </style>
 </head>
@@ -477,8 +426,9 @@
       <h1>Wordle <img src="flag.png" alt="🇦🇲" style="height: 0.7em; vertical-align: middle;"></h1>
       <p class="subtitle">by Armen Mkrtchyan</p>
 
-      <button id="toggle-keyboard">ԱԲԳ</button> <!-- Keyboard Toggle Button -->
       <button id="toggle-theme">🌗</button>
+      <button id="toggle-layout"></button> <!-- Added Layout Toggle Button -->
+
       <div class="message-container">
          <div id="message" class="message"></div>
       </div>
@@ -491,52 +441,65 @@
       </div>
   </div>
 
-  <footer>
-      <a href="https://armblog.net" target="_blank" rel="noopener noreferrer">Armblog.net</a>
-  </footer>
+  <!-- Removed Footer HTML -->
 
 <script>
   const boardElement = document.getElementById('board');
   const keyboardTopRowElement = document.getElementById('keyboard-top-row');
   const keyboardMainGridElement = document.getElementById('keyboard-main-grid');
   const keyboardElement = document.getElementById('keyboard');
-  const toggleBtn = document.getElementById('toggle-theme');
-  const keyboardToggleBtn = document.getElementById('toggle-keyboard'); // Get the new button
+  const toggleBtnTheme = document.getElementById('toggle-theme'); // Renamed for clarity
+  const toggleBtnLayout = document.getElementById('toggle-layout'); // New layout button
   const messageElement = document.getElementById('message');
+  const mainContent = document.querySelector('.main-content');
 
   // --- Constants ---
   const WORD_LENGTH = 5;
   const MAX_ROWS = 6;
   const ENTER_KEY = 'ընդունել';
   const DELETE_KEY = 'ջնջել';
+  const LOCAL_STORAGE_LAYOUT_KEY = 'armenianWordleLayout';
 
   // --- Word List (Assumed 5 letters, lowercase) ---
-  // (Keep your large word list here)
-  const WORDS = ['ֆոտոն','նռնակ','հնդիկ','հեղուկ','արգոն','թրթուռ','կայուն','լուծում','շապիկ','հրշեջ','ընբիշ','մետաղ','ավելի','անզեն','հաշիվ','թափոր','խելառ','լքված','դայակ','ցերեկ','կտրուկ','կճղակ','վրացի','քուռակ','բորսա','ծաղիկ','հատիկ','նիհար','արձակ','թրթուր','տոկուն','եղևնի','սապատ','նեղուց','բժիշկ','ուռենի','չվերթ','մասուր','մեթոդ','թշշոց','քնքուշ','փեթակ','մեդիա','կրունկ','կաթսա','կոալա','գիտակ','կրկես','վարազ','փետուր','կտրիճ','հատուկ','կաղնի','պապիկ','ելույթ','ակամա','բուժում','անկապ','մամուլ','օրգան','արևոտ','դակիչ','թևնոց','պատիվ','մետրո','օթյակ','դրախտ','եռանդ','արկած','դալար','գուլպա','խրոխտ','կաուրի','քանոն','ճաղատ','գնորդ','փխրուն','դրամա','ռետին','զղջում','կապիչ','ապտակ','էկրան','բրդյա','դահուկ','պղտոր','դադար','երշիկ','ձյուդո','ջութակ','լվացք','արծաթ','պուրակ','դեկան','լավաշ','գավաթ','բուլկի','սիրուն','կատակ','զոդում','թեփուկ','անտեր','սափոր','հյուսն','հանում','բյուջե','սեզոն','նիզակ','գրպան','բլղուր','պղպեղ','կնճիռ','սրինգ','եղինջ','հասցե','տզրուկ','սպիրտ','դրվագ','տրվագ','տոկոս','մագիլ','արմավ','վստահ','անցում','չարազ','ամբոխ','պահոց','ակցիա','տիտան','ուրբաթ','անգիր','կենաց','խոռոչ','աղանձ','դարակ','փափուկ','գմբեթ','խոնավ','նախնի','գնդակ','ազդակ','ջոկատ','թենիս','ճահիճ','բնույթ','խրճիթ','թիրախ','տաճար','նշենի','անձրև','հատում','գարուն','խուրմա','ջեռոց','շնորհ','պատիժ','ժողով','դիետա','կանոն','ղազախ','ազնիվ','մոխիր','ճաշակ','բնազդ','անհոգ','ճագար','դուդուկ','խոժոռ','աջլիկ','քոթուկ','անձավ','բմբուլ','խնդիր','սուլոց','բանուկ','կավիճ','հրդեհ','սամբո','հովիվ','առյուծ','կողով','արճիճ','սմբակ','քաղցր','անտաշ','թանձր','երկիր','ատլաս','ժյուրի','ստույգ','խլուրդ','իմաստ','եռակի','կրկին','սրիկա','կաթիլ','թառափ','ճակատ','կոկիկ','սուտակ','կմախք','անբիծ','խխունջ','մտրուկ','կրպակ','աղյուս','մտրակ','հրթիռ','արժեք','էական','ֆիզիկ','վարակ','բացում','առվակ','դոնոր','հուզիչ','կյանք','խնամի','թափուր','կարոտ','համեմ','չնչին','տեսուչ','ուղերձ','շաքար','մալուխ','կոմիկ','հասուն','աղվես','տաքսի','զվարթ','դրոշմ','ծածուկ','մաքուր','օպերա','կուզիկ','կիթառ','ձվաձև','թթենի','էթիկա','չաման','նախիր','բլրակ','բուդդա','աբեղա','հնաոճ','եզակի','դժվար','փաթեթ','պտույտ','արդար','աղցան','առույգ','լրտես','անխնա','ռեգբի','ածելի','հովազ','քարոզ','չամիչ','գրեթե','աղմուկ','դժգոհ','խոշոր','շիտակ','համառ','բանան','միտում','հուժկու','օրենք','զնդան','սողուն','գնացք','փողոց','բոված','քացախ','չմուշկ','ժանիք','ծղրիդ','հասած','թոշակ','անմահ','տարեց','լեմուր','պանդա','մկրատ','խռպոտ','խավիծ','բրդոտ','երդում','չեզոք','նոտար','վտանգ','պիցցա','ֆերմա','ծովափ','ագենտ','մառան','վիպակ','ռուբլի','հուշում','պառավ','խմբակ','սպունգ','թռչուն','ատյան','բեկոր','մատուռ','իներտ','թութակ','անտուն','աբխազ','բոբիկ','չարչի','զգեստ','հուլիս','խավար','գալար','նորեկ','գոռոզ','բազուկ','վզկապ','անամպ','սնդիկ','խուճուճ','լազեր','տափակ','զիջող','ակումբ','կնունք','սալիկ','հնարք','գիշեր','գազան','կաղին','կանեփ','պիտակ','սրճեփ','տավիղ','սամիթ','մորուք','ալևոր','եղունգ','տարազ','գազար','ականջ','սուլիչ','թթվաշ','բացիչ','պատառ','օրրան','օազիս','կորիզ','պարոն','պարեկ','կարիք','պղինձ','թաքուն','ձագար','երեխա','հաշիշ','սխտոր','անհատ','պահակ','վիշապ','շրջան','ծամոն','մածուն','վայրի','ծիծաղ','միջատ','թալան','նամուս','ամուրի','վաղուց','հումոր','ամորֆ','խնոցի','սփռոց','բազում','թափոն','ապրիլ','դելտա','ցնցուղ','զավակ','կայսր','բոլուկ','մենակ','փրկիչ','խղճուկ','չեչեն','սյուժե','աճյուն','կաշվե','ստրուկ','բալետ','թանաք','սանիկ','կշեռք','թմբուկ','վիրուս','բռնիչ','քամիչ','լրատու','գաճաճ','թովիչ','միջոց','մոտիկ','դիմակ','բաժակ','ավարտ','դաժան','բկլիկ','արթուն','մանրէ','կոտեմ','գոմեշ','սիսեռ','սավան','օդաչու','սոխակ','ծիծակ','սոխուկ','ընկեր','ներկա','շլդիկ','ծպտուն','ճկույթ','աքլոր','ակնոց','գնդիկ','ցուցում','ծագում','քննիչ','արշավ','աղջիկ','ունելի','սնունդ','տխմար','տիկին','հպարտ','սթրես','սրվակ','օթևան','բողոք','արմատ','կրքոտ','ծանոթ','արյուն','երանգ','աճուրդ','լյարդ','ամայի','զրույց','սալոր','երկաթ','տոննա','արծիվ','դրույթ','նյարդ','անգետ','կատար','դրացի','լարում','կռունկ','ուղևոր','մանգո','ալբոմ','բեղլու','անուրջ','դուստր','ողորկ','իշխան','ոլորտ','ուլունք','անճար','թոնիր','աուդիո','բիզոն','կողակ','ցորեն','օքսիդ','սմբուկ','սամբա','անկոչ','քանակ','հոկեյ','վահան','խանութ','հրաշք','կոշիկ','անմիտ','զորեղ','արձան','տեսակ','ցողուն','ոսկոր','ըմբիշ','դագաղ','ապակի','դիպուկ','թաթար','մկնիկ','կոկոս','փուչիկ','անդուր','ամփոփ','կոբրա','գագաթ','ապշած','բրինձ','նժույգ','եղնիկ','սենատ','ռեզուս','ջնջոց','շաշկի','կոճակ','ագռավ','իսլամ','դղյակ','մեռած','գերան','զննող','թիթեռ','շեփոր','աքսոր','սելավ','մանուկ','սիբեխ','սպորտ','պնդուկ','երբեք','քիմիկ','պարան','արդուկ','խնձոր','նեխուր','հստակ','միջուկ','ստվեր','գետին','փարոս','հնչեղ','տատիկ','թշվառ','քլունգ','ձավար','պալատ','անջուր','ծղոտե','տանիք','հասակ','խաղաղ','պակաս','կարիճ','հսկիչ','ակունք','երեկո','լուցկի','անսեռ','շարան','հոպոպ','տարիք','համար','կուրծք','անեծք','պաշար','չղջիկ','խորան','վիսկի','անկախ','լուսան','եղյամ','ավանդ','կաքավ','ալյուր','կապար','մորեխ','փրփուր','նամակ','մթերք','անցած','դժոխք','սկիզբ','կապոց','եղեռն','բարդի','բուժիչ','մեխակ','պնդում','րաբբի','սեղան','չափում','ծուղակ','կոպեկ','ծարավ','ցնցում','ակորդ','ոչինչ','քիմիա','ակցիզ','ֆանտա','թավիշ','խշշոց','մոծակ','ավազե','կրճատ','կապիկ','բրոնզ','հարավ','թերաճ','ռեժիմ','ցուցակ','բերրի','բաժին','տոմատ','նվաստ','համեղ','տակառ','զգաստ','գերաճ','շքերթ','լողափ','ապագա','բանակ','հարիչ','զուռնա','ռոբոտ','պարգև','անմեղ','շռայլ','սխեմա','հունիս','այլուր','կամար','արդեն','տաջիկ','խարան','չքնաղ','բարձր','քաղաք','թզենի','բշտիկ','աղքատ','թախիծ','կակաչ','անդամ','խճուղի','ջրվեժ','լորտու','ավյուն','ասպետ','կոչում','սկյուռ','անբան','կացին','տեքստ','խիզախ','ճուռակ','նպաստ','եղեգն','կպչուն','առողջ','մայիս','կնճիթ','կցորդ','զատիկ','դիմում','օսկար','համով','հատակ','խմիչք','դանակ','կարագ','անհամ','թռիչք','ամրոց','մելիք','սեդան','լապշա','բացատ','կեսօր','ծծումբ','գումար','սրբիչ','վզնոց','երկար','անվախ','հմայք','սնանկ','բացիկ','մռայլ','բիրժա','բացիլ','կլիմա','մրցում','ոհմակ','նարդի','լատտե','մումիա','առնետ','մրրիկ','աղերս','ոչխար','ելևէջ','հերոս','գունատ','կեռիկ','դեղին','կեռաս','ծնունդ','խնամք','արխիվ','երգիչ','հազար','կարապ','պասիվ','տաբատ','ծիրան','դոլար','խուճապ','հավատ','փական','փաթիլ','գուշակ','կախիչ','սակավ','պարեն','ծակող','լուսին','ռադիո','կրծող','հիմար','սերիա','լոլիկ','խաղող','ռեհան','ասույթ','դափնի','ուտեստ','այսօր','զգույշ','դպրոց','բերան','միջին','դոդոշ','ամբար','անտիկ','ծորակ','հաճախ','երաշտ','շաբաթ','պարտք','բախում','աղոթք','գզրոց','անզոր','լիմոն','տնջրի','բռնակ','աուդիտ','սրունք','դդմիկ','ալիբի','տոնուս','լակոտ','մորթի','խրթին','կեֆիր','բարակ','անոնս','սպասք','կանաչ','վրձին','խելոք','ամրակ','ակտիվ','դահիճ','շուշան','մատիտ','պանիր','կոպիտ','տապակ','կակաո','վիճակ','ճնշում','անտառ','արարք','մողես','շերեփ','հովիտ','ֆիլտր','պեպսի','մասոն','անկում','ուզբեկ','եռյակ','ներուժ','արջուկ','թմբիկ','ծծումբ','դիմաց','վանող','կիսատ','լինել','առնել','խոսել','նստել','վազել','թռչել','լողալ','սիրել','հիշել','խաղալ','օգնել','գտնել','բացել','փակել','սկսել','ապրել','ծնվել','փոխել','երգել','պարել','ժպտալ'];
+  const WORDS = ['ֆոտոն','նռնակ','հնդիկ','հեղուկ','արգոն','թրթուռ','կայուն','լուծում','շապիկ','հրշեջ','ընբիշ','մետաղ','ավելի','անզեն','հաշիվ','թափոր','խելառ','լքված','դայակ','ցերեկ','կտրուկ','կճղակ','վրացի','քուռակ','բորսա','ծաղիկ','հատիկ','նիհար','արձակ','թրթուր','տոկուն','եղևնի','սապատ','նեղուց','բժիշկ','ուռենի','չվերթ','մասուր','մեթոդ','թշշոց','քնքուշ','փեթակ','մեդիա','կրունկ','կաթսա','կոալա','գիտակ','կրկես','վարազ','փետուր','կտրիճ','հատուկ','կաղնի','պապիկ','ելույթ','ակամա','բուժում','անկապ','մամուլ','օրգան','արևոտ','դակիչ','թևնոց','պատիվ','մետրո','օթյակ','դրախտ','եռանդ','արկած','դալար','գուլպա','խրոխտ','կաուրի','քանոն','ճաղատ','գնորդ','փխրուն','դրամա','ռետին','զղջում','կապիչ','ապտակ','էկրան','բրդյա','դահուկ','պղտոր','դադար','երշիկ','ձյուդո','ջութակ','լվացք','արծաթ','պուրակ','դեկան','լավաշ','գավաթ','բուլկի','սիրուն','կատակ','զոդում','թեփուկ','անտեր','սափոր','հյուսն','հանում','բյուջե','սեզոն','նիզակ','գրպան','բլղուր','պղպեղ','կնճիռ','սրինգ','եղինջ','հասցե','տզրուկ','սպիրտ','դրվագ','տոկոս','մագիլ','արմավ','վստահ','անցում','չարազ','ամբոխ','պահոց','ակցիա','տիտան','ուրբաթ','անգիր','կենաց','խոռոչ','աղանձ','դարակ','փափուկ','գմբեթ','խոնավ','նախնի','գնդակ','ազդակ','ջոկատ','թենիս','ճահիճ','բնույթ','խրճիթ','թիրախ','տաճար','նշենի','անձրև','հատում','գարուն','խուրմա','ջեռոց','շնորհ','պատիժ','ժողով','դիետա','կանոն','ղազախ','ազնիվ','մոխիր','ճաշակ','բնազդ','անհոգ','ճագար','դուդուկ','խոժոռ','աջլիկ','քոթուկ','անձավ','բմբուլ','խնդիր','սուլոց','բանուկ','կավիճ','հրդեհ','սամբո','հովիվ','առյուծ','կողով','արճիճ','սմբակ','քաղցր','անտաշ','թանձր','երկիր','ատլաս','ժյուրի','ստույգ','խլուրդ','իմաստ','եռակի','կրկին','սրիկա','կաթիլ','թառափ','ճակատ','կոկիկ','սուտակ','կմախք','անբիծ','խխունջ','մտրուկ','կրպակ','աղյուս','մտրակ','հրթիռ','արժեք','էական','ֆիզիկ','վարակ','բացում','առվակ','դոնոր','հուզիչ','կյանք','խնամի','թափուր','կարոտ','համեմ','չնչին','տեսուչ','ուղերձ','շաքար','մալուխ','կոմիկ','հասուն','աղվես','տաքսի','զվարթ','դրոշմ','ծածուկ','մաքուր','օպերա','կուզիկ','կիթառ','ձվաձև','թթենի','էթիկա','չաման','նախիր','բլրակ','բուդդա','աբեղա','հնաոճ','եզակի','դժվար','փաթեթ','պտույտ','արդար','աղցան','առույգ','լրտես','անխնա','ռեգբի','ածելի','հովազ','քարոզ','չամիչ','գրեթե','աղմուկ','դժգոհ','խոշոր','շիտակ','համառ','բանան','միտում','հուժկու','օրենք','զնդան','սողուն','գնացք','փողոց','բոված','քացախ','չմուշկ','ժանիք','ծղրիդ','հասած','թոշակ','անմահ','տարեց','լեմուր','պանդա','մկրատ','խռպոտ','խավիծ','բրդոտ','երդում','չեզոք','նոտար','վտանգ','պիցցա','ֆերմա','ծովափ','ագենտ','մառան','վիպակ','ռուբլի','հուշում','պառավ','խմբակ','սպունգ','թռչուն','ատյան','բեկոր','մատուռ','իներտ','թութակ','անտուն','աբխազ','բոբիկ','չարչի','զգեստ','հուլիս','խավար','գալար','նորեկ','գոռոզ','բազուկ','վզկապ','անամպ','սնդիկ','խուճուճ','լազեր','տափակ','զիջող','ակումբ','կնունք','սալիկ','հնարք','գիշեր','գազան','կաղին','կանեփ','պիտակ','սրճեփ','տավիղ','սամիթ','մորուք','ալևոր','եղունգ','տարազ','գազար','ականջ','սուլիչ','թթվաշ','բացիչ','պատառ','օրրան','օազիս','կորիզ','պարոն','պարեկ','կարիք','պղինձ','թաքուն','ձագար','երեխա','հաշիշ','սխտոր','անհատ','պահակ','վիշապ','շրջան','ծամոն','մածուն','վայրի','ծիծաղ','միջատ','թալան','նամուս','ամուրի','վաղուց','հումոր','ամորֆ','խնոցի','սփռոց','բազում','թափոն','ապրիլ','դելտա','ցնցուղ','զավակ','կայսր','բոլուկ','մենակ','փրկիչ','խղճուկ','չեչեն','սյուժե','աճյուն','կաշվե','ստրուկ','բալետ','թանաք','սանիկ','կշեռք','թմբուկ','վիրուս','բռնիչ','քամիչ','լրատու','գաճաճ','թովիչ','միջոց','մոտիկ','դիմակ','բաժակ','ավարտ','դաժան','բկլիկ','արթուն','մանրէ','կոտեմ','գոմեշ','սիսեռ','սավան','օդաչու','սոխակ','ծիծակ','սոխուկ','ընկեր','ներկա','շլդիկ','ծպտուն','ճկույթ','աքլոր','ակնոց','գնդիկ','ցուցում','ծագում','քննիչ','արշավ','աղջիկ','ունելի','սնունդ','տխմար','տիկին','հպարտ','սթրես','սրվակ','օթևան','բողոք','արմատ','կրքոտ','ծանոթ','արյուն','երանգ','աճուրդ','լյարդ','ամայի','զրույց','սալոր','երկաթ','տոննա','արծիվ','դրույթ','նյարդ','անգետ','կատար','դրացի','լարում','կռունկ','ուղևոր','մանգո','ալբոմ','բեղլու','անուրջ','դուստր','ողորկ','իշխան','ոլորտ','ուլունք','անճար','թոնիր','աուդիո','բիզոն','կողակ','ցորեն','օքսիդ','սմբուկ','սամբա','անկոչ','քանակ','հոկեյ','վահան','խանութ','հրաշք','կոշիկ','անմիտ','զորեղ','արձան','տեսակ','ցողուն','ոսկոր','ըմբիշ','դագաղ','ապակի','դիպուկ','թաթար','մկնիկ','կոկոս','փուչիկ','անդուր','ամփոփ','կոբրա','գագաթ','ապշած','բրինձ','նժույգ','եղնիկ','սենատ','ռեզուս','ջնջոց','շաշկի','կոճակ','ագռավ','իսլամ','դղյակ','մեռած','գերան','զննող','թիթեռ','շեփոր','աքսոր','սելավ','մանուկ','սիբեխ','սպորտ','պնդուկ','երբեք','քիմիկ','պարան','արդուկ','խնձոր','նեխուր','հստակ','միջուկ','ստվեր','գետին','փարոս','հնչեղ','տատիկ','թշվառ','քլունգ','ձավար','պալատ','անջուր','ծղոտե','տանիք','հասակ','խաղաղ','պակաս','կարիճ','հսկիչ','ակունք','երեկո','լուցկի','անսեռ','շարան','հոպոպ','տարիք','համար','կուրծք','անեծք','պաշար','չղջիկ','խորան','վիսկի','անկախ','լուսան','եղյամ','ավանդ','կաքավ','ալյուր','կապար','մորեխ','փրփուր','նամակ','մթերք','անցած','դժոխք','սկիզբ','կապոց','եղեռն','բարդի','բուժիչ','մեխակ','պնդում','րաբբի','սեղան','չափում','ծուղակ','կոպեկ','ծարավ','ցնցում','ակորդ','ոչինչ','քիմիա','ակցիզ','ֆանտա','թավիշ','խշշոց','մոծակ','ավազե','կրճատ','կապիկ','բրոնզ','հարավ','թերաճ','ռեժիմ','ցուցակ','բերրի','բաժին','տոմատ','նվաստ','համեղ','տակառ','զգաստ','գերաճ','շքերթ','լողափ','ապագա','բանակ','հարիչ','զուռնա','ռոբոտ','պարգև','անմեղ','շռայլ','սխեմա','հունիս','այլուր','կամար','արդեն','տաջիկ','խարան','չքնաղ','բարձր','քաղաք','թզենի','բշտիկ','աղքատ','թախիծ','կակաչ','անդամ','խճուղի','ջրվեժ','լորտու','ավյուն','ասպետ','կոչում','սկյուռ','անբան','կացին','տեքստ','խիզախ','ճուռակ','նպաստ','եղեգն','կպչուն','առողջ','մայիս','կնճիթ','կցորդ','զատիկ','դիմում','օսկար','համով','հատակ','խմիչք','դանակ','կարագ','անհամ','թռիչք','ամրոց','մելիք','սեդան','լապշա','բացատ','կեսօր','ծծումբ','գումար','սրբիչ','վզնոց','երկար','անվախ','հմայք','սնանկ','բացիկ','մռայլ','բիրժա','բացիլ','կլիմա','մրցում','ոհմակ','նարդի','լատտե','մումիա','առնետ','մրրիկ','աղերս','ոչխար','ելևէջ','հերոս','գունատ','կեռիկ','դեղին','կեռաս','ծնունդ','խնամք','արխիվ','երգիչ','հազար','կարապ','պասիվ','տաբատ','ծիրան','դոլար','խուճապ','հավատ','փական','փաթիլ','գուշակ','կախիչ','սակավ','պարեն','ծակող','լուսին','ռադիո','կրծող','հիմար','սերիա','լոլիկ','խաղող','ռեհան','ասույթ','դափնի','ուտեստ','այսօր','զգույշ','դպրոց','բերան','միջին','դոդոշ','ամբար','անտիկ','ծորակ','հաճախ','երաշտ','շաբաթ','պարտք','բախում','աղոթք','գզրոց','անզոր','լիմոն','տնջրի','բռնակ','աուդիտ','սրունք','դդմիկ','ալիբի','տոնուս','լակոտ','մորթի','խրթին','կեֆիր','բարակ','անոնս','սպասք','կանաչ','վրձին','խելոք','ամրակ','ակտիվ','դահիճ','շուշան','մատիտ','պանիր','կոպիտ','տապակ','կակաո','վիճակ','ճնշում','անտառ','արարք','մողես','շերեփ','հովիտ','ֆիլտր','պեպսի','մասոն','անկում','ուզբեկ','եռյակ','ներուժ','արջուկ','թմբիկ','ծծումբ','դիմաց','վանող','կիսատ','լինել','առնել','խոսել','նստել','վազել','թռչել','լողալ','սիրել','հիշել','խաղալ','օգնել','գտնել','բացել','փակել','սկսել','ապրել','ծնվել','փոխել','երգել','պարել','ժպտալ'];
+
 
   if (WORDS.length === 0) {
       console.error("Word list is empty!");
   }
 
-  // --- Keyboard Layouts ---
-  const alphabeticalKeyboardLayout = [
-     ['ա', 'բ', 'գ', 'դ', 'ե', 'զ', 'է', 'ը'], // 8 keys
-     ['թ', 'ժ', 'ի', 'լ', 'խ', 'ծ', 'կ', 'հ'], // 8 keys
-     ['ձ', 'ղ', 'ճ', 'մ', 'յ', 'ն', 'շ', 'ո'], // 8 keys
-     ['չ', 'պ', 'ջ', 'ռ', 'ս', 'վ', 'տ', 'ր'], // 8 keys
-     ['ց', 'ու', 'փ', 'ք', 'և', 'օ', 'ֆ'] // 7 keys
-  ];
-   const maxKeysAlphabetical = 8; // Widest row in alphabetical layout
+  // --- Correctly Sorted LOWERCASE Armenian Letters for Highlighting/Validation ---
+  // This list is used for general character validation and keyboard highlighting,
+  // independent of the layout shown on the screen.
+  const sortedLetters = [
+      'ա', 'բ', 'գ', 'դ', 'ե', 'զ', 'է', 'ը', // 8
+      'թ', 'ժ', 'ի', 'լ', 'խ', 'ծ', 'կ', 'հ', // 8 (16 total)
+      'ձ', 'ղ', 'ճ', 'մ', 'յ', 'ն', 'շ', 'ո', // 8 (24 total)
+      'չ', 'պ', 'ջ', 'ռ', 'ս', 'վ', 'տ', 'ր', // 8 (32 total)
+      'ց', 'ու', 'փ', 'ք', 'և', 'օ', 'ֆ'      // 7 (39 total)
+    ];
+  const allLetters = [...sortedLetters]; // Use this for physical keyboard input validation
 
-   // The new phonetic layout based on user's input
-  const phoneticKeyboardLayout = [
-    ['է', 'թ', 'փ', 'ձ', 'ջ', 'և', 'ր', 'չ', 'ճ', 'ժ'], // 10 keys
-    ['ք', 'ո', 'ե', 'ռ', 'տ', 'ու', 'ի', 'օ', 'պ', 'խ'], // 10 keys
-    ['ա', 'ս', 'դ', 'ֆ', 'գ', 'հ', 'յ', 'կ', 'լ', 'ծ'], // 10 keys
-    ['զ', 'ղ', 'ց', 'վ', 'բ', 'ն', 'մ', 'շ', 'ը'] // 9 keys
+  // --- Keyboard Layout Definitions ---
+  const keyboardAlphabeticalLayout = [
+     sortedLetters.slice(0, 8),   // ա - ը
+     sortedLetters.slice(8, 16),  // թ - հ
+     sortedLetters.slice(16, 24), // ձ - ո
+     sortedLetters.slice(24, 32), // չ - ր
+     [...sortedLetters.slice(32), ''] // ց - ֆ (7 letters) + 1 placeholder = 8 elements
   ];
-   const maxKeysPhonetic = 10; // Widest row in phonetic layout
 
+   const keyboardPhoneticLayout = [
+      ['է', 'թ', 'փ', 'ձ', 'ջ', 'և', 'ր', 'չ', 'ճ', 'ժ'], // 10 keys
+      ['ք', 'ո', 'ե', 'ռ', 'տ', 'ու', 'ի', 'օ', 'պ', 'խ'], // 10 keys
+      ['ա', 'ս', 'դ', 'ֆ', 'գ', 'հ', 'յ', 'կ', 'լ', 'ծ'], // 10 keys
+      ['զ', 'ղ', 'ց', 'վ', 'բ', 'ն', 'մ', 'շ', 'ը', ''] // 9 keys + 1 placeholder = 10 elements for consistent grid
+   ];
+
+   const LAYOUT_NAMES = {
+       'alphabetical': 'ԱԲԳ',
+       'phonetic': 'ՔՈԵ'
+   };
 
   // --- Daily Word Logic ---
   const startDate = new Date("2025-04-11");
@@ -546,8 +509,6 @@
   const targetWord = WORDS.length > 0 ? WORDS[dayOffset % WORDS.length] : "սխալ";
   const parsedTarget = splitWord(targetWord);
   const dateKey = `armenianWordle-${today.toISOString().split('T')[0]}`;
-  const layoutStorageKey = 'armenianWordleKeyboardLayout';
-
 
   // --- Game State Variables ---
   let guesses = [];
@@ -555,39 +516,37 @@
   let currentRowIndex = 0;
   let isGameOver = false;
   let messageTimeout;
-  let keyStatuses = {}; // Cumulative best status
-  let lastGuessSpecificInfo = {}; // Temp info for current turn's highlighting specifics
-
-  // --- Keyboard Layout State ---
-  let currentKeyboardLayoutType = 'phonetic'; // Default layout type
+  // Stores CUMULATIVE best status: {'letter': 'correct' | 'present' | 'absent'}
+  let keyStatuses = {};
+  // Track current layout state
+  let currentLayoutName = 'phonetic'; // Default layout
+  let currentLayout = keyboardPhoneticLayout;
 
 
   // --- Initialization ---
   function init() {
-    loadState(); // Load theme, game state, AND keyboard layout preference
+    loadState(); // Load theme, layout preference, and game state
     buildBoard();
-    updateKeyboardLayout(); // Build keyboard based on loaded preference
+    buildKeyboard(); // Build keyboard based on loaded layout
     redrawBoardFromState();
-    updateKeyboardHighlight({}); // Initial highlight based on loaded keyStatuses
+    updateKeyboardHighlight(); // Update keyboard highlight based on loaded keyStatuses
 
-    // Check for game over state on refresh
-    if (isGameOver && currentRowIndex >= MAX_ROWS) {
+    // Check for game over state on refresh and display final message/disable input
+    if (isGameOver) {
         const lastGuessString = guesses.length > 0 ? guesses[guesses.length - 1].map(g => g.letter).join('') : '';
         if (splitWord(lastGuessString).join('') !== parsedTarget.join('')) {
-             showMessage(`Պարտություն։ Այսօրվա բառը՝ ${targetWord}`, 0);
+             // If the game was lost
+             showMessage(`Պարտություն։ Այսօրվա բառը՝ ${targetWord}`, 0); // Show message indefinitely
              disableInput();
         } else {
-             showMessage('🎉 Հաղթանակ 🎉', 0);
+             // If the game was won
+             showMessage('🎉 Հաղթանակ 🎉', 0); // Show message indefinitely
              disableInput();
         }
-    } else if (isGameOver) {
-         showMessage('🎉 Հաղթանակ 🎉', 0);
-         disableInput();
     }
 
     window.addEventListener('keydown', handlePhysicalKey);
-    keyboardToggleBtn.onclick = toggleKeyboardLayout; // Add listener to new button
-     toggleBtn.onclick = toggleTheme; // Ensure theme toggle listener is attached
+    toggleBtnLayout.addEventListener('click', switchLayout); // Add listener to the new button
   }
 
   // --- State Management (localStorage) ---
@@ -600,51 +559,71 @@
       keyStatuses // Save only the CUMULATIVE keyStatuses
     };
     localStorage.setItem(dateKey, JSON.stringify(state));
-    // Keyboard layout is saved separately in updateKeyboardLayout
+    localStorage.setItem(LOCAL_STORAGE_LAYOUT_KEY, currentLayoutName); // Save layout preference
   }
 
   function loadState() {
     // Theme
     const savedTheme = localStorage.getItem('theme') || 'light';
     document.body.classList.toggle('dark', savedTheme === 'dark');
-    toggleBtn.textContent = savedTheme === 'dark' ? '☀️' : '🌗';
+    toggleBtnTheme.textContent = savedTheme === 'dark' ? '☀️' : '🌗';
 
-    // Keyboard Layout
-    currentKeyboardLayoutType = localStorage.getItem(layoutStorageKey) || 'phonetic'; // Default to phonetic
+    // Layout Preference
+    const savedLayoutName = localStorage.getItem(LOCAL_STORAGE_LAYOUT_KEY);
+    if (savedLayoutName && LAYOUT_NAMES[savedLayoutName]) { // Validate saved name
+        currentLayoutName = savedLayoutName;
+    } else {
+        currentLayoutName = 'phonetic'; // Default
+    }
+    currentLayout = (currentLayoutName === 'phonetic') ? keyboardPhoneticLayout : keyboardAlphabeticalLayout;
+    // Update button text to reflect the loaded layout
+    toggleBtnLayout.textContent = LAYOUT_NAMES[currentLayoutName];
+    // Update body attribute for CSS targeting
+    document.body.setAttribute('data-keyboard-layout', currentLayoutName);
+
 
     // Game State
     const savedStateJSON = localStorage.getItem(dateKey);
     if (savedStateJSON) {
         try {
             const savedState = JSON.parse(savedStateJSON);
+            // Check if the saved state is for the current word (date)
             if (savedState.targetWord === targetWord) {
                 guesses = savedState.guesses || [];
                 currentRowIndex = savedState.currentRowIndex || 0;
                 isGameOver = savedState.isGameOver || false;
                 keyStatuses = savedState.keyStatuses || {}; // Load cumulative statuses
-                // Basic validation for keyStatuses
+                // Optional: Validate keyStatuses content if necessary
                 for (const key in keyStatuses) {
                    const validStatuses = ['correct', 'present', 'absent', null];
                    if (!validStatuses.includes(keyStatuses[key])) {
-                       delete keyStatuses[key];
+                       delete keyStatuses[key]; // Remove invalid statuses
                    }
                 }
             } else {
+                // If targetWord in storage doesn't match today's word, start a new game
                 console.log("New day or different word detected. Starting fresh.");
-                keyStatuses = {}; // Reset key statuses for new word
+                resetGameState();
             }
         } catch (e) {
             console.error("Error loading saved state:", e);
-            keyStatuses = {}; // Reset on error
+            resetGameState(); // Reset if state is corrupted
         }
     } else {
-        keyStatuses = {}; // Reset if no state found
+         // No saved state found, start a new game
+        resetGameState();
     }
-    lastGuessSpecificInfo = {}; // Always reset this on load
-
-    // Update the keyboard button label based on the loaded layout
-    keyboardToggleBtn.textContent = currentKeyboardLayoutType === 'phonetic' ? 'ԱԲԳ' : 'ՓՆԹԿ';
+    lastGuessSpecificInfo = {}; // Always reset this on load - not used for state but good practice
   }
+
+  function resetGameState() {
+      guesses = [];
+      currentGuess = [];
+      currentRowIndex = 0;
+      isGameOver = false;
+      keyStatuses = {};
+  }
+
 
    // --- Word Processing ---
    function splitWord(word) {
@@ -670,21 +649,18 @@
         for (let j = 0; j < WORD_LENGTH; j++) {
             const tile = document.createElement('div');
             tile.className = 'tile';
+            tile.innerHTML = '<div></div>';
             row.appendChild(tile);
         }
         boardElement.appendChild(row);
     }
   }
 
-  // --- Modified buildKeyboard to handle placeholders for alignment ---
-  function buildKeyboard(layoutData) {
+  function buildKeyboard() {
     keyboardTopRowElement.innerHTML = '';
     keyboardMainGridElement.innerHTML = '';
 
-    // Determine the max keys for the *currently building* layout
-    const currentLayoutMaxKeys = layoutData === phoneticKeyboardLayout ? maxKeysPhonetic : maxKeysAlphabetical;
-
-    // Top Row (Enter/Delete) - Flexbox
+    // Top Row
     [ENTER_KEY, DELETE_KEY].forEach(keyText => {
         const keyElement = document.createElement('button');
         keyElement.textContent = keyText;
@@ -699,79 +675,53 @@
         keyboardTopRowElement.appendChild(keyElement);
     });
 
-    // Main Grid - Dynamic Flexbox rows
-    layoutData.forEach((rowKeys, rowIndex) => {
-        const rowElement = document.createElement('div');
-        rowElement.className = 'keyboard-row';
-
-        const numPlaceholdersNeeded = currentLayoutMaxKeys - rowKeys.length;
-
-        // Add placeholders *before* keys for the last row if it's shorter
-        // This creates the gap at the start of the last row
-        if (rowIndex === layoutData.length - 1 && numPlaceholdersNeeded > 0) {
-             for(let i = 0; i < numPlaceholdersNeeded; i++) {
-                 const placeholder = document.createElement('button');
-                 placeholder.className = 'key placeholder';
-                 placeholder.disabled = true;
-                 placeholder.style.cursor = 'default';
-                 rowElement.appendChild(placeholder);
-             }
-        }
-
-
+    // Main Grid - Use the currentLayout
+    currentLayout.forEach(rowKeys => {
         rowKeys.forEach(keyText => {
             const keyElement = document.createElement('button');
             keyElement.textContent = keyText;
             keyElement.className = 'key';
-             // Only add data-key if it's not a placeholder
-            if (keyText) {
+             // Handle placeholder keys
+            if (!keyText) {
+                 keyElement.classList.add('placeholder');
+                 keyElement.disabled = true;
+                 keyElement.style.cursor = 'default';
+            } else {
                 keyElement.dataset.key = keyText;
                 keyElement.onclick = () => handleKeyClick(keyText);
             }
-             /* Placeholders are handled by the logic above/below */
-            rowElement.appendChild(keyElement);
+            keyboardMainGridElement.appendChild(keyElement);
         });
-
-         // Add placeholders *after* keys for rows other than the last one if they are shorter
-         // and if placeholder wasn't added before (only for the last row)
-         if (rowIndex !== layoutData.length - 1 && numPlaceholdersNeeded > 0) {
-              for(let i = 0; i < numPlaceholdersNeeded; i++) {
-                 const placeholder = document.createElement('button');
-                 placeholder.className = 'key placeholder';
-                 placeholder.disabled = true;
-                 placeholder.style.cursor = 'default';
-                 rowElement.appendChild(placeholder);
-             }
-         }
-
-        keyboardMainGridElement.appendChild(rowElement);
     });
+
+    // Re-apply grid columns based on the current layout
+    // We do this by setting a data attribute on the body and using CSS
+    document.body.setAttribute('data-keyboard-layout', currentLayoutName);
+
   }
 
-  // --- Keyboard Layout Toggle Logic ---
-  function toggleKeyboardLayout() {
-      currentKeyboardLayoutType = currentKeyboardLayoutType === 'phonetic' ? 'alphabetical' : 'phonetic';
-      updateKeyboardLayout(); // Update UI and save preference
-  }
+    // --- Keyboard Layout Switcher ---
+    function switchLayout() {
+        // Toggle layout name
+        currentLayoutName = (currentLayoutName === 'phonetic') ? 'alphabetical' : 'phonetic';
 
-  function updateKeyboardLayout() {
-      const layoutData = currentKeyboardLayoutType === 'phonetic' ? phoneticKeyboardLayout : alphabeticalKeyboardLayout;
+        // Set the corresponding layout array
+        currentLayout = (currentLayoutName === 'phonetic') ? keyboardPhoneticLayout : keyboardAlphabeticalLayout;
 
-      // Update the CSS variable for max keys *before* building
-      const currentLayoutMaxKeys = layoutData === phoneticKeyboardLayout ? maxKeysPhonetic : maxKeysAlphabetical;
-      keyboardElement.style.setProperty('--max-keys-overall', currentLayoutMaxKeys);
+        // Update button text
+        toggleBtnLayout.textContent = LAYOUT_NAMES[currentLayoutName];
 
+        // Rebuild the keyboard with the new layout
+        buildKeyboard();
 
-      buildKeyboard(layoutData); // Build the keyboard with the selected layout
-      // Update the button text to show the *next* layout
-      keyboardToggleBtn.textContent = currentKeyboardLayoutType === 'phonetic' ? 'ԱԲԳ' : 'ՓՆԹԿ';
+        // Update key highlights on the new keyboard
+        updateKeyboardHighlight();
 
-      // Re-apply key highlights based on current game state after rebuilding
-      updateKeyboardHighlight(lastGuessSpecificInfo);
+        // Save the preference
+        saveState();
 
-      // Save the selected layout preference
-      localStorage.setItem(layoutStorageKey, currentKeyboardLayoutType);
-  }
+        // The CSS handles the grid column changes via the data-keyboard-layout attribute set in buildKeyboard
+    }
 
 
   // --- UI Updating & State Restoration ---
@@ -782,8 +732,10 @@
         if (rowIndex < guesses.length) {
              const guessData = guesses[rowIndex];
              tiles.forEach((tile, tileIndex) => {
+                const tileInner = tile.querySelector('div');
+                if (!tileInner) return;
                 const letterData = guessData[tileIndex] || { letter: '', status: '' };
-                tile.textContent = letterData.letter; // Set text directly
+                tileInner.textContent = letterData.letter;
                 tile.classList.remove('correct', 'present', 'absent', 'filled');
                 if (letterData.letter) {
                      tile.classList.add('filled');
@@ -794,7 +746,8 @@
              });
         } else {
               tiles.forEach(tile => {
-                 tile.textContent = ''; // Clear text directly
+                 const tileInner = tile.querySelector('div');
+                 if (tileInner) tileInner.textContent = '';
                  tile.classList.remove('correct', 'present', 'absent', 'filled');
               });
         }
@@ -806,38 +759,34 @@
     const currentRow = boardElement.querySelectorAll('.row')[currentRowIndex];
     const tiles = currentRow.querySelectorAll('.tile');
     tiles.forEach((tile, index) => {
+        const tileInner = tile.querySelector('div');
+        if (!tileInner) return;
         const letter = currentGuess[index] || '';
-        tile.textContent = letter; // Set text directly
+        tileInner.textContent = letter;
         if (letter) {
             tile.classList.add('filled');
         } else {
             tile.classList.remove('filled');
         }
-        tile.classList.remove('correct', 'present', 'absent');
+        tile.classList.remove('correct', 'present', 'absent'); // Ensure no old status classes linger
     });
   }
 
-  // --- updateKeyboardHighlight uses cumulative AND last guess info ---
-  function updateKeyboardHighlight(displayInfoForLastGuess) { // Expects {'letter': {wasCorrect:bool, wasPresent:bool}}
-    // Select all keys with a data-key attribute (actual letters)
-    keyboardElement.querySelectorAll('.key[data-key]').forEach(keyElement => {
+  // --- updateKeyboardHighlight uses cumulative status ---
+  function updateKeyboardHighlight() {
+    keyboardMainGridElement.querySelectorAll('.key[data-key]').forEach(keyElement => {
         const letter = keyElement.dataset.key;
         const cumulativeStatus = keyStatuses[letter]; // Cumulative best
-        // Get info specifically for the LAST guess result display
-        const lastGuessInfo = displayInfoForLastGuess ? displayInfoForLastGuess[letter] : null;
 
+        // Remove old status classes
         keyElement.classList.remove('correct', 'present', 'absent', 'has-present');
 
-        // Apply cumulative status first
+        // Apply cumulative status
         if (cumulativeStatus) {
-             keyElement.classList.add(cumulativeStatus);
+            keyElement.classList.add(cumulativeStatus);
         }
-
-        // If there was a 'present' match for this letter in the LAST guess
-        // AND the key's cumulative status is 'correct', add the 'has-present' class for the border
-        if (cumulativeStatus === 'correct' && lastGuessInfo && lastGuessInfo.wasPresent) {
-             keyElement.classList.add('has-present');
-        }
+        // The .has-present class logic from the original code is not used here
+        // as it wasn't fully integrated with the state.
     });
 }
 
@@ -859,7 +808,7 @@
     updateCurrentRowDisplay();
   }
 
-  // --- handleSubmit updates cumulative statuses AND calculates last guess info ---
+  // --- handleSubmit updates cumulative statuses ---
   function handleSubmit() {
     if (isGameOver) return;
 
@@ -871,143 +820,65 @@
 
     const guessString = currentGuess.join('');
 
-    // Check if the word exists in the dictionary BEFORE checking letter statuses
+    // Check if the word is in the valid word list
     if (!WORDS.includes(guessString)) {
         shakeRow(currentRowIndex);
-        showMessage("Տվյալ բառը մեր բառարանում չկա :(", 1500); // Message for non-existent word
-        return; // Stop processing if the word is not valid
+        showMessage("Տվյալ բառը մեր բառարանում չկա :(", 1500);
+        return;
     }
 
     const result = checkGuess(guessString);
     guesses.push(result);
 
-    // Reset temporary info for this turn
-    lastGuessSpecificInfo = {};
-
-     let tempGuessSpecificInfo = {}; // Track correct/present within this specific guess result
-
+    // Update CUMULATIVE keyStatuses based on the current guess result
     result.forEach(({ letter, status }) => {
-        // 1. Track specifics for THIS guess result
-        if (!tempGuessSpecificInfo[letter]) {
-             tempGuessSpecificInfo[letter] = { wasCorrect: false, wasPresent: false };
+        const currentStatus = keyStatuses[letter];
+        if (status === 'correct') {
+            keyStatuses[letter] = 'correct'; // Correct always overrides
+        } else if (status === 'present' && currentStatus !== 'correct') {
+            keyStatuses[letter] = 'present'; // Present overrides absent/null, but not correct
+        } else if (status === 'absent' && !currentStatus) {
+            keyStatuses[letter] = 'absent'; // Absent only sets if no status yet (not overriding present/correct)
         }
-        if (status === 'correct') tempGuessSpecificInfo[letter].wasCorrect = true;
-        if (status === 'present') tempGuessSpecificInfo[letter].wasPresent = true;
-
-        // 2. Update CUMULATIVE best status for the key highlight
-        const currentStoredBest = keyStatuses[letter];
-
-         let nextStatus = currentStoredBest;
-         if (status === 'correct') {
-            nextStatus = 'correct';
-         } else if (status === 'present') {
-             if (currentStoredBest !== 'correct') { // 'present' overrides 'absent' or null
-                 nextStatus = 'present';
-             }
-         } else if (status === 'absent') {
-             // Only mark a key as absent if it hasn't been marked correct or present *cumulatively*
-             // AND it was truly absent in the *current guess*.
-             // We need to check if the *character value* appeared as correct/present anywhere in the current guess result.
-             let wasCorrectOrPresentInThisGuess = result.some(item => item.letter === letter && (item.status === 'correct' || item.status === 'present'));
-
-             if (!currentStoredBest && !wasCorrectOrPresentInThisGuess) {
-                 nextStatus = 'absent';
-             }
-         }
-         keyStatuses[letter] = nextStatus;
-
-
+         // Note: If a key was 'present' and is now 'absent' in THIS guess, its cumulative status remains 'present'.
+         // If a key was 'correct' and is now 'present'/'absent', its cumulative status remains 'correct'.
     });
 
-    // 3. Store the temporary guess specific info for potential use in updateKeyboardHighlight
-    // (Used specifically for the correct+present border edge case in dark mode)
-    lastGuessSpecificInfo = tempGuessSpecificInfo;
-
-
+    // Animate and update display
     animateGuessResult(currentRowIndex, result);
-    // Pass the info calculated specifically for THIS guess to the highlight function
-    updateKeyboardHighlight(lastGuessSpecificInfo);
+    updateKeyboardHighlight(); // Update keyboard based on cumulative state
 
-    currentRowIndex++;
-    currentGuess = [];
-    saveState(); // Save the updated CUMULATIVE keyStatuses
-
+    // Proceed to next row or end game after animation delay
     setTimeout(() => {
+        currentRowIndex++;
+        currentGuess = [];
+        saveState(); // Save the updated CUMULATIVE keyStatuses and layout preference
+
         checkWinLoss(guessString);
-    }, WORD_LENGTH * 150); // Delay checkWinLoss until animation finishes
+    }, WORD_LENGTH * 150 + 300); // Wait for tile animation + a little buffer
   }
 
 
   function handlePhysicalKey(e) {
      if (isGameOver) return;
      let key = e.key;
-     // Allow Enter, Backspace, Delete
      if (key.length > 1 && key !== 'Backspace' && key !== 'Delete' && key !== 'Enter') {
-         // For other special keys (Shift, Ctrl, Alt, etc.), just ignore
          return;
      }
-     key = e.key.toLowerCase(); // Use e.key for actual pressed key value
-
-     // Define allowed characters for physical keyboard input
-     // Include all unique characters from both keyboard layouts + 'ու' specific logic
-     const allowedChars = new Set();
-     // Add all unique characters from the layouts, filtering out empty strings
-     [...alphabeticalKeyboardLayout.flat(), ...phoneticKeyboardLayout.flat()].filter(char => char).forEach(char => allowedChars.add(char));
-     allowedChars.add('ու'); // Ensure 'ու' is considered a valid input unit
+     key = key.toLowerCase();
 
      if (key === 'enter') {
-         e.preventDefault(); // Prevent default form submission if any
          handleSubmit();
      } else if (key === 'backspace' || key === 'delete') {
-          e.preventDefault(); // Prevent browser back navigation
          handleDelete();
      } else {
-         // Handle regular letter input
-         // Special case for 'ու' typically typed with 'u' on some keyboards
-         // Check if 'u' was pressed AND if 'ու' is in our allowed characters
-         if (key === 'u' && allowedChars.has('ու')) {
-              if (currentGuess.length < WORD_LENGTH) {
-                 handleKeyClick('ու');
-                 e.preventDefault(); // Prevent typing 'u' character
-             }
-         }
-          /*
-          // Optional: Add more specific phonetic physical key mappings here if needed
-          // This could be more complex to handle 'ու' combinations correctly
-          const phoneticMapping = {
-              'c': 'ց',
-              'v': 'վ',
-              't\'': 'թ', // Example for characters needing quotes
-              // ... other mappings if your physical layout differs from standard phonetic software layouts
-          };
-          const mappedKey = phoneticMapping[key]; // Simple direct map lookup
-          if (mappedKey && allowedChars.has(mappedKey)) {
-              if (currentGuess.length < WORD_LENGTH) {
-                 handleKeyClick(mappedKey);
-                 e.preventDefault();
-             }
-          } else if (key.length === 1 && allowedChars.has(key)) {
-             // Fallback to simple single character if no special mapping found
-             if (currentGuess.length < WORD_LENGTH) {
-                handleKeyClick(key);
-                 e.preventDefault();
-            }
-          }
-          */
-           /*
-           // Simplified physical key mapping for standard Armenian letters and 'u' for 'ու'
-           // This captures standard physical keys that match Armenian letters directly
-            */
-          else if (key.length === 1 && allowedChars.has(key)) {
+         // Check if the pressed key is a valid Armenian letter or 'ու' from the `allLetters` array.
+         // This validates physical input based on accepted characters, not the virtual layout.
+         if (allLetters.includes(key)) {
              if (currentGuess.length < WORD_LENGTH) {
                  handleKeyClick(key);
-                 e.preventDefault(); // Prevent default typing
              }
-          } else {
-             // Handle more complex phonetic mappings if needed, outside of the simple 'u' or direct key match
-             // This would require a comprehensive mapping logic if your physical layout is different.
-             // For now, we stick to the simple cases handled above.
-          }
+         }
      }
   }
 
@@ -1016,36 +887,32 @@
   function checkGuess(guessString) {
      const guessChars = splitWord(guessString);
      const result = [];
-     const targetCopy = [...parsedTarget]; // Create a mutable copy
+     const targetCopy = [...parsedTarget];
 
-     // Pass 1: Find Correct matches (letter and position)
+     // Initialize result array structure
+     for(let i = 0; i < WORD_LENGTH; i++) {
+         result[i] = { letter: guessChars[i], status: '' };
+     }
+
+     // Pass 1: Correct
      for (let i = 0; i < WORD_LENGTH; i++) {
-         const letter = guessChars[i];
-         if (letter === targetCopy[i]) {
-             result[i] = { letter: letter, status: 'correct' };
-             targetCopy[i] = null; // Mark this position in targetCopy as used
-         } else {
-             // Initialize with letter and empty status, will fill in Pass 2
-             result[i] = { letter: letter, status: '' };
+         if (guessChars[i] === parsedTarget[i]) {
+             result[i].status = 'correct';
+             targetCopy[i] = null; // Mark this letter in target as used
          }
      }
 
-     // Pass 2: Find Present and Absent matches
+     // Pass 2: Present/Absent
      for (let i = 0; i < WORD_LENGTH; i++) {
-         if (result[i].status === 'correct') {
-             // Already marked as correct, skip
-             continue;
-         }
+         if (result[i].status === 'correct') continue; // Skip already matched correct letters
 
          const letter = guessChars[i];
-         const indexInTargetCopy = targetCopy.indexOf(letter);
+         const indexInTarget = targetCopy.indexOf(letter); // Search in remaining target letters
 
-         if (indexInTargetCopy !== -1) {
-             // Letter is in the target word but not in the correct position
+         if (indexInTarget !== -1) {
              result[i].status = 'present';
-             targetCopy[indexInTargetCopy] = null; // Mark this letter in targetCopy as used
+             targetCopy[indexInTarget] = null; // Mark this letter in target as used
          } else {
-             // Letter is not in the target word (or already used up by correct/present matches)
              result[i].status = 'absent';
          }
      }
@@ -1054,26 +921,28 @@
 
   function checkWinLoss(lastGuessString) {
      if (splitWord(lastGuessString).join('') === parsedTarget.join('')) {
-         showMessage('🎉 Հաղթանակ 🎉', 5000);
+         showMessage('🎉 Հաղթանակ 🎉', 5000); // Short duration for win message
          isGameOver = true;
          disableInput();
-         saveState();
+         saveState(); // Save final state (win) and layout
      } else if (currentRowIndex >= MAX_ROWS) {
-          showMessage(`Պարտություն։ Այսօրվա բառը՝ ${targetWord}`, 10000);
+          showMessage(`Պարտություն։ Այսօրվա բառը՝ ${targetWord}`, 0); // Indefinite duration for loss message
           isGameOver = true;
           disableInput();
-          saveState();
+          saveState(); // Save final state (loss) and layout
      }
   }
 
   function disableInput() {
-     console.log("Game Over - Input Disabled");
+     // console.log("Game Over - Input Disabled");
      window.removeEventListener('keydown', handlePhysicalKey);
      keyboardElement.querySelectorAll('.key').forEach(btn => {
-         // Only disable interactive keys, not placeholders
          if (!btn.classList.contains('placeholder')) {
-            btn.onclick = null; // Remove click handler
+            btn.onclick = null;
             btn.style.cursor = 'default';
+            // Optionally disable the button visually as well
+            // btn.disabled = true;
+            // btn.style.opacity = 0.8;
          }
      });
   }
@@ -1085,22 +954,45 @@
      const tiles = row.querySelectorAll('.tile');
      tiles.forEach((tile, index) => {
          const { letter, status } = result[index];
+         const tileInner = tile.querySelector('div');
 
+         if (!tileInner) return;
+
+         // Set text and 'filled' class immediately
+         tileInner.textContent = letter;
          if (letter) {
             tile.classList.add('filled');
          } else {
              tile.classList.remove('filled');
          }
+         // Remove any old status classes just in case
+         tile.classList.remove('correct', 'present', 'absent');
 
-         // Set text and apply status class with stagger
+
+         // Apply status class with stagger and potentially a flip animation (CSS needed)
          setTimeout(() => {
-             tile.textContent = letter; // Set text directly on the tile
              if (status) {
                 tile.classList.add(status);
+                // You could add a flip animation class here if defined in CSS
+                // tile.classList.add('flip'); // Example
              }
-         }, index * 150); // Stagger delay for coloring/status
+         }, index * 150); // Stagger delay for status reveal/animation
      });
+     // Optional: Add event listener for animation end if using CSS animations
+     // row.addEventListener('animationend', handleAnimationEnd, { once: true });
   }
+
+  /*
+  // Example handler if using tile flip animations
+  function handleAnimationEnd(event) {
+      if (event.target.classList.contains('tile')) {
+          // Remove the flip class after animation
+          event.target.classList.remove('flip');
+      }
+      // Maybe trigger next row logic here if it was dependent on animation end
+      // However, the current logic uses a setTimeout after handleSubmit which is simpler.
+  }
+  */
 
 
   function shakeRow(rowIndex) {
@@ -1125,16 +1017,103 @@
    }
 
   // --- Theme Toggle ---
-  function toggleTheme() {
+  toggleBtnTheme.onclick = () => {
     const isDark = document.body.classList.toggle('dark');
     const theme = isDark ? 'dark' : 'light';
-    toggleBtn.textContent = isDark ? '☀️' : '🌗';
+    toggleBtnTheme.textContent = isDark ? '☀️' : '🌗';
     localStorage.setItem('theme', theme);
+  };
+
+  // --- Dynamic Board Sizing for Small Screens ---
+  function adjustBoardSize() {
+      const viewportHeight = window.innerHeight;
+
+      // Get references to non-board elements that occupy vertical space
+      const h1 = document.querySelector('h1');
+      const subtitle = document.querySelector('.subtitle');
+      const messageContainer = document.querySelector('.message-container');
+      const keyboard = document.getElementById('keyboard');
+      const mainContentStyle = getComputedStyle(mainContent); // Get style for main content padding
+
+      const boardContainer = document.querySelector('.board-container'); // Need this to get its margins
+
+      if (!h1 || !subtitle || !messageContainer || !keyboard || !boardContainer || !boardElement || !mainContent) {
+          console.warn("adjustBoardSize: One or more elements not found.");
+          return; // Exit if critical elements are missing
+      }
+
+      // Calculate the total height occupied by non-board elements including their margins/padding
+      let nonBoardHeight = 0;
+      const elements = [h1, subtitle, messageContainer, keyboard];
+      elements.forEach(el => {
+          const style = getComputedStyle(el);
+          nonBoardHeight += el.offsetHeight; // Includes padding and border
+          nonBoardHeight += parseFloat(style.marginTop) || 0;
+          nonBoardHeight += parseFloat(style.marginBottom) || 0;
+      });
+
+       // Also account for padding on the main content div
+       nonBoardHeight += parseFloat(mainContentStyle.paddingTop) || 0;
+       nonBoardHeight += parseFloat(mainContentStyle.paddingBottom) || 0;
+
+
+      // Account for the board container's own vertical margins
+      const boardContainerStyle = getComputedStyle(boardContainer);
+      const boardContainerMarginTop = parseFloat(boardContainerStyle.marginTop) || 0;
+      const boardContainerMarginBottom = parseFloat(boardContainerStyle.marginBottom) || 0;
+      const boardContainerVerticalMargins = boardContainerMarginTop + boardContainerMarginBottom;
+
+      // Available vertical space *for the board grid itself* (excluding its margins and its container's margins)
+      const availableBoardHeight = viewportHeight - nonBoardHeight - boardContainerVerticalMargins;
+
+      // Get the current grid gaps from the board element (accounts for media queries)
+      const boardStyle = getComputedStyle(boardElement);
+      const rowGap = parseFloat(boardStyle.rowGap) || 0;
+      const columnGap = parseFloat(boardStyle.columnGap) || 0;
+
+      // Calculate the maximum possible tile size based on the available board height
+      // The board has MAX_ROWS rows and (MAX_ROWS - 1) gaps vertically.
+      // We add a small buffer (e.g., 4px) to prevent edge cases causing scrollbars.
+      // A larger buffer might be needed depending on exact rendering and sub-pixel issues.
+      const buffer = 8; // Increased buffer slightly
+      const maxTileSize = (availableBoardHeight - (MAX_ROWS - 1) * rowGap - buffer) / MAX_ROWS;
+
+      // Calculate the required board width based on the max tile size
+      // The board has WORD_LENGTH columns and (WORD_LENGTH - 1) gaps horizontally.
+      const requiredBoardWidth = (WORD_LENGTH * maxTileSize) + (WORD_LENGTH - 1) * columnGap;
+
+      // Get the default max width from the CSS (e.g., 350px or 300px in media queries).
+      // It's tricky to get the *computed* max-width reliably if it's set by media queries.
+      // Let's assume the CSS max-widths (350px / 300px) as the thresholds for JS intervention.
+      // We can check the screen width to see which CSS media query might be active.
+      const cssMaxWidth = window.matchMedia('(max-width: 340px)').matches ? 300 : 350;
+
+      // Apply the calculated width as max-width to the board container
+      // ONLY if it's smaller than the CSS default AND the calculated tile size is reasonable (prevents shrinking too much)
+      const minReasonableTileSize = 30; // Adjusted slightly - avoid making tiles tiny, adjust as needed
+      // Also ensure requiredBoardWidth is positive
+      if (requiredBoardWidth < cssMaxWidth && maxTileSize > minReasonableTileSize && requiredBoardWidth > 0) {
+          // Apply the calculated width
+          boardContainer.style.maxWidth = `${requiredBoardWidth}px`;
+          // console.log(`Adjusted: Viewport H=${viewportHeight.toFixed(1)}, Non-Board H=${nonBoardHeight.toFixed(1)}, Board H=${availableBoardHeight.toFixed(1)}, Tile=${maxTileSize.toFixed(1)}, Board W=${requiredBoardWidth.toFixed(1)}`);
+      } else {
+          // If enough space or calculated width is larger/too small/invalid, remove the inline style
+          // to let the CSS max-width (350px or media query's 300px) take over.
+          boardContainer.style.maxWidth = ''; // Revert to CSS value
+          // console.log(`Default: Viewport H=${viewportHeight.toFixed(1)}, Non-Board H=${nonBoardHeight.toFixed(1)}, Board H=${availableBoardHeight.toFixed(1)}, Tile=${maxTileSize.toFixed(1)}, Board W=${requiredBoardWidth.toFixed(1)}`);
+      }
   }
 
 
   // --- Start the game ---
-  init();
+  // Use DOMContentLoaded to ensure HTML is ready before running init
+  document.addEventListener('DOMContentLoaded', () => {
+      init(); // Initialize game state, board, keyboard etc.
+      adjustBoardSize(); // Then adjust size based on initial viewport size
+  });
+
+  // Adjust size whenever the window is resized
+  window.addEventListener('resize', adjustBoardSize);
 
 </script>
 
