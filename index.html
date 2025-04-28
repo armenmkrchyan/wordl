@@ -148,13 +148,14 @@
       gap: 4px;
       padding: 0 3px;
       margin-top: 5px;
-      margin-bottom: 20px; /* Changed bottom margin */
+      margin-bottom: 20px; /* Changed bottom margin to 20px */
       align-self: center; /* Center keyboard horizontally */
     }
 
     #keyboard-top-row {
         display: grid;
-        grid-template-columns: 1.5fr 1fr;
+        /* Make Enter and Delete columns equal size */
+        grid-template-columns: 1fr 1fr;
         gap: 3px;
     }
 
@@ -187,7 +188,8 @@
 
     .key {
       min-height: 40px;
-      font-size: clamp(0.8rem, 3vw, 1.1rem);
+      /* Adjusted font-size clamp to allow letters to be larger */
+      font-size: clamp(1.2rem, 5vw, 1.8rem);
       font-weight: bold;
       border: 3px solid transparent;
       border-radius: 4px;
@@ -210,6 +212,7 @@
 
     .key.enter,
     .key.delete {
+      /* Font size for Enter/Delete keys remains smaller as they have longer text */
       font-size: clamp(0.7rem, 2.5vw, 0.9rem);
       color: white;
       border-width: 3px;
@@ -406,9 +409,11 @@
 
         .key {
             min-height: 36px; /* Further reduce */
-            font-size: clamp(0.7rem, 2.8vw, 1rem);
+            /* Adjusted font size for small screens */
+            font-size: clamp(1rem, 3.5vw, 1.3rem); /* Adjusted clamp values */
         }
         .key.enter, .key.delete {
+             /* Keep smaller font size for Enter/Delete on small screens */
             font-size: clamp(0.65rem, 2.3vw, 0.8rem);
         }
         /* Adjust button positions relative to main-content padding/width */
@@ -1120,7 +1125,7 @@
       adjustBoardSize(); // Then adjust size based on initial viewport size
   });
 
-  // Adjust size whenever the window is resized
+  // Adjust size whenever the window is resized or layout changes
   window.addEventListener('resize', adjustBoardSize);
 
 </script>
