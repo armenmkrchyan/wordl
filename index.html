@@ -23,8 +23,8 @@
     body {
       font-family: sans-serif;
       display: flex;
-      flex-direction: column;
-      align-items: center;
+      flex-direction: column; /* Stack children vertically */
+      align-items: center; /* Center children horizontally */
       transition: background 0.3s, color 0.3s;
       background-color: var(--bg-color, #fff);
       color: var(--text-color, #000);
@@ -48,17 +48,20 @@
     }
 
     .main-content {
-        flex: 1 0 auto; /* Allows shrinking and growing, taking available space */
+        flex: 1 1 auto; /* Allows growing and shrinking, takes available space */
         width: 100%;
         display: flex;
-        flex-direction: column;
-        align-items: center;
-        max-width: 550px;
+        flex-direction: column; /* Stack children vertically */
+        align-items: center; /* Center children horizontally */
+        max-width: 550px; /* Max width for the main content area */
         margin-left: auto;
         margin-right: auto;
         padding-left: 5px;
         padding-right: 5px;
         padding-bottom: 10px; /* Added some padding to the bottom of main-content */
+        /* Ensure main-content aligns children even if they don't fill the width */
+        align-self: center;
+        position: relative; /* Needed for absolute positioning of child buttons */
     }
 
     h1 {
@@ -83,10 +86,12 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        width: 100%;
-        /* Default max-width */
-        max-width: 350px;
-        margin: 8px 0;
+        width: 100%; /* Board container takes full width of main-content */
+        /* Removed max-width here - JS will control it */
+        /* max-width: 350px; */
+        margin: 8px 0; /* Keep vertical margins */
+        flex: 1 1 auto; /* Allow board container to grow/shrink within main-content */
+        min-height: 0; /* Allow flex item to shrink below content size */
     }
 
     .board {
@@ -94,6 +99,7 @@
       grid-template-rows: repeat(6, 1fr);
       grid-gap: 4px;
       width: 100%; /* Board takes full width of its container */
+      /* The height will be determined by width due to tile aspect ratio */
     }
 
     .row {
@@ -132,15 +138,20 @@
     .tile.absent { background-color: var(--absent-bg); color: var(--tile-text-dark); border-color: var(--absent-bg); }
 
     #keyboard {
+      flex-shrink: 0; /* Prevent keyboard from shrinking */
+      width: 100%;
+      max-width: 550px; /* Align keyboard with main content */
+      margin-left: auto;
+      margin-right: auto;
       display: flex;
       flex-direction: column;
       gap: 4px;
-      width: 100%;
       padding: 0 3px;
-      margin: 5px auto 0;
+      margin-top: 5px;
+      margin-bottom: 20px; /* Changed bottom margin */
+      align-self: center; /* Center keyboard horizontally */
     }
 
-    /* Separate grid styles for different layouts if needed, though often similar gap/structure */
     #keyboard-top-row {
         display: grid;
         grid-template-columns: 1.5fr 1fr;
@@ -149,22 +160,28 @@
 
     #keyboard-main-grid {
         display: grid;
-        /* Default to Alphabetical grid columns */
+        /* Default to Alphabetical grid columns, overridden by data attribute */
         grid-template-columns: repeat(8, 1fr);
         gap: 3px;
     }
 
     /* Specific grid columns for Phonetic layout main grid */
     body[data-keyboard-layout="phonetic"] #keyboard-main-grid {
-         grid-template-columns: repeat(10, 1fr); /* Phonetic layout has rows of 10 */
+         grid-template-columns: repeat(10, 1fr); /* Phonetic layout rows have 10 slots */
          gap: 3px; /* Maintain consistent gap */
     }
-     body[data-keyboard-layout="phonetic"] #keyboard-main-grid .key.placeholder {
-        /* Make placeholder keys visible but inactive for alignment if needed */
-         visibility: visible;
-         background: rgba(0,0,0,0.05); /* Light background to see empty space */
-         pointer-events: none;
-         border-color: transparent;
+
+     /* Placeholder key styling - visible only in layouts that need it for alignment */
+     .key.placeholder {
+        background: transparent;
+        pointer-events: none;
+        border-color: transparent;
+        visibility: hidden; /* Hidden by default */
+     }
+
+    body[data-keyboard-layout="phonetic"] #keyboard-main-grid .key.placeholder {
+        visibility: visible; /* Make placeholder visible in phonetic layout */
+        background: rgba(0,0,0,0.03); /* Subtle background */
      }
 
 
@@ -207,14 +224,6 @@
          background-color: var(--delete-key-bg);
          border-color: var(--delete-key-bg);
          white-space: nowrap;
-    }
-
-    /* Placeholder key styling - Adjusted slightly */
-    .key.placeholder {
-        background: transparent;
-        pointer-events: none;
-        border-color: transparent;
-        visibility: hidden; /* Keep hidden in alphabetical layout */
     }
 
 
@@ -308,11 +317,12 @@
 
 
     /* Theme and Layout Button Positioning */
-    #toggle-theme {
+    /* Position these absolutely within the main-content area */
+    .main-content > #toggle-theme {
       position: absolute;
       top: 10px;
-      right: 10px; /* Position Theme button */
-      margin-bottom: 10px;
+      right: 10px; /* Position Theme button on the right */
+      margin-bottom: 0; /* Remove margin as position is absolute */
       padding: 6px 10px;
       font-size: 0.9rem;
       border-radius: 5px;
@@ -322,17 +332,17 @@
       color: #333;
       z-index: 20;
     }
-    .dark #toggle-theme {
+    .dark .main-content > #toggle-theme {
         background-color: #333;
         color: white;
         border-color: #555;
     }
 
-    #toggle-layout {
+    .main-content > #toggle-layout {
       position: absolute;
       top: 10px;
-      right: 65px; /* Position Layout button to the left of Theme */
-      margin-bottom: 10px;
+      left: 10px; /* Position Layout button on the left */
+      margin-bottom: 0; /* Remove margin as position is absolute */
       padding: 6px 10px;
       font-size: 0.9rem;
       border-radius: 5px;
@@ -341,10 +351,10 @@
       background-color: #eee;
       color: #333;
       z-index: 20;
-       /* Added min-width to prevent text wrap */
-       min-width: 80px;
+       min-width: 80px; /* Added min-width to prevent text wrap */
+       text-align: center; /* Center text in button */
     }
-     .dark #toggle-layout {
+     .dark .main-content > #toggle-layout {
         background-color: #333;
         color: white;
         border-color: #555;
@@ -373,8 +383,7 @@
          }
         .board-container {
             margin: 5px 0;
-            /* This max-width can be overridden by JS if screen height is smaller */
-            max-width: 300px;
+            /* max-width controlled by JS */
         }
         .board, .row {
             grid-gap: 3px; /* Further reduce */
@@ -383,6 +392,7 @@
             gap: 3px;
             padding: 0 2px;
             margin-top: 3px;
+            margin-bottom: 15px; /* Adjusted bottom margin for small screens */
         }
         /* Adjust gaps/columns for smaller screens if needed, though JS might handle size */
          #keyboard-main-grid, #keyboard-top-row {
@@ -401,17 +411,18 @@
         .key.enter, .key.delete {
             font-size: clamp(0.65rem, 2.3vw, 0.8rem);
         }
-        #toggle-theme {
+        /* Adjust button positions relative to main-content padding/width */
+        .main-content > #toggle-theme {
             padding: 4px 7px;
             font-size: 0.8rem;
             top: 5px;
-            right: 5px; /* Adjust position */
+            right: 5px; /* Maintain right position */
         }
-        #toggle-layout {
+        .main-content > #toggle-layout {
             padding: 4px 7px;
             font-size: 0.8rem;
             top: 5px;
-            right: 55px; /* Adjust position relative to theme button */
+            left: 5px; /* Adjust position to the left */
              min-width: 70px; /* Adjust min-width */
         }
         .message-container {
@@ -435,23 +446,22 @@
       <div class="board-container">
          <div class="board" id="board"></div>
       </div>
-      <div id="keyboard">
-          <div id="keyboard-top-row"></div>
-          <div id="keyboard-main-grid"></div>
-      </div>
   </div>
-
-  <!-- Removed Footer HTML -->
+  <!-- Keyboard is now a direct child of body, AFTER main-content -->
+  <div id="keyboard">
+      <div id="keyboard-top-row"></div>
+      <div id="keyboard-main-grid"></div>
+  </div>
 
 <script>
   const boardElement = document.getElementById('board');
   const keyboardTopRowElement = document.getElementById('keyboard-top-row');
   const keyboardMainGridElement = document.getElementById('keyboard-main-grid');
-  const keyboardElement = document.getElementById('keyboard');
-  const toggleBtnTheme = document.getElementById('toggle-theme'); // Renamed for clarity
-  const toggleBtnLayout = document.getElementById('toggle-layout'); // New layout button
+  const keyboardElement = document.getElementById('keyboard'); // Now a direct child of body
+  const toggleBtnTheme = document.getElementById('toggle-theme');
+  const toggleBtnLayout = document.getElementById('toggle-layout');
   const messageElement = document.getElementById('message');
-  const mainContent = document.querySelector('.main-content');
+  const mainContent = document.querySelector('.main-content'); // Still needed for sizing context
 
   // --- Constants ---
   const WORD_LENGTH = 5;
@@ -469,8 +479,6 @@
   }
 
   // --- Correctly Sorted LOWERCASE Armenian Letters for Highlighting/Validation ---
-  // This list is used for general character validation and keyboard highlighting,
-  // independent of the layout shown on the screen.
   const sortedLetters = [
       'ա', 'բ', 'գ', 'դ', 'ե', 'զ', 'է', 'ը', // 8
       'թ', 'ժ', 'ի', 'լ', 'խ', 'ծ', 'կ', 'հ', // 8 (16 total)
@@ -519,8 +527,9 @@
   // Stores CUMULATIVE best status: {'letter': 'correct' | 'present' | 'absent'}
   let keyStatuses = {};
   // Track current layout state
-  let currentLayoutName = 'phonetic'; // Default layout
-  let currentLayout = keyboardPhoneticLayout;
+  // Use the saved layout preference as default, if not found, use 'phonetic'
+  let currentLayoutName = localStorage.getItem(LOCAL_STORAGE_LAYOUT_KEY) || 'phonetic';
+  let currentLayout = (currentLayoutName === 'phonetic') ? keyboardPhoneticLayout : keyboardAlphabeticalLayout;
 
 
   // --- Initialization ---
@@ -578,7 +587,7 @@
     currentLayout = (currentLayoutName === 'phonetic') ? keyboardPhoneticLayout : keyboardAlphabeticalLayout;
     // Update button text to reflect the loaded layout
     toggleBtnLayout.textContent = LAYOUT_NAMES[currentLayoutName];
-    // Update body attribute for CSS targeting
+    // Update body attribute for CSS targeting (done in buildKeyboard too, but set here initially)
     document.body.setAttribute('data-keyboard-layout', currentLayoutName);
 
 
@@ -686,6 +695,7 @@
                  keyElement.classList.add('placeholder');
                  keyElement.disabled = true;
                  keyElement.style.cursor = 'default';
+                 keyElement.dataset.key = ''; // Add dataset.key even for placeholder
             } else {
                 keyElement.dataset.key = keyText;
                 keyElement.onclick = () => handleKeyClick(keyText);
@@ -697,7 +707,6 @@
     // Re-apply grid columns based on the current layout
     // We do this by setting a data attribute on the body and using CSS
     document.body.setAttribute('data-keyboard-layout', currentLayoutName);
-
   }
 
     // --- Keyboard Layout Switcher ---
@@ -719,8 +728,6 @@
 
         // Save the preference
         saveState();
-
-        // The CSS handles the grid column changes via the data-keyboard-layout attribute set in buildKeyboard
     }
 
 
@@ -774,8 +781,11 @@
 
   // --- updateKeyboardHighlight uses cumulative status ---
   function updateKeyboardHighlight() {
-    keyboardMainGridElement.querySelectorAll('.key[data-key]').forEach(keyElement => {
+    keyboardElement.querySelectorAll('.key[data-key]').forEach(keyElement => { // Select all keys, including placeholders (they won't have a meaningful status)
         const letter = keyElement.dataset.key;
+        // Don't highlight placeholders
+        if (!letter) return;
+
         const cumulativeStatus = keyStatuses[letter]; // Cumulative best
 
         // Remove old status classes
@@ -840,8 +850,6 @@
         } else if (status === 'absent' && !currentStatus) {
             keyStatuses[letter] = 'absent'; // Absent only sets if no status yet (not overriding present/correct)
         }
-         // Note: If a key was 'present' and is now 'absent' in THIS guess, its cumulative status remains 'present'.
-         // If a key was 'correct' and is now 'present'/'absent', its cumulative status remains 'correct'.
     });
 
     // Animate and update display
@@ -982,18 +990,6 @@
      // row.addEventListener('animationend', handleAnimationEnd, { once: true });
   }
 
-  /*
-  // Example handler if using tile flip animations
-  function handleAnimationEnd(event) {
-      if (event.target.classList.contains('tile')) {
-          // Remove the flip class after animation
-          event.target.classList.remove('flip');
-      }
-      // Maybe trigger next row logic here if it was dependent on animation end
-      // However, the current logic uses a setTimeout after handleSubmit which is simpler.
-  }
-  */
-
 
   function shakeRow(rowIndex) {
     const row = boardElement.querySelectorAll('.row')[rowIndex];
@@ -1024,28 +1020,27 @@
     localStorage.setItem('theme', theme);
   };
 
-  // --- Dynamic Board Sizing for Small Screens ---
+  // --- Dynamic Board Sizing for Small Screens (and large screens too) ---
   function adjustBoardSize() {
       const viewportHeight = window.innerHeight;
 
       // Get references to non-board elements that occupy vertical space
       const h1 = document.querySelector('h1');
       const subtitle = document.querySelector('.subtitle');
-      const messageContainer = document.querySelector('.message-container');
-      const keyboard = document.getElementById('keyboard');
+      const keyboard = document.getElementById('keyboard'); // Now a direct child of body
       const mainContentStyle = getComputedStyle(mainContent); // Get style for main content padding
-
       const boardContainer = document.querySelector('.board-container'); // Need this to get its margins
 
-      if (!h1 || !subtitle || !messageContainer || !keyboard || !boardContainer || !boardElement || !mainContent) {
+      // Check if all required elements exist
+      if (!h1 || !subtitle || !keyboard || !boardContainer || !boardElement || !mainContent) {
           console.warn("adjustBoardSize: One or more elements not found.");
           return; // Exit if critical elements are missing
       }
 
       // Calculate the total height occupied by non-board elements including their margins/padding
       let nonBoardHeight = 0;
-      const elements = [h1, subtitle, messageContainer, keyboard];
-      elements.forEach(el => {
+      const flowElements = [h1, subtitle, keyboard]; // Elements in the normal document flow that take vertical space
+      flowElements.forEach(el => {
           const style = getComputedStyle(el);
           nonBoardHeight += el.offsetHeight; // Includes padding and border
           nonBoardHeight += parseFloat(style.marginTop) || 0;
@@ -1055,7 +1050,7 @@
        // Also account for padding on the main content div
        nonBoardHeight += parseFloat(mainContentStyle.paddingTop) || 0;
        nonBoardHeight += parseFloat(mainContentStyle.paddingBottom) || 0;
-
+       // Note: messageContainer is fixed position, its height doesn't affect flow space
 
       // Account for the board container's own vertical margins
       const boardContainerStyle = getComputedStyle(boardContainer);
@@ -1073,34 +1068,94 @@
 
       // Calculate the maximum possible tile size based on the available board height
       // The board has MAX_ROWS rows and (MAX_ROWS - 1) gaps vertically.
-      // We add a small buffer (e.g., 4px) to prevent edge cases causing scrollbars.
-      // A larger buffer might be needed depending on exact rendering and sub-pixel issues.
-      const buffer = 8; // Increased buffer slightly
-      const maxTileSize = (availableBoardHeight - (MAX_ROWS - 1) * rowGap - buffer) / MAX_ROWS;
+      // We add a small buffer to prevent edge cases causing scrollbars.
+      const buffer = 8;
+      const maxTileSizeBasedOnHeight = (availableBoardHeight - (MAX_ROWS - 1) * rowGap - buffer) / MAX_ROWS;
 
-      // Calculate the required board width based on the max tile size
-      // The board has WORD_LENGTH columns and (WORD_LENGTH - 1) gaps horizontally.
-      const requiredBoardWidth = (WORD_LENGTH * maxTileSize) + (WORD_LENGTH - 1) * columnGap;
+      // Calculate the required board width based on the max tile size from height
+      const requiredBoardWidthFromHeight = (WORD_LENGTH * maxTileSizeBasedOnHeight) + (WORD_LENGTH - 1) * columnGap;
 
-      // Get the default max width from the CSS (e.g., 350px or 300px in media queries).
-      // It's tricky to get the *computed* max-width reliably if it's set by media queries.
-      // Let's assume the CSS max-widths (350px / 300px) as the thresholds for JS intervention.
-      // We can check the screen width to see which CSS media query might be active.
-      const cssMaxWidth = window.matchMedia('(max-width: 340px)').matches ? 300 : 350;
+      // Get the default max width defined in CSS for the board container
+      // We can get this from the element's computed style *before* we set an inline style
+      const tempMaxWidth = boardContainer.style.maxWidth; // Save current inline style
+      boardContainer.style.maxWidth = ''; // Temporarily remove inline style
+      const cssMaxWidth = parseFloat(getComputedStyle(boardContainer).maxWidth);
+      // If cssMaxWidth is NaN or 0 (e.g. not set), fall back to a default or ignore it if we only want to grow
+      const finalCssMaxWidth = isNaN(cssMaxWidth) || cssMaxWidth === 0 ? Infinity : cssMaxWidth;
+      boardContainer.style.maxWidth = tempMaxWidth; // Restore inline style
+
+
+      // The desired width is the maximum of the width required by vertical fit
+      // and the standard CSS max width (when we want it to grow beyond its default on large screens).
+      // Or, if we only want it to shrink on small screens but respect the CSS max-width on large screens,
+      // then the logic is slightly different. The previous logic (`Math.min(requiredBoardWidthFromHeight, cssMaxWidth)`)
+      // was for shrinking *or* staying at CSS max.
+      // If the request is "if there is a space available, make board larger", this implies
+      // the board container might need a `max-width` *larger* than the CSS default.
+      // However, the current `max-width: 550px;` on `.main-content` (which contains the board)
+      // effectively limits the board's width anyway, as it's `width: 100%;` of its container.
+      // So, the board's actual maximum possible width is `min(requiredBoardWidthFromHeight, main-content's width)`.
+
+      // Let's calculate the maximum available horizontal space for the board within main-content
+      const mainContentPaddingHorizontal = parseFloat(mainContentStyle.paddingLeft) + parseFloat(mainContentStyle.paddingRight);
+      const availableBoardWidthHorizontal = parseFloat(mainContentStyle.width) - mainContentPaddingHorizontal;
+
+
+      // The tile size is constrained by BOTH vertical space and horizontal space.
+      // maxTileSizeBasedOnHeight is calculated based on vertical space.
+      // maxTileSizeBasedOnWidth is calculated based on the available horizontal space within main-content.
+      const maxTileSizeBasedOnWidth = (availableBoardWidthHorizontal - (WORD_LENGTH - 1) * columnGap) / WORD_LENGTH;
+
+
+      // The effective max tile size is the smaller of the two constraints.
+      const effectiveMaxTileSize = Math.min(maxTileSizeBasedOnHeight, maxTileSizeBasedOnWidth);
+
+      // Calculate the board width based on the effective max tile size
+      const finalBoardWidth = (WORD_LENGTH * effectiveMaxTileSize) + (WORD_LENGTH - 1) * columnGap;
+
 
       // Apply the calculated width as max-width to the board container
-      // ONLY if it's smaller than the CSS default AND the calculated tile size is reasonable (prevents shrinking too much)
-      const minReasonableTileSize = 30; // Adjusted slightly - avoid making tiles tiny, adjust as needed
-      // Also ensure requiredBoardWidth is positive
-      if (requiredBoardWidth < cssMaxWidth && maxTileSize > minReasonableTileSize && requiredBoardWidth > 0) {
-          // Apply the calculated width
-          boardContainer.style.maxWidth = `${requiredBoardWidth}px`;
-          // console.log(`Adjusted: Viewport H=${viewportHeight.toFixed(1)}, Non-Board H=${nonBoardHeight.toFixed(1)}, Board H=${availableBoardHeight.toFixed(1)}, Tile=${maxTileSize.toFixed(1)}, Board W=${requiredBoardWidth.toFixed(1)}`);
+      // Ensure the calculated size is reasonable and positive
+      const minReasonableTileSize = 30;
+      const minReasonableBoardWidth = (WORD_LENGTH * minReasonableTileSize) + (WORD_LENGTH - 1) * columnGap;
+
+
+      if (effectiveMaxTileSize > minReasonableTileSize && finalBoardWidth > 0) {
+          // Apply the calculated width to the board container
+          // boardContainer.style.maxWidth = `${finalBoardWidth}px`; // This might conflict with main-content max-width
+          // Instead, let's just let the board take 100% of its container and rely on
+          // making the *container* (board-container) grow up to the calculated size,
+          // but constrained by main-content's max-width.
+
+          // The calculation already respects horizontal limits implicitly because we used
+          // mainContentStyle.width for `availableBoardWidthHorizontal`.
+
+          // Let's simplify: The calculated `requiredBoardWidthFromHeight` tells us
+          // how wide the board *needs* to be to fit vertically.
+          // If this needed width is *less* than the current max width of the board container,
+          // then we *must* shrink it to fit vertically.
+          // If this needed width is *more* than the current max width, we can let it grow,
+          // but it's still capped by the `main-content`'s max width.
+          // Let's go back to the min logic, but use the CSS max-width of the board container
+          // as the upper limit for shrinking/growing within.
+
+           // Recalculate using the CSS max-width correctly
+           const cssMaxWidthForBoardContainer = parseFloat(getComputedStyle(boardContainer).maxWidth) || Infinity; // Get CSS max-width
+           const targetWidth = Math.min(requiredBoardWidthFromHeight, cssMaxWidthForBoardContainer); // Target is minimum of vertical need and CSS limit
+
+           // Apply the width if it's reasonable
+           if (targetWidth > minReasonableBoardWidth && targetWidth > 0) {
+               boardContainer.style.maxWidth = `${targetWidth}px`;
+               // console.log(`Adjusted: Viewport H=${viewportHeight.toFixed(1)}, Needed W (Vert)=${requiredBoardWidthFromHeight.toFixed(1)}, CSS MaxW=${cssMaxWidthForBoardContainer.toFixed(1)}, Target W=${targetWidth.toFixed(1)}`);
+           } else {
+                boardContainer.style.maxWidth = ''; // Revert to CSS
+                // console.log(`Default: Viewport H=${viewportHeight.toFixed(1)}, Needed W (Vert)=${requiredBoardWidthFromHeight.toFixed(1)}, CSS MaxW=${cssMaxWidthForBoardContainer.toFixed(1)}, Target W=${targetWidth.toFixed(1)} (Reverted)`);
+           }
+
       } else {
-          // If enough space or calculated width is larger/too small/invalid, remove the inline style
-          // to let the CSS max-width (350px or media query's 300px) take over.
+          // If calculated width is too small or invalid, revert to CSS
           boardContainer.style.maxWidth = ''; // Revert to CSS value
-          // console.log(`Default: Viewport H=${viewportHeight.toFixed(1)}, Non-Board H=${nonBoardHeight.toFixed(1)}, Board H=${availableBoardHeight.toFixed(1)}, Tile=${maxTileSize.toFixed(1)}, Board W=${requiredBoardWidth.toFixed(1)}`);
+           // console.log(`Default: Viewport H=${viewportHeight.toFixed(1)}, Non-Board H=${nonBoardHeight.toFixed(1)}, Board H=${availableBoardHeight.toFixed(1)}, Tile=${effectiveMaxTileSize.toFixed(1)}, Board W=${finalBoardWidth.toFixed(1)} (Reverted)`);
       }
   }
 
