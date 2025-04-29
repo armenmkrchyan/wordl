@@ -935,7 +935,7 @@
 
         if (isViewingPastGame) {
              // It's a past game, but no saved state or saved state wasn't finished. Allow playing.
-             showMessage(`Խաղում եք անցած խաղ #${gameNumber} (${effectiveDate.toISOString().split('T')[0]})`, 3000); // Informational message
+             showMessage(`Խաղ #${gameNumber} (${effectiveDate.toISOString().split('T')[0]})`, 3000); // Informational message
              console.log(`Playing past game: ${effectiveDate.toISOString().split('T')[0]}`);
         } else {
              // It's today's game, in progress or just started.
