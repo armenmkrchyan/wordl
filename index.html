@@ -45,6 +45,12 @@
         --tile-text-light: #000;
         --tile-text-dark: #fff;
         --link-color: #007bff;
+        --popup-bg: #f8f9fa;
+        --popup-text: #212529;
+        --popup-border: #dee2e6;
+        --popup-overlay-bg: rgba(0, 0, 0, 0.5);
+        --popup-close-color: #6c757d;
+        --popup-link-hover-bg: #e9ecef;
     }
 
     .main-content {
@@ -64,14 +70,47 @@
         position: relative; /* Needed for absolute positioning of child buttons */
     }
 
+    .header-container {
+        display: flex;
+        align-items: baseline; /* Align title and game number */
+        justify-content: center;
+        flex-wrap: wrap; /* Allow wrapping on very small screens */
+        gap: 0.5em; /* Space between title and game number */
+        margin-top: 10px;
+        margin-bottom: 2px;
+        position: relative; /* For absolute positioning of buttons below */
+        width: 100%; /* Take full width to contain elements */
+    }
+
     h1 {
-      margin-top: 10px;
-      margin-bottom: 2px;
+      /* Removed margins, handled by header-container */
+      margin: 0;
       font-size: 1.5rem;
       white-space: nowrap;
     }
 
+    #game-number-display {
+        font-size: 0.9rem;
+        font-weight: bold;
+        color: var(--link-color);
+        cursor: pointer;
+        text-decoration: none;
+        border-bottom: 1px dashed var(--link-color);
+        margin-left: 5px; /* Space from title */
+        white-space: nowrap;
+    }
+    #game-number-display:hover {
+        text-decoration: none;
+        border-bottom-style: solid;
+    }
+    .dark #game-number-display {
+        color: var(--link-color); /* Keep link color distinct in dark mode */
+        border-bottom-color: var(--link-color);
+    }
+
     .subtitle {
+        width: 100%; /* Ensure subtitle takes full width */
+        text-align: center; /* Center subtitle text */
         font-size: 0.9rem;
         color: #777;
         margin-top: 0;
@@ -263,11 +302,11 @@
 
     .message-container {
         position: fixed;
-        top: 70px;
+        top: 70px; /* Adjust if necessary */
         left: 50%;
         transform: translateX(-50%);
         min-height: 30px;
-        z-index: 10;
+        z-index: 1000; /* Above popup overlay */
         width: 90%;
         max-width: 350px;
     }
@@ -301,6 +340,12 @@
         --key-text: #dadce0;
         --tile-text-light: #fff;
         --link-color: #64b5f6;
+        --popup-bg: #2c2c2e;
+        --popup-text: #eaeaeb;
+        --popup-border: #444;
+        --popup-overlay-bg: rgba(0, 0, 0, 0.7);
+        --popup-close-color: #aaa;
+        --popup-link-hover-bg: #3a3a3c;
     }
 
     .dark .message {
@@ -330,7 +375,7 @@
     /* Position these absolutely within the main-content area */
     .main-content > #toggle-theme {
       position: absolute;
-      top: 10px;
+      top: 5px; /* Adjusted position slightly */
       right: 10px; /* Position Theme button on the right */
       margin-bottom: 0; /* Remove margin as position is absolute */
       padding: 6px 10px;
@@ -350,7 +395,7 @@
 
     .main-content > #toggle-layout {
       position: absolute;
-      top: 10px;
+      top: 5px; /* Adjusted position slightly */
       left: 10px; /* Position Layout button on the left */
       margin-bottom: 0; /* Remove margin as position is absolute */
       padding: 6px 10px;
@@ -370,6 +415,75 @@
         border-color: #555;
     }
 
+    /* --- Popup Styles --- */
+    .popup-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: var(--popup-overlay-bg);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 900; /* Below message container */
+        padding: 15px; /* Padding around content */
+    }
+    .popup-content {
+        background-color: var(--popup-bg);
+        color: var(--popup-text);
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid var(--popup-border);
+        max-width: 90%;
+        width: 400px; /* Max width for the popup */
+        max-height: 80vh; /* Limit height */
+        overflow-y: auto; /* Allow scrolling for list */
+        position: relative;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    .popup-content h2 {
+        margin-top: 0;
+        margin-bottom: 15px;
+        text-align: center;
+        font-size: 1.3rem;
+    }
+    .popup-close {
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: var(--popup-close-color);
+        cursor: pointer;
+        line-height: 1;
+    }
+    .popup-close:hover {
+        color: var(--text-color); /* Use main text color on hover */
+    }
+    #past-games-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    #past-games-list li a {
+        display: block;
+        padding: 8px 12px;
+        margin-bottom: 5px;
+        background-color: transparent;
+        color: var(--link-color);
+        text-decoration: none;
+        border-radius: 4px;
+        transition: background-color 0.2s;
+        font-size: 0.95rem;
+    }
+     .dark #past-games-list li a {
+        color: var(--link-color); /* Ensure link color is visible */
+     }
+    #past-games-list li a:hover {
+        background-color: var(--popup-link-hover-bg);
+        text-decoration: underline;
+    }
 
     @keyframes shake {
       0%, 100% { transform: translateX(0); }
@@ -381,9 +495,14 @@
 
     /* Media Query for very small/short screens */
     @media (max-width: 340px), (max-height: 600px) {
+        .header-container {
+            margin-top: 8px;
+        }
         h1 {
             font-size: 1.3rem; /* Further reduce */
-            margin-top: 8px;
+        }
+        #game-number-display {
+            font-size: 0.8rem;
         }
         .subtitle {
             margin-bottom: 3px;
@@ -427,54 +546,93 @@
         .main-content > #toggle-theme {
             padding: 4px 7px;
             font-size: 0.8rem;
-            top: 5px;
+            top: 2px; /* Adjust based on header changes */
             right: 5px; /* Maintain right position */
         }
         .main-content > #toggle-layout {
             padding: 4px 7px;
             font-size: 0.8rem;
-            top: 5px;
+            top: 2px; /* Adjust based on header changes */
             left: 5px; /* Adjust position to the left */
              min-width: 70px; /* Adjust min-width */
         }
         .message-container {
             top: 60px; /* Adjust if needed */
         }
+        .popup-content {
+            width: 95%; /* Allow popup to use more width */
+            padding: 15px;
+        }
+         .popup-content h2 {
+            font-size: 1.2rem;
+         }
+         #past-games-list li a {
+             font-size: 0.9rem;
+             padding: 6px 10px;
+         }
     }
 
   </style>
 </head>
 <body>
   <div class="main-content">
-      <h1>Wordle <img src="flag.png" alt="🇦🇲" style="height: 0.7em; vertical-align: middle;"></h1>
-      <!-- Updated subtitle to be a link -->
+      <!-- Header Container -->
+      <div class="header-container">
+         <h1>Wordle <img src="flag.png" alt="🇦🇲" style="height: 0.7em; vertical-align: middle;"></h1>
+         <!-- Game Number Display -->
+         <span id="game-number-display">Game #...</span>
+      </div>
+      <!-- Subtitle -->
       <p class="subtitle">by <a href="https://www.armblog.net" target="_blank">Armen Mkrtchyan</a></p>
 
+      <!-- Controls -->
       <button id="toggle-theme">🌗</button>
-      <button id="toggle-layout"></button> <!-- Added Layout Toggle Button -->
+      <button id="toggle-layout"></button>
 
+      <!-- Message Container -->
       <div class="message-container">
          <div id="message" class="message"></div>
       </div>
+
+      <!-- Board -->
       <div class="board-container">
          <div class="board" id="board"></div>
       </div>
   </div>
-  <!-- Keyboard is now a direct child of body, AFTER main-content -->
+
+  <!-- Keyboard -->
   <div id="keyboard">
       <div id="keyboard-top-row"></div>
       <div id="keyboard-main-grid"></div>
   </div>
 
+  <!-- Past Games Popup -->
+  <div id="past-games-popup" class="popup-overlay" style="display: none;">
+    <div class="popup-content">
+      <span class="popup-close" id="popup-close-button">×</span>
+      <h2>Past Games</h2>
+      <ul id="past-games-list">
+        <!-- Dynamically populated -->
+        <li><a href="#">Game #1 - 2025-04-11</a></li>
+        <li><a href="#">Game #2 - 2025-04-12</a></li>
+      </ul>
+    </div>
+  </div>
+
+
 <script>
   const boardElement = document.getElementById('board');
   const keyboardTopRowElement = document.getElementById('keyboard-top-row');
   const keyboardMainGridElement = document.getElementById('keyboard-main-grid');
-  const keyboardElement = document.getElementById('keyboard'); // Now a direct child of body
+  const keyboardElement = document.getElementById('keyboard');
   const toggleBtnTheme = document.getElementById('toggle-theme');
   const toggleBtnLayout = document.getElementById('toggle-layout');
   const messageElement = document.getElementById('message');
-  const mainContent = document.querySelector('.main-content'); // Still needed for sizing context
+  const mainContent = document.querySelector('.main-content');
+  const gameNumberDisplay = document.getElementById('game-number-display'); // New element
+  const pastGamesPopup = document.getElementById('past-games-popup'); // New element
+  const pastGamesList = document.getElementById('past-games-list'); // New element
+  const popupCloseButton = document.getElementById('popup-close-button'); // New element
 
   // --- Constants ---
   const WORD_LENGTH = 5;
@@ -482,54 +640,138 @@
   const ENTER_KEY = 'ընդունել';
   const DELETE_KEY = 'ջնջել';
   const LOCAL_STORAGE_LAYOUT_KEY = 'armenianWordleLayout';
+  const LOCAL_STORAGE_HISTORY_KEY = 'armenianWordleHistory'; // Key for past game metadata
+  const START_DATE_STRING = "2025-04-11"; // Keep as string for consistency
 
-  // --- Word List (Assumed 5 letters, lowercase) ---
+  // --- Word List ---
   const WORDS = ['ֆոտոն','նռնակ','հնդիկ','հեղուկ','արգոն','թրթուռ','կայուն','լուծում','շապիկ','հրշեջ','ընբիշ','մետաղ','ավելի','անզեն','հաշիվ','թափոր','խելառ','լքված','դայակ','ցերեկ','կտրուկ','կճղակ','վրացի','քուռակ','բորսա','ծաղիկ','հատիկ','նիհար','արձակ','թրթուր','տոկուն','եղևնի','սապատ','նեղուց','բժիշկ','ուռենի','չվերթ','մասուր','մեթոդ','թշշոց','քնքուշ','փեթակ','մեդիա','կրունկ','կաթսա','կոալա','գիտակ','կրկես','վարազ','փետուր','կտրիճ','հատուկ','կաղնի','պապիկ','ելույթ','ակամա','բուժում','անկապ','մամուլ','օրգան','արևոտ','դակիչ','թևնոց','պատիվ','մետրո','օթյակ','դրախտ','եռանդ','արկած','դալար','գուլպա','խրոխտ','կաուրի','քանոն','ճաղատ','գնորդ','փխրուն','դրամա','ռետին','զղջում','կապիչ','ապտակ','էկրան','բրդյա','դահուկ','պղտոր','դադար','երշիկ','ձյուդո','ջութակ','լվացք','արծաթ','պուրակ','դեկան','լավաշ','գավաթ','բուլկի','սիրուն','կատակ','զոդում','թեփուկ','անտեր','սափոր','հյուսն','հանում','բյուջե','սեզոն','նիզակ','գրպան','բլղուր','պղպեղ','կնճիռ','սրինգ','եղինջ','հասցե','տզրուկ','սպիրտ','դրվագ','տոկոս','մագիլ','արմավ','վստահ','անցում','չարազ','ամբոխ','պահոց','ակցիա','տիտան','ուրբաթ','անգիր','կենաց','խոռոչ','աղանձ','դարակ','փափուկ','գմբեթ','խոնավ','նախնի','գնդակ','ազդակ','ջոկատ','թենիս','ճահիճ','բնույթ','խրճիթ','թիրախ','տաճար','նշենի','անձրև','հատում','գարուն','խուրմա','ջեռոց','շնորհ','պատիժ','ժողով','դիետա','կանոն','ղազախ','ազնիվ','մոխիր','ճաշակ','բնազդ','անհոգ','ճագար','դուդուկ','խոժոռ','աջլիկ','քոթուկ','անձավ','բմբուլ','խնդիր','սուլոց','բանուկ','կավիճ','հրդեհ','սամբո','հովիվ','առյուծ','կողով','արճիճ','սմբակ','քաղցր','անտաշ','թանձր','երկիր','ատլաս','ժյուրի','ստույգ','խլուրդ','իմաստ','եռակի','կրկին','սրիկա','կաթիլ','թառափ','ճակատ','կոկիկ','սուտակ','կմախք','անբիծ','խխունջ','մտրուկ','կրպակ','աղյուս','մտրակ','հրթիռ','արժեք','էական','ֆիզիկ','վարակ','բացում','առվակ','դոնոր','հուզիչ','կյանք','խնամի','թափուր','կարոտ','համեմ','չնչին','տեսուչ','ուղերձ','շաքար','մալուխ','կոմիկ','հասուն','աղվես','տաքսի','զվարթ','դրոշմ','ծածուկ','մաքուր','օպերա','կուզիկ','կիթառ','ձվաձև','թթենի','էթիկա','չաման','նախիր','բլրակ','բուդդա','աբեղա','հնաոճ','եզակի','դժվար','փաթեթ','պտույտ','արդար','աղցան','առույգ','լրտես','անխնա','ռեգբի','ածելի','հովազ','քարոզ','չամիչ','գրեթե','աղմուկ','դժգոհ','խոշոր','շիտակ','համառ','բանան','միտում','հուժկու','օրենք','զնդան','սողուն','գնացք','փողոց','բոված','քացախ','չմուշկ','ժանիք','ծղրիդ','հասած','թոշակ','անմահ','տարեց','լեմուր','պանդա','մկրատ','խռպոտ','խավիծ','բրդոտ','երդում','չեզոք','նոտար','վտանգ','պիցցա','ֆերմա','ծովափ','ագենտ','մառան','վիպակ','ռուբլի','հուշում','պառավ','խմբակ','սպունգ','թռչուն','ատյան','բեկոր','մատուռ','իներտ','թութակ','անտուն','աբխազ','բոբիկ','չարչի','զգեստ','հուլիս','խավար','գալար','նորեկ','գոռոզ','բազուկ','վզկապ','անամպ','սնդիկ','խուճուճ','լազեր','տափակ','զիջող','ակումբ','կնունք','սալիկ','հնարք','գիշեր','գազան','կաղին','կանեփ','պիտակ','սրճեփ','տավիղ','սամիթ','մորուք','ալևոր','եղունգ','տարազ','գազար','ականջ','սուլիչ','թթվաշ','բացիչ','պատառ','օրրան','օազիս','կորիզ','պարոն','պարեկ','կարիք','պղինձ','թաքուն','ձագար','երեխա','հաշիշ','սխտոր','անհատ','պահակ','վիշապ','շրջան','ծամոն','մածուն','վայրի','ծիծաղ','միջատ','թալան','նամուս','ամուրի','վաղուց','հումոր','ամորֆ','խնոցի','սփռոց','բազում','թափոն','ապրիլ','դելտա','ցնցուղ','զավակ','կայսր','բոլուկ','մենակ','փրկիչ','խղճուկ','չեչեն','սյուժե','աճյուն','կաշվե','ստրուկ','բալետ','թանաք','սանիկ','կշեռք','թմբուկ','վիրուս','բռնիչ','քամիչ','լրատու','գաճաճ','թովիչ','միջոց','մոտիկ','դիմակ','բաժակ','ավարտ','դաժան','բկլիկ','արթուն','մանրէ','կոտեմ','գոմեշ','սիսեռ','սավան','օդաչու','սոխակ','ծիծակ','սոխուկ','ընկեր','ներկա','շլդիկ','ծպտուն','ճկույթ','աքլոր','ակնոց','գնդիկ','ցուցում','ծագում','քննիչ','արշավ','աղջիկ','ունելի','սնունդ','տխմար','տիկին','հպարտ','սթրես','սրվակ','օթևան','բողոք','արմատ','կրքոտ','ծանոթ','արյուն','երանգ','աճուրդ','լյարդ','ամայի','զրույց','սալոր','երկաթ','տոննա','արծիվ','դրույթ','նյարդ','անգետ','կատար','դրացի','լարում','կռունկ','ուղևոր','մանգո','ալբոմ','բեղլու','անուրջ','դուստր','ողորկ','իշխան','ոլորտ','ուլունք','անճար','թոնիր','աուդիո','բիզոն','կողակ','ցորեն','օքսիդ','սմբուկ','սամբա','անկոչ','քանակ','հոկեյ','վահան','խանութ','հրաշք','կոշիկ','անմիտ','զորեղ','արձան','տեսակ','ցողուն','ոսկոր','ըմբիշ','դագաղ','ապակի','դիպուկ','թաթար','մկնիկ','կոկոս','փուչիկ','անդուր','ամփոփ','կոբրա','գագաթ','ապշած','բրինձ','նժույգ','եղնիկ','սենատ','ռեզուս','ջնջոց','շաշկի','կոճակ','ագռավ','իսլամ','դղյակ','մեռած','գերան','զննող','թիթեռ','շեփոր','աքսոր','սելավ','մանուկ','սիբեխ','սպորտ','պնդուկ','երբեք','քիմիկ','պարան','արդուկ','խնձոր','նեխուր','հստակ','միջուկ','ստվեր','գետին','փարոս','հնչեղ','տատիկ','թշվառ','քլունգ','ձավար','պալատ','անջուր','ծղոտե','տանիք','հասակ','խաղաղ','պակաս','կարիճ','հսկիչ','ակունք','երեկո','լուցկի','անսեռ','շարան','հոպոպ','տարիք','համար','կուրծք','անեծք','պաշար','չղջիկ','խորան','վիսկի','անկախ','լուսան','եղյամ','ավանդ','կաքավ','ալյուր','կապար','մորեխ','փրփուր','նամակ','մթերք','անցած','դժոխք','սկիզբ','կապոց','եղեռն','բարդի','բուժիչ','մեխակ','պնդում','րաբբի','սեղան','չափում','ծուղակ','կոպեկ','ծարավ','ցնցում','ակորդ','ոչինչ','քիմիա','ակցիզ','ֆանտա','թավիշ','խշշոց','մոծակ','ավազե','կրճատ','կապիկ','բրոնզ','հարավ','թերաճ','ռեժիմ','ցուցակ','բերրի','բաժին','տոմատ','նվաստ','համեղ','տակառ','զգաստ','գերաճ','շքերթ','լողափ','ապագա','բանակ','հարիչ','զուռնա','ռոբոտ','պարգև','անմեղ','շռայլ','սխեմա','հունիս','այլուր','կամար','արդեն','տաջիկ','խարան','չքնաղ','բարձր','քաղաք','թզենի','բշտիկ','աղքատ','թախիծ','կակաչ','անդամ','խճուղի','ջրվեժ','լորտու','ավյուն','ասպետ','կոչում','սկյուռ','անբան','կացին','տեքստ','խիզախ','ճուռակ','նպաստ','եղեգն','կպչուն','առողջ','մայիս','կնճիթ','կցորդ','զատիկ','դիմում','օսկար','համով','հատակ','խմիչք','դանակ','կարագ','անհամ','թռիչք','ամրոց','մելիք','սեդան','լապշա','բացատ','կեսօր','ծծումբ','գումար','սրբիչ','վզնոց','երկար','անվախ','հմայք','սնանկ','բացիկ','մռայլ','բիրժա','բացիլ','կլիմա','մրցում','ոհմակ','նարդի','լատտե','մումիա','առնետ','մրրիկ','աղերս','ոչխար','ելևէջ','հերոս','գունատ','կեռիկ','դեղին','կեռաս','ծնունդ','խնամք','արխիվ','երգիչ','հազար','կարապ','պասիվ','տաբատ','ծիրան','դոլար','խուճապ','հավատ','փական','փաթիլ','գուշակ','կախիչ','սակավ','պարեն','ծակող','լուսին','ռադիո','կրծող','հիմար','սերիա','լոլիկ','խաղող','ռեհան','ասույթ','դափնի','ուտեստ','այսօր','զգույշ','դպրոց','բերան','միջին','դոդոշ','ամբար','անտիկ','ծորակ','հաճախ','երաշտ','շաբաթ','պարտք','բախում','աղոթք','գզրոց','անզոր','լիմոն','տնջրի','բռնակ','աուդիտ','սրունք','դդմիկ','ալիբի','տոնուս','լակոտ','մորթի','խրթին','կեֆիր','բարակ','անոնս','սպասք','կանաչ','վրձին','խելոք','ամրակ','ակտիվ','դահիճ','շուշան','մատիտ','պանիր','կոպիտ','տապակ','կակաո','վիճակ','ճնշում','անտառ','արարք','մողես','շերեփ','հովիտ','ֆիլտր','պեպսի','մասոն','անկում','ուզբեկ','եռյակ','ներուժ','արջուկ','թմբիկ','ծծումբ','դիմաց','վանող','կիսատ','լինել','առնել','խոսել','նստել','վազել','թռչել','լողալ','սիրել','հիշել','խաղալ','օգնել','գտնել','բացել','փակել','սկսել','ապրել','ծնվել','փոխել','երգել','պարել','ժպտալ'];
+  if (WORDS.length === 0) console.error("Word list is empty!");
 
-
-  if (WORDS.length === 0) {
-      console.error("Word list is empty!");
-  }
-
-  // --- Correctly Sorted LOWERCASE Armenian Letters for Highlighting/Validation ---
-  const sortedLetters = [
-      'ա', 'բ', 'գ', 'դ', 'ե', 'զ', 'է', 'ը', // 8
-      'թ', 'ժ', 'ի', 'լ', 'խ', 'ծ', 'կ', 'հ', // 8 (16 total)
-      'ձ', 'ղ', 'ճ', 'մ', 'յ', 'ն', 'շ', 'ո', // 8 (24 total)
-      'չ', 'պ', 'ջ', 'ռ', 'ս', 'վ', 'տ', 'ր', // 8 (32 total)
-      'ց', 'ու', 'փ', 'ք', 'և', 'օ', 'ֆ'      // 7 (39 total)
-    ];
-  const allLetters = [...sortedLetters]; // Use this for physical keyboard input validation
+  // --- Correctly Sorted LOWERCASE Armenian Letters ---
+  const sortedLetters = ['ա', 'բ', 'գ', 'դ', 'ե', 'զ', 'է', 'ը','թ', 'ժ', 'ի', 'լ', 'խ', 'ծ', 'կ', 'հ','ձ', 'ղ', 'ճ', 'մ', 'յ', 'ն', 'շ', 'ո','չ', 'պ', 'ջ', 'ռ', 'ս', 'վ', 'տ', 'ր','ց', 'ու', 'փ', 'ք', 'և', 'օ', 'ֆ'];
+  const allLetters = [...sortedLetters];
 
   // --- Keyboard Layout Definitions ---
-  const keyboardAlphabeticalLayout = [
-     sortedLetters.slice(0, 8),   // ա - ը
-     sortedLetters.slice(8, 16),  // թ - հ
-     sortedLetters.slice(16, 24), // ձ - ո
-     sortedLetters.slice(24, 32), // չ - ր
-     [...sortedLetters.slice(32), ''] // ց - ֆ (7 letters) + 1 placeholder = 8 elements
-  ];
+  const keyboardAlphabeticalLayout = [sortedLetters.slice(0, 8),sortedLetters.slice(8, 16),sortedLetters.slice(16, 24),sortedLetters.slice(24, 32),[...sortedLetters.slice(32), '']];
+  const keyboardPhoneticLayout = [['է', 'թ', 'փ', 'ձ', 'ջ', 'և', 'ր', 'չ', 'ճ', 'ժ'],['ք', 'ո', 'ե', 'ռ', 'տ', 'ու', 'ի', 'օ', 'պ', 'խ'],['ա', 'ս', 'դ', 'ֆ', 'գ', 'հ', 'յ', 'կ', 'լ', 'ծ'],['զ', 'ղ', 'ց', 'վ', 'բ', 'ն', 'մ', 'շ', 'ը', '']];
+  const LAYOUT_NAMES = {'alphabetical': 'ԱԲԳ','phonetic': 'ՔՈԵ'};
 
-   const keyboardPhoneticLayout = [
-      ['է', 'թ', 'փ', 'ձ', 'ջ', 'և', 'ր', 'չ', 'ճ', 'ժ'], // 10 keys
-      ['ք', 'ո', 'ե', 'ռ', 'տ', 'ու', 'ի', 'օ', 'պ', 'խ'], // 10 keys
-      ['ա', 'ս', 'դ', 'ֆ', 'գ', 'հ', 'յ', 'կ', 'լ', 'ծ'], // 10 keys
-      ['զ', 'ղ', 'ց', 'վ', 'բ', 'ն', 'մ', 'շ', 'ը', ''] // 9 keys + 1 placeholder = 10 elements for consistent grid
-   ];
+  // --- Game Date and Word Logic ---
+  let effectiveDate; // The date we are actually displaying/loading state for
+  let isViewingPastGame = false; // Flag to indicate if we loaded from URL param
+  let targetWord;
+  let parsedTarget;
+  let dateKey; // localStorage key for the game state of the effectiveDate
+  let dayOffset; // Offset for the effectiveDate
+  let gameNumber; // Game number for the effectiveDate
 
-   const LAYOUT_NAMES = {
-       'alphabetical': 'ԱԲԳ', /* Changed name */
-       'phonetic': 'ՔՈԵ' /* Changed name */
-   };
+    // --- Game Date and Word Logic (UTC Version) ---
+  function setupDateAndWord(dateString = null) {
+      // Define Start Date components from the string
+      const startYear = parseInt(START_DATE_STRING.substring(0, 4));
+      const startMonth = parseInt(START_DATE_STRING.substring(5, 7)) - 1; // Month is 0-indexed for Date.UTC
+      const startDay = parseInt(START_DATE_STRING.substring(8, 10));
+      // Get Start Date as milliseconds since epoch at UTC midnight
+      const startDateUTC = Date.UTC(startYear, startMonth, startDay, 0, 0, 0, 0);
 
-  // --- Daily Word Logic ---
-  const startDate = new Date("2025-04-11");
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const dayOffset = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
-  const targetWord = WORDS.length > 0 ? WORDS[dayOffset % WORDS.length] : "սխալ";
-  const parsedTarget = splitWord(targetWord);
-  const dateKey = `armenianWordle-${today.toISOString().split('T')[0]}`;
+      // Get Today's Date at UTC midnight
+      const now = new Date(); // Current moment
+      const todayUTC = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0); // Today's midnight UTC
+
+      let effectiveDateUTC; // This will hold the UTC milliseconds for the date we are loading
+      isViewingPastGame = false; // Reset flag
+
+      // console.log(`[Setup UTC] Received dateString: ${dateString}`); // Keep for debugging if needed
+
+      if (dateString) {
+          // Parse the incoming date string as UTC midnight
+          const parts = dateString.split('-');
+          let requestedDateUTC = NaN;
+          if (parts.length === 3) {
+               const reqYear = parseInt(parts[0]);
+               const reqMonth = parseInt(parts[1]) - 1; // 0-indexed month
+               const reqDay = parseInt(parts[2]);
+               // Ensure parsed components are valid before creating UTC date
+               if (!isNaN(reqYear) && !isNaN(reqMonth) && !isNaN(reqDay)) {
+                    requestedDateUTC = Date.UTC(reqYear, reqMonth, reqDay, 0, 0, 0, 0);
+               }
+          }
+
+          // console.log(`[Setup UTC] Parsed requestedDateUTC: ${isNaN(requestedDateUTC) ? 'Invalid Date' : new Date(requestedDateUTC).toISOString()}`); // Debugging
+
+          // Validate parsed date (milliseconds): Is it a number? Is it on or before today (UTC)? Is it on or after start date (UTC)?
+          if (!isNaN(requestedDateUTC) && requestedDateUTC <= todayUTC && requestedDateUTC >= startDateUTC) {
+              effectiveDateUTC = requestedDateUTC;
+              isViewingPastGame = true;
+          } else {
+              // Fallback to today if requested date is invalid, future, or before start date
+              console.warn(`Invalid, future, or too early date requested: ${dateString}. Loading today's game.`);
+              effectiveDateUTC = todayUTC;
+              isViewingPastGame = false; // Make sure flag is false
+              // Clear the bad query param from URL history
+              if (window.history.replaceState) {
+                   window.history.replaceState(null, '', window.location.pathname);
+              }
+          }
+      } else {
+          // No date string provided, use today's UTC midnight
+          effectiveDateUTC = todayUTC;
+          isViewingPastGame = false;
+      }
+
+      // --- Calculate offset and game number based purely on UTC difference ---
+      const diffMillis = effectiveDateUTC - startDateUTC;
+      // Ensure difference is non-negative before calculating offset
+      dayOffset = diffMillis >= 0 ? Math.floor(diffMillis / (1000 * 60 * 60 * 24)) : -1;
+      gameNumber = dayOffset + 1; // Game number is offset + 1 (Game #1 corresponds to offset 0)
+
+      // Create a standard Date object representing the effective date (primarily for formatting)
+      // Note: Formatting this directly might show local time, use UTC methods for consistency.
+      effectiveDate = new Date(effectiveDateUTC);
+
+      // --- Logging for Verification ---
+      // console.log(`[Setup UTC] Effective Date (UTC ms): ${effectiveDateUTC}, ISO: ${effectiveDate.toISOString()}`);
+      // console.log(`[Setup UTC] Start Date (UTC ms): ${startDateUTC}, ISO: ${new Date(startDateUTC).toISOString()}`);
+      // console.log(`[Setup UTC] Calculated dayOffset: ${dayOffset}`);
+      // console.log(`[Setup UTC] Calculated gameNumber: ${gameNumber}`);
+      // --- End Logging ---
+
+
+      // Select the target word using the calculated dayOffset
+      targetWord = WORDS.length > 0 ? WORDS[dayOffset % WORDS.length] : "սխալ";
+      // Add a check for negative offset or offset exceeding word list length
+      if (dayOffset < 0 || dayOffset >= WORDS.length) {
+           console.warn(`Calculated dayOffset ${dayOffset} is invalid or out of bounds for WORDS array (length ${WORDS.length}). Using fallback word.`);
+           targetWord = "սխալ"; // Ensure fallback word if offset is bad
+           // Optionally reset gameNumber if offset is invalid?
+           // gameNumber = '?'; // Or handle appropriately elsewhere
+      }
+      parsedTarget = splitWord(targetWord);
+
+      // Generate the dateKey using the YYYY-MM-DD format derived from UTC components
+      const keyYear = effectiveDate.getUTCFullYear();
+      const keyMonth = String(effectiveDate.getUTCMonth() + 1).padStart(2, '0');
+      const keyDay = String(effectiveDate.getUTCDate()).padStart(2, '0');
+      const effectiveDateStringForKey = `${keyYear}-${keyMonth}-${keyDay}`;
+      dateKey = `armenianWordle-${effectiveDateStringForKey}`;
+
+      // Update the display
+      gameNumberDisplay.textContent = `Խաղ #${gameNumber}`;
+      if (isViewingPastGame) {
+          gameNumberDisplay.title = `Դիտում եք ${effectiveDateStringForKey} խաղը։ Սեղմեք՝ բացելու պատմությունը։`;
+      } else {
+          gameNumberDisplay.title = `Սեղմեք՝ տեսնելու անցած խաղերը։`;
+      }
+      // console.log(`[Setup UTC] Word selected for offset ${dayOffset}: ${targetWord}`); // Debugging
+      // console.log(`[Setup UTC] dateKey: ${dateKey}`); // Debugging
+  }
+
+  function getGameNumberForDate(date) {
+      const startDate = new Date(START_DATE_STRING);
+      date.setHours(0, 0, 0, 0);
+      const offset = Math.floor((date - startDate) / (1000 * 60 * 60 * 24));
+      return offset + 1;
+  }
 
   // --- Game State Variables ---
   let guesses = [];
@@ -537,114 +779,190 @@
   let currentRowIndex = 0;
   let isGameOver = false;
   let messageTimeout;
-  // Stores CUMULATIVE best status: {'letter': 'correct' | 'present' | 'absent'}
   let keyStatuses = {};
-  // Track current layout state
-  // Use the saved layout preference as default, if not found, use 'phonetic'
   let currentLayoutName = localStorage.getItem(LOCAL_STORAGE_LAYOUT_KEY) || 'phonetic';
   let currentLayout = (currentLayoutName === 'phonetic') ? keyboardPhoneticLayout : keyboardAlphabeticalLayout;
 
 
-  // --- Initialization ---
-  function init() {
-    loadState(); // Load theme, layout preference, and game state
-    buildBoard();
-    buildKeyboard(); // Build keyboard based on loaded layout
-    redrawBoardFromState();
-    updateKeyboardHighlight(); // Update keyboard highlight based on loaded keyStatuses
-
-    // Check for game over state on refresh and display final message/disable input
-    if (isGameOver) {
-        const lastGuessString = guesses.length > 0 ? guesses[guesses.length - 1].map(g => g.letter).join('') : '';
-        if (splitWord(lastGuessString).join('') !== parsedTarget.join('')) {
-             // If the game was lost
-             showMessage(`Պարտություն։ Այսօրվա բառը՝ ${targetWord}`, 0); // Show message indefinitely
-             disableInput();
-        } else {
-             // If the game was won
-             showMessage('🎉 Հաղթանակ 🎉', 0); // Show message indefinitely
-             disableInput();
-        }
-    }
-
-    window.addEventListener('keydown', handlePhysicalKey);
-    toggleBtnLayout.addEventListener('click', switchLayout); // Add listener to the new button
-  }
-
-  // --- State Management (localStorage) ---
+   // --- State Management (localStorage) ---
   function saveState() {
+    // Allow saving state regardless of whether it's today or a past game.
+    // The dateKey ensures it saves to the correct day's storage slot.
+
     const state = {
       guesses,
       currentRowIndex,
       isGameOver,
-      targetWord,
-      keyStatuses // Save only the CUMULATIVE keyStatuses
+      targetWord, // Save the target word for this date's state
+      keyStatuses
     };
-    localStorage.setItem(dateKey, JSON.stringify(state));
-    localStorage.setItem(LOCAL_STORAGE_LAYOUT_KEY, currentLayoutName); // Save layout preference
+    localStorage.setItem(dateKey, JSON.stringify(state)); // Use dateKey for the specific day being played/viewed
+    // console.log(`Saved state for ${dateKey}, isGameOver: ${isGameOver}`);
+
+    // Save layout preference separately, always allowed
+    localStorage.setItem(LOCAL_STORAGE_LAYOUT_KEY, currentLayoutName);
+
+    // --- Update MAIN History List (Only when CURRENT day's game ends) ---
+    // This check REMAINS crucial: Only add to the official history popup list
+    // when the game corresponding to the ACTUAL CURRENT DATE is finished.
+    const todayForHistoryCheck = new Date();
+    todayForHistoryCheck.setHours(0, 0, 0, 0);
+    const isEffectiveDateToday = effectiveDate.getTime() === todayForHistoryCheck.getTime();
+
+    if (isGameOver && isEffectiveDateToday) { // Only update history if game over AND it's today's game
+        try {
+            // console.log(`Updating history list because today's game (#${gameNumber}) finished.`);
+            const historyString = localStorage.getItem(LOCAL_STORAGE_HISTORY_KEY);
+            let history = historyString ? JSON.parse(historyString) : [];
+            if (!Array.isArray(history)) history = [];
+
+            const currentDateString = effectiveDate.toISOString().split('T')[0]; // Should be today's date string
+            const currentGameNumber = gameNumber; // Should be today's game number
+
+            const existingEntryIndex = history.findIndex(entry => entry.date === currentDateString);
+            const newEntry = { date: currentDateString, number: currentGameNumber };
+
+            if (existingEntryIndex > -1) {
+                history[existingEntryIndex] = newEntry;
+            } else {
+                history.push(newEntry);
+            }
+
+            history.sort((a, b) => new Date(b.date) - new Date(a.date));
+            localStorage.setItem(LOCAL_STORAGE_HISTORY_KEY, JSON.stringify(history));
+            // console.log("Saved history:", history);
+
+        } catch (e) {
+            console.error("Error saving game history:", e);
+        }
+    } else if (isGameOver && !isEffectiveDateToday) {
+         // console.log(`Finished a past game (${dateKey}), NOT updating main history list.`);
+    }
   }
+
 
   function loadState() {
     // Theme
-    // Changed default theme from 'light' to 'dark'
     const savedTheme = localStorage.getItem('theme') || 'dark';
     document.body.classList.toggle('dark', savedTheme === 'dark');
     toggleBtnTheme.textContent = savedTheme === 'dark' ? '☀️' : '🌗';
 
     // Layout Preference
     const savedLayoutName = localStorage.getItem(LOCAL_STORAGE_LAYOUT_KEY);
-    if (savedLayoutName && LAYOUT_NAMES[savedLayoutName]) { // Validate saved name
+    if (savedLayoutName && LAYOUT_NAMES[savedLayoutName]) {
         currentLayoutName = savedLayoutName;
     } else {
-        currentLayoutName = 'phonetic'; // Default layout is phonetic
+        currentLayoutName = 'phonetic';
     }
     currentLayout = (currentLayoutName === 'phonetic') ? keyboardPhoneticLayout : keyboardAlphabeticalLayout;
-    // Update button text to reflect the loaded layout
     toggleBtnLayout.textContent = LAYOUT_NAMES[currentLayoutName];
-    // Update body attribute for CSS targeting (done in buildKeyboard too, but set here initially)
     document.body.setAttribute('data-keyboard-layout', currentLayoutName);
 
-
-    // Game State
-    const savedStateJSON = localStorage.getItem(dateKey);
+    // --- Load Game State for the effectiveDate ---
+    const savedStateJSON = localStorage.getItem(dateKey); // Use the key for the specific date
     if (savedStateJSON) {
+        // Saved state EXISTS for this date (today or past)
         try {
             const savedState = JSON.parse(savedStateJSON);
-            // Check if the saved state is for the current word (date)
-            if (savedState.targetWord === targetWord) {
-                guesses = savedState.guesses || [];
-                currentRowIndex = savedState.currentRowIndex || 0;
-                isGameOver = savedState.isGameOver || false;
-                keyStatuses = savedState.keyStatuses || {}; // Load cumulative statuses
-                // Optional: Validate keyStatuses content if necessary
-                for (const key in keyStatuses) {
-                   const validStatuses = ['correct', 'present', 'absent', null];
-                   if (!validStatuses.includes(keyStatuses[key])) {
-                       delete keyStatuses[key]; // Remove invalid statuses
-                   }
-                }
-            } else {
-                // If targetWord in storage doesn't match today's word, start a new game
-                console.log("New day or different word detected. Starting fresh.");
-                resetGameState();
+            guesses = savedState.guesses || [];
+            currentRowIndex = savedState.currentRowIndex || 0;
+            // *** Load isGameOver directly from the saved state ***
+            isGameOver = savedState.isGameOver || false;
+            keyStatuses = savedState.keyStatuses || {};
+            // Validate keyStatuses
+            for (const key in keyStatuses) {
+               const validStatuses = ['correct', 'present', 'absent', null];
+               if (!validStatuses.includes(keyStatuses[key])) {
+                   delete keyStatuses[key];
+               }
             }
+             // console.log(`Loaded state for ${dateKey}: isGameOver=${isGameOver}`);
+
         } catch (e) {
-            console.error("Error loading saved state:", e);
+            console.error(`Error loading saved state for ${dateKey}:`, e);
             resetGameState(); // Reset if state is corrupted
+            isGameOver = false; // Ensure playable if state was corrupt
         }
     } else {
-         // No saved state found, start a new game
+        // No saved state found for this date
+        // Reset game variables for a fresh start for this date's word
         resetGameState();
+        // *** Ensure isGameOver is false, allowing play ***
+        isGameOver = false;
+        // console.log(`No saved state found for ${dateKey}. Initializing fresh game. isGameOver=${isGameOver}`);
     }
-    lastGuessSpecificInfo = {}; // Always reset this on load - not used for state but good practice
+    // currentGuess should always be reset on load, regardless of state found
+    currentGuess = [];
   }
+
+
+  // --- Initialization ---
+  function init() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const dateParam = urlParams.get('date');
+
+    setupDateAndWord(dateParam); // Determine effectiveDate, targetWord, isViewingPastGame etc.
+
+    loadState(); // Load state (if exists) for effectiveDate. Sets isGameOver based on loaded state or defaults to false.
+
+    buildBoard();
+    buildKeyboard(); // Build keyboard based on loaded layout
+    redrawBoardFromState(); // Display loaded guesses or empty board
+    updateKeyboardHighlight(); // Update keyboard based on loaded keyStatuses
+
+    // --- Conditional Input Disabling & Messaging ---
+    if (isGameOver) {
+        // Game is over EITHER because today's game was finished OR loaded state for a past game showed it was finished.
+        disableInput();
+
+        // Show final message based on the loaded state (which loadState populated)
+        const lastGuessString = guesses.length > 0 ? guesses[guesses.length - 1].map(g => g.letter).join('') : '';
+        const wordForMessage = (localStorage.getItem(dateKey) ? JSON.parse(localStorage.getItem(dateKey)).targetWord : null) || targetWord; // Use saved target if possible, else current
+
+        if (splitWord(lastGuessString).join('') === splitWord(wordForMessage).join('')) {
+            showMessage('🎉 Հաղթանակ 🎉', 0); // Indefinite
+        } else {
+            // If lost or loaded a completed-lost game
+             showMessage(`Խաղն ավարտված է։ Բառը՝ ${wordForMessage}`, 0); // Indefinite, generalized message
+        }
+         if (isViewingPastGame) {
+              console.log(`Viewing completed past game: ${effectiveDate.toISOString().split('T')[0]}`);
+         }
+
+    } else {
+        // Game is NOT over. It's either today's game in progress, or a past game loaded fresh.
+        // Ensure input is enabled (default state, no need to explicitly enable unless previously disabled)
+
+        if (isViewingPastGame) {
+             // It's a past game, but no saved state or saved state wasn't finished. Allow playing.
+             showMessage(`Խաղում եք անցած խաղ #${gameNumber} (${effectiveDate.toISOString().split('T')[0]})`, 3000); // Informational message
+             console.log(`Playing past game: ${effectiveDate.toISOString().split('T')[0]}`);
+        } else {
+             // It's today's game, in progress or just started.
+             // console.log("Playing today's game.");
+             // No initial message needed unless resuming mid-game, maybe? (Currently no specific message for this)
+        }
+    }
+
+
+    // Add general event listeners
+    window.addEventListener('keydown', handlePhysicalKey);
+    toggleBtnLayout.addEventListener('click', switchLayout);
+    gameNumberDisplay.addEventListener('click', openPastGamesPopup);
+    popupCloseButton.addEventListener('click', closePastGamesPopup);
+    pastGamesPopup.addEventListener('click', (e) => {
+        if (e.target === pastGamesPopup) closePastGamesPopup();
+    });
+  }
+
 
   function resetGameState() {
       guesses = [];
       currentGuess = [];
       currentRowIndex = 0;
-      isGameOver = false;
+      isGameOver = false; // Reset game over status
       keyStatuses = {};
+      // Don't reset isViewingPastGame here, it's determined by URL
   }
 
 
@@ -704,12 +1022,11 @@
             const keyElement = document.createElement('button');
             keyElement.textContent = keyText;
             keyElement.className = 'key';
-             // Handle placeholder keys
             if (!keyText) {
                  keyElement.classList.add('placeholder');
                  keyElement.disabled = true;
                  keyElement.style.cursor = 'default';
-                 keyElement.dataset.key = ''; // Add dataset.key even for placeholder
+                 keyElement.dataset.key = '';
             } else {
                 keyElement.dataset.key = keyText;
                 keyElement.onclick = () => handleKeyClick(keyText);
@@ -717,33 +1034,19 @@
             keyboardMainGridElement.appendChild(keyElement);
         });
     });
-
-    // Set body attribute for CSS targeting
     document.body.setAttribute('data-keyboard-layout', currentLayoutName);
   }
 
     // --- Keyboard Layout Switcher ---
     function switchLayout() {
-        // Toggle layout name
         currentLayoutName = (currentLayoutName === 'phonetic') ? 'alphabetical' : 'phonetic';
-
-        // Set the corresponding layout array
         currentLayout = (currentLayoutName === 'phonetic') ? keyboardPhoneticLayout : keyboardAlphabeticalLayout;
-
-        // Update button text
         toggleBtnLayout.textContent = LAYOUT_NAMES[currentLayoutName];
-
-        // Rebuild the keyboard with the new layout
         buildKeyboard();
-
-        // *** IMPORTANT: Recalculate and adjust size after rebuilding the keyboard ***
         adjustBoardSize();
-
-        // Update key highlights on the new keyboard
         updateKeyboardHighlight();
-
-        // Save the preference
-        saveState();
+        // Save layout preference immediately, not tied to game state saving
+         localStorage.setItem(LOCAL_STORAGE_LAYOUT_KEY, currentLayoutName);
     }
 
 
@@ -768,6 +1071,7 @@
                 }
              });
         } else {
+              // Clear rows below current guess or loaded state
               tiles.forEach(tile => {
                  const tileInner = tile.querySelector('div');
                  if (tileInner) tileInner.textContent = '';
@@ -775,11 +1079,17 @@
               });
         }
      });
+      // Ensure the current guess row is also cleared if redraw happens after loading state
+      if (currentRowIndex < MAX_ROWS && currentRowIndex >= guesses.length) {
+          updateCurrentRowDisplay(); // This will clear the row if currentGuess is empty
+      }
   }
 
+
   function updateCurrentRowDisplay() {
-    if (currentRowIndex >= MAX_ROWS) return;
+    if (isGameOver || currentRowIndex >= MAX_ROWS) return; // Don't update if game is over
     const currentRow = boardElement.querySelectorAll('.row')[currentRowIndex];
+    if (!currentRow) return; // Safety check
     const tiles = currentRow.querySelectorAll('.tile');
     tiles.forEach((tile, index) => {
         const tileInner = tile.querySelector('div');
@@ -791,34 +1101,26 @@
         } else {
             tile.classList.remove('filled');
         }
-        tile.classList.remove('correct', 'present', 'absent'); // Ensure no old status classes linger
+        tile.classList.remove('correct', 'present', 'absent');
     });
   }
 
-  // --- updateKeyboardHighlight uses cumulative status ---
   function updateKeyboardHighlight() {
-    keyboardElement.querySelectorAll('.key[data-key]').forEach(keyElement => { // Select all keys, including placeholders (they won't have a meaningful status)
+    keyboardElement.querySelectorAll('.key[data-key]').forEach(keyElement => {
         const letter = keyElement.dataset.key;
-        // Don't highlight placeholders
         if (!letter) return;
-
-        const cumulativeStatus = keyStatuses[letter]; // Cumulative best
-
-        // Remove old status classes
+        const cumulativeStatus = keyStatuses[letter];
         keyElement.classList.remove('correct', 'present', 'absent', 'has-present');
-
-        // Apply cumulative status
         if (cumulativeStatus) {
             keyElement.classList.add(cumulativeStatus);
         }
-        // The .has-present class logic from the original code is not used here
-        // as it wasn't fully integrated with the state.
     });
-}
+  }
 
 
    // --- Event Handlers ---
   function handleKeyClick(key) {
+    // Allow adding letters only if game is not over and current guess is not full
     if (isGameOver || currentGuess.length >= WORD_LENGTH) {
         return;
     }
@@ -827,6 +1129,7 @@
   }
 
   function handleDelete() {
+    // Allow delete only if game is not over and there are letters to delete
     if (isGameOver || currentGuess.length === 0) {
         return;
     }
@@ -834,8 +1137,8 @@
     updateCurrentRowDisplay();
   }
 
-  // --- handleSubmit updates cumulative statuses ---
   function handleSubmit() {
+    // Prevent submit if game is already over (e.g., loaded past game or finished today's)
     if (isGameOver) return;
 
     if (currentGuess.length !== WORD_LENGTH) {
@@ -846,7 +1149,6 @@
 
     const guessString = currentGuess.join('');
 
-    // Check if the word is in the valid word list
     if (!WORDS.includes(guessString)) {
         shakeRow(currentRowIndex);
         showMessage("Տվյալ բառը մեր բառարանում չկա :(", 1500);
@@ -856,37 +1158,32 @@
     const result = checkGuess(guessString);
     guesses.push(result);
 
-    // Update CUMULATIVE keyStatuses based on the current guess result
     result.forEach(({ letter, status }) => {
         const currentStatus = keyStatuses[letter];
-        if (status === 'correct') {
-            keyStatuses[letter] = 'correct'; // Correct always overrides
-        } else if (status === 'present' && currentStatus !== 'correct') {
-            keyStatuses[letter] = 'present'; // Present overrides absent/null, but not correct
-        } else if (status === 'absent' && !currentStatus) {
-            keyStatuses[letter] = 'absent'; // Absent only sets if no status yet (not overriding present/correct)
-        }
+        if (status === 'correct') keyStatuses[letter] = 'correct';
+        else if (status === 'present' && currentStatus !== 'correct') keyStatuses[letter] = 'present';
+        else if (status === 'absent' && !currentStatus) keyStatuses[letter] = 'absent';
     });
 
-    // Animate and update display
     animateGuessResult(currentRowIndex, result);
-    updateKeyboardHighlight(); // Update keyboard based on cumulative state
+    updateKeyboardHighlight();
 
-    // Proceed to next row or end game after animation delay
     setTimeout(() => {
         currentRowIndex++;
         currentGuess = [];
-        saveState(); // Save the updated CUMULATIVE keyStatuses and layout preference
+        // We will check win/loss first, then save state (which includes history update if won/lost)
+        checkWinLoss(guessString); // This will set isGameOver if needed
+        saveState(); // Save state after checking win/loss
 
-        checkWinLoss(guessString);
-    }, WORD_LENGTH * 150 + 300); // Wait for tile animation + a little buffer
+    }, WORD_LENGTH * 150 + 300);
   }
 
 
   function handlePhysicalKey(e) {
-     if (isGameOver) return;
+     if (isGameOver) return; // Check isGameOver flag
      let key = e.key;
-     if (key.length > 1 && key !== 'Backspace' && key !== 'Delete' && key !== 'Enter') {
+     // Ignore modifier keys, function keys, etc. Allow Enter, Backspace, Delete.
+     if (e.altKey || e.ctrlKey || e.metaKey || key.startsWith('F') || key.length > 1 && !['Backspace', 'Delete', 'Enter'].includes(key)) {
          return;
      }
      key = key.toLowerCase();
@@ -896,12 +1193,9 @@
      } else if (key === 'backspace' || key === 'delete') {
          handleDelete();
      } else {
-         // Check if the pressed key is a valid Armenian letter or ' ու' from the `allLetters` array.
-         // This validates physical input based on accepted characters, not the virtual layout.
+         // Check if the pressed key is a valid Armenian letter.
          if (allLetters.includes(key)) {
-             if (currentGuess.length < WORD_LENGTH) {
-                 handleKeyClick(key);
-             }
+              handleKeyClick(key); // Let handleKeyClick check length limit
          }
      }
   }
@@ -912,30 +1206,18 @@
      const guessChars = splitWord(guessString);
      const result = [];
      const targetCopy = [...parsedTarget];
-
-     // Initialize result array structure
-     for(let i = 0; i < WORD_LENGTH; i++) {
-         result[i] = { letter: guessChars[i], status: '' };
-     }
-
-     // Pass 1: Correct
+     for(let i = 0; i < WORD_LENGTH; i++) result[i] = { letter: guessChars[i], status: '' };
      for (let i = 0; i < WORD_LENGTH; i++) {
          if (guessChars[i] === parsedTarget[i]) {
-             result[i].status = 'correct';
-             targetCopy[i] = null; // Mark this letter in target as used
+             result[i].status = 'correct'; targetCopy[i] = null;
          }
      }
-
-     // Pass 2: Present/Absent
      for (let i = 0; i < WORD_LENGTH; i++) {
-         if (result[i].status === 'correct') continue; // Skip already matched correct letters
-
+         if (result[i].status === 'correct') continue;
          const letter = guessChars[i];
-         const indexInTarget = targetCopy.indexOf(letter); // Search in remaining target letters
-
+         const indexInTarget = targetCopy.indexOf(letter);
          if (indexInTarget !== -1) {
-             result[i].status = 'present';
-             targetCopy[indexInTarget] = null; // Mark this letter in target as used
+             result[i].status = 'present'; targetCopy[indexInTarget] = null;
          } else {
              result[i].status = 'absent';
          }
@@ -944,66 +1226,59 @@
   }
 
   function checkWinLoss(lastGuessString) {
+     // This function now primarily sets the isGameOver flag and shows messages.
+     // saveState() handles the actual saving and history update based on isGameOver.
+     let gameEnded = false;
      if (splitWord(lastGuessString).join('') === parsedTarget.join('')) {
-         showMessage('🎉 Հաղթանակ 🎉', 5000); // Short duration for win message
+         showMessage('🎉 Հաղթանակ 🎉', 5000); // Shorter duration for win on current day
          isGameOver = true;
-         disableInput();
-         saveState(); // Save final state (win) and layout
+         gameEnded = true;
+         disableInput(); // Disable input immediately on win
      } else if (currentRowIndex >= MAX_ROWS) {
-          showMessage(`Պարտություն։ Այսօրվա բառը՝ ${targetWord}`, 0); // Indefinite duration for loss message
+          showMessage(`Պարտություն։ Այսօրվա բառը՝ ${targetWord}`, 0); // Indefinite duration for loss
           isGameOver = true;
-          disableInput();
-          saveState(); // Save final state (loss) and layout
+          gameEnded = true;
+          disableInput(); // Disable input immediately on loss
      }
+     // If game ended, saveState will handle history logging.
   }
 
   function disableInput() {
-     // console.log("Game Over - Input Disabled");
-     window.removeEventListener('keydown', handlePhysicalKey);
+     // console.log("Input Disabled. isGameOver:", isGameOver, "isViewingPastGame:", isViewingPastGame);
+     // Set flag just to be sure, although checkWinLoss or loading past game should do it
+     isGameOver = true;
+     // Remove event listeners that allow input modification
+     window.removeEventListener('keydown', handlePhysicalKey); // Best practice to remove listener
      keyboardElement.querySelectorAll('.key').forEach(btn => {
-         if (!btn.classList.contains('placeholder')) {
-            btn.onclick = null;
-            btn.style.cursor = 'default';
-            // Optionally disable the button visually as well
-            // btn.disabled = true;
-            // btn.style.opacity = 0.8;
+         // Keep click listeners for layout/theme/game number
+         if (btn.classList.contains('enter') || btn.classList.contains('delete') || btn.dataset.key) {
+             btn.onclick = null; // Remove letter/enter/delete handlers
+             btn.style.cursor = 'default';
+             // btn.disabled = true; // Optional: visually disable
+             // btn.style.opacity = 0.7;
          }
      });
+     // Re-attach physical key listener IF input needs to be re-enabled (not currently used, but for future)
+     // window.addEventListener('keydown', handlePhysicalKey);
   }
 
 
   // --- Animations & Messages ---
   function animateGuessResult(rowIndex, result) {
      const row = boardElement.querySelectorAll('.row')[rowIndex];
+     if (!row) return;
      const tiles = row.querySelectorAll('.tile');
      tiles.forEach((tile, index) => {
          const { letter, status } = result[index];
          const tileInner = tile.querySelector('div');
-
          if (!tileInner) return;
-
-         // Set text and 'filled' class immediately
          tileInner.textContent = letter;
-         if (letter) {
-            tile.classList.add('filled');
-         } else {
-             tile.classList.remove('filled');
-         }
-         // Remove any old status classes just in case
+         tile.classList.add('filled');
          tile.classList.remove('correct', 'present', 'absent');
-
-
-         // Apply status class with stagger and potentially a flip animation (CSS needed)
          setTimeout(() => {
-             if (status) {
-                tile.classList.add(status);
-                // You could add a flip animation class here if defined in CSS
-                // tile.classList.add('flip'); // Example
-             }
-         }, index * 150); // Stagger delay for status reveal/animation
+             if (status) tile.classList.add(status);
+         }, index * 150);
      });
-     // Optional: Add event listener for animation end if using CSS animations
-     // row.addEventListener('animationend', handleAnimationEnd, { once: true });
   }
 
 
@@ -1011,9 +1286,7 @@
     const row = boardElement.querySelectorAll('.row')[rowIndex];
     if (row) {
         row.classList.add('shake');
-        row.addEventListener('animationend', () => {
-            row.classList.remove('shake');
-        }, { once: true });
+        row.addEventListener('animationend', () => row.classList.remove('shake'), { once: true });
     }
   }
 
@@ -1021,6 +1294,7 @@
         clearTimeout(messageTimeout);
         messageElement.textContent = msg;
         messageElement.classList.add('show');
+        // If duration is 0 or less, message stays until cleared or replaced
         if (duration > 0) {
             messageTimeout = setTimeout(() => {
                 messageElement.classList.remove('show');
@@ -1031,124 +1305,180 @@
   // --- Theme Toggle ---
   toggleBtnTheme.onclick = () => {
     const isDark = document.body.classList.toggle('dark');
-    const theme = isDark ? 'dark' : 'light';
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
     toggleBtnTheme.textContent = isDark ? '☀️' : '🌗';
-    localStorage.setItem('theme', theme);
   };
 
-  // --- Dynamic Board Sizing for Small Screens (and large screens too) ---
+    // --- Past Games Popup Logic (UTC Version - Includes Today) ---
+  function openPastGamesPopup() {
+      try {
+          pastGamesList.innerHTML = ''; // Clear previous list
+
+          // Define Start Date components
+          const startYear = parseInt(START_DATE_STRING.substring(0, 4));
+          const startMonth = parseInt(START_DATE_STRING.substring(5, 7)) - 1; // 0-indexed
+          const startDay = parseInt(START_DATE_STRING.substring(8, 10));
+          // Get Start Date as milliseconds since epoch at UTC midnight
+          const startDateUTC = Date.UTC(startYear, startMonth, startDay, 0, 0, 0, 0);
+
+          // Get Today's Date at UTC midnight
+          const now = new Date();
+          const todayUTC = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0);
+
+          // console.log(`[Popup UTC] Today UTC: ${new Date(todayUTC).toISOString()}, StartDate UTC: ${new Date(startDateUTC).toISOString()}`);
+
+          // Check if start date is valid relative to today
+          if (isNaN(startDateUTC) || startDateUTC > todayUTC) {
+               pastGamesList.innerHTML = `<li>Խաղերը սկսվում են ${START_DATE_STRING}-ից։</li>`;
+               pastGamesPopup.style.display = 'flex';
+               return;
+          }
+
+          // Calculate offset for today based on UTC difference
+          const todayOffset = Math.floor((todayUTC - startDateUTC) / (1000 * 60 * 60 * 24));
+          // Today's game number is offset + 1
+          const todaysGameNumber = todayOffset + 1;
+
+          // console.log(`[Popup UTC] Today Offset: ${todayOffset}, Today's Game Number: ${todaysGameNumber}`);
+
+          // Check if there are any games to list (today's game number should be >= 1)
+          if (todaysGameNumber < 1) {
+              // Should not happen if start date is valid and not in the future
+              pastGamesList.innerHTML = '<li>Խաղերի ցուցակը ստեղծելիս սխալ։</li>';
+          } else {
+              const items = []; // Store items to reverse later
+              // console.log(`[Popup UTC] Loop range: i = 1 to ${todaysGameNumber}`); // Adjusted log
+
+              // *** Loop from game 1 up to AND INCLUDING today's game number ***
+              for (let i = 1; i <= todaysGameNumber; i++) {
+                  // Calculate the offset for game number 'i'
+                  const gameOffset = i - 1; // Game #1 -> offset 0, Game #19 -> offset 18
+                  // Calculate the date for this offset in UTC milliseconds
+                  const gameDateUTC = startDateUTC + (gameOffset * 1000 * 60 * 60 * 24);
+                  // Create a Date object from UTC milliseconds to easily extract components
+                  const gameDate = new Date(gameDateUTC);
+
+                  // Get date components using UTC methods
+                  const year = gameDate.getUTCFullYear();
+                  const month = String(gameDate.getUTCMonth() + 1).padStart(2, '0');
+                  const day = String(gameDate.getUTCDate()).padStart(2, '0');
+                  const gameDateString = `${year}-${month}-${day}`; // Format as YYYY-MM-DD
+
+                  // Log the last generated item for verification
+                  // if (i === todaysGameNumber) {
+                  //      console.log(`[Popup UTC] Last item generated (Today): i=${i}, offset=${gameOffset}, date=${gameDateString}`);
+                  // }
+
+                  // Create list item and link
+                  const li = document.createElement('li');
+                  const a = document.createElement('a');
+                  a.href = `${window.location.pathname}?date=${gameDateString}`; // Link uses the calculated YYYY-MM-DD
+                  a.textContent = `Խաղ #${i} - ${gameDateString}`;
+                  a.title = `Դիտել ${gameDateString} խաղը`;
+
+                  // Optionally, add a visual indicator if this entry is for the currently viewed game
+                  const isThisTheCurrentlyViewedGame = effectiveDate && gameDateUTC === effectiveDate.getTime();
+                  if (isThisTheCurrentlyViewedGame) {
+                      a.style.fontWeight = 'bold'; // Example: Make the current game link bold
+                      // a.textContent += " (ընթացիկ)"; // Example: Add text indicator
+                  }
+
+
+                  li.appendChild(a);
+                  items.push(li); // Add to array
+              }
+              // Reverse the list so today's game is at the top
+              items.reverse().forEach(item => pastGamesList.appendChild(item));
+          }
+
+          pastGamesPopup.style.display = 'flex'; // Show the popup
+      } catch (e) {
+          console.error("Error generating past games list:", e);
+          pastGamesList.innerHTML = '<li>Պատմությունը բեռնելիս սխալ տեղի ունեցավ։</li>';
+          pastGamesPopup.style.display = 'flex'; // Show popup even if error generating list
+      }
+  }
+
+  function closePastGamesPopup() {
+      pastGamesPopup.style.display = 'none';
+  }
+
+
+  // --- Dynamic Board Sizing ---
   function adjustBoardSize() {
+      // (This function remains the same as your provided version)
       const viewportHeight = window.innerHeight;
-
-      // Get references to non-board elements that occupy vertical space
-      const h1 = document.querySelector('h1');
+      const h1 = document.querySelector('h1'); // Part of header-container now
+      const headerContainer = document.querySelector('.header-container'); // Use container height
       const subtitle = document.querySelector('.subtitle');
-      const keyboard = document.getElementById('keyboard'); // Now a direct child of body
-      const mainContentStyle = getComputedStyle(mainContent); // Get style for main content padding
-      const boardContainer = document.querySelector('.board-container'); // Need this to get its margins
+      const keyboard = document.getElementById('keyboard');
+      const mainContentStyle = getComputedStyle(mainContent);
+      const boardContainer = document.querySelector('.board-container');
 
-      // Check if all required elements exist
-      if (!h1 || !subtitle || !keyboard || !boardContainer || !boardElement || !mainContent) {
+      // Adjust element checks if structure changed significantly
+      if (!headerContainer || !subtitle || !keyboard || !boardContainer || !boardElement || !mainContent) {
           console.warn("adjustBoardSize: One or more elements not found.");
-          return; // Exit if critical elements are missing
+          return;
       }
 
-      // Calculate the total height occupied by non-board elements including their margins/padding
       let nonBoardHeight = 0;
-      const flowElements = [h1, subtitle, keyboard]; // Elements in the normal document flow that take vertical space
+      // Use headerContainer instead of just h1
+      const flowElements = [headerContainer, subtitle, keyboard];
       flowElements.forEach(el => {
           const style = getComputedStyle(el);
-          nonBoardHeight += el.offsetHeight; // Includes padding and border
+          nonBoardHeight += el.offsetHeight;
           nonBoardHeight += parseFloat(style.marginTop) || 0;
           nonBoardHeight += parseFloat(style.marginBottom) || 0;
       });
 
-       // Also account for padding on the main content div
        nonBoardHeight += parseFloat(mainContentStyle.paddingTop) || 0;
        nonBoardHeight += parseFloat(mainContentStyle.paddingBottom) || 0;
-       /* Message container is fixed position, its height doesn't affect flow space
-          unless we need to ensure there's space below it, but standard flow should
-          push things down correctly if it's positioned fixed.
-          Let's re-evaluate if its height should be factored in.
-          If it's fixed, it's out of flow. The space it covers *visually* might obscure
-          content, but doesn't affect the calculation of available space *between*
-          flow elements.
-          However, if the message is very tall, it might overlay the top of the board.
-          The current fixed position means it doesn't contribute to pushing the board down.
-          Let's keep it out of the `nonBoardHeight` calculation for now, as it's common
-          for fixed elements to be outside the normal layout calculation.
-          If issues arise, we might need to add padding-top to main-content dynamically
-          or increase the buffer.
-       */
 
-
-      // Account for the board container's own vertical margins
       const boardContainerStyle = getComputedStyle(boardContainer);
       const boardContainerMarginTop = parseFloat(boardContainerStyle.marginTop) || 0;
       const boardContainerMarginBottom = parseFloat(boardContainerStyle.marginBottom) || 0;
       const boardContainerVerticalMargins = boardContainerMarginTop + boardContainerMarginBottom;
 
-      // Available vertical space *for the board grid itself* (excluding its margins and its container's margins)
       const availableBoardHeight = viewportHeight - nonBoardHeight - boardContainerVerticalMargins;
 
-      // Get the current grid gaps from the board element (accounts for media queries)
       const boardStyle = getComputedStyle(boardElement);
       const rowGap = parseFloat(boardStyle.rowGap) || 0;
       const columnGap = parseFloat(boardStyle.columnGap) || 0;
 
-      // Calculate the maximum possible tile size based on the available board height
-      // The board has MAX_ROWS rows and (MAX_ROWS - 1) gaps vertically.
-      // We add a small buffer to prevent edge cases causing scrollbars.
       const buffer = 8;
-      const maxTileSizeBasedOnHeight = (availableBoardHeight - (MAX_ROWS - 1) * rowGap - buffer) / MAX_ROWS;
-
-      // Calculate the required board width to fit this max tile size horizontally
+      const maxTileSizeBasedOnHeight = Math.max(0, (availableBoardHeight - (MAX_ROWS - 1) * rowGap - buffer) / MAX_ROWS);
       const requiredBoardWidthFromHeight = (WORD_LENGTH * maxTileSizeBasedOnHeight) + (WORD_LENGTH - 1) * columnGap;
 
+      const tempMaxWidth = boardContainer.style.maxWidth;
+      boardContainer.style.maxWidth = '';
+      const cssMaxWidthForBoardContainer = parseFloat(getComputedStyle(boardContainer).maxWidth);
+      // Ensure main content's max-width is also considered if it's smaller
+      const mainContentMaxWidth = parseFloat(mainContentStyle.maxWidth) || Infinity;
+      const finalCssMaxWidth = Math.min(
+            isNaN(cssMaxWidthForBoardContainer) ? Infinity : cssMaxWidthForBoardContainer,
+            mainContentMaxWidth
+          );
+      boardContainer.style.maxWidth = tempMaxWidth;
 
-      // Determine the effective max width for the board.
-      // This should be the minimum of the width needed to fit vertically
-      // AND the max width allowed by the main content container.
-      // The max width of the board container itself is handled by the CSS.
-      // The JS calculation is primarily to *shrink* the board when vertical space is limited,
-      // ensuring it fits without scroll. If vertical space is ample, we let CSS max-width take over.
-
-       // Get the computed CSS max-width of the board container
-       const tempMaxWidth = boardContainer.style.maxWidth; // Save current inline style
-       boardContainer.style.maxWidth = ''; // Temporarily remove inline style to get CSS value
-       const cssMaxWidthForBoardContainer = parseFloat(getComputedStyle(boardContainer).maxWidth);
-       const finalCssMaxWidth = isNaN(cssMaxWidthForBoardContainer) ? Infinity : cssMaxWidthForBoardContainer; // Treat NaN as no CSS limit
-       boardContainer.style.maxWidth = tempMaxWidth; // Restore inline style
-
-
-      // The target width is the smaller of the width required for vertical fit
-      // and the CSS max-width defined for the board-container.
       const targetWidth = Math.min(requiredBoardWidthFromHeight, finalCssMaxWidth);
 
-
-      // Apply the calculated width as max-width to the board container
-      // Ensure the calculated size is reasonable and positive
       const minReasonableTileSize = 30;
       const minReasonableBoardWidth = (WORD_LENGTH * minReasonableTileSize) + (WORD_LENGTH - 1) * columnGap;
 
       if (targetWidth > minReasonableBoardWidth && targetWidth > 0) {
           boardContainer.style.maxWidth = `${targetWidth}px`;
-          // console.log(`Adjusted: Viewport H=${viewportHeight.toFixed(1)}, Needed W (Vert)=${requiredBoardWidthFromHeight.toFixed(1)}, CSS MaxW=${finalCssMaxWidth.toFixed(1)}, Target W=${targetWidth.toFixed(1)}`);
       } else {
-           boardContainer.style.maxWidth = ''; // Revert to CSS
-           // console.log(`Default: Viewport H=${viewportHeight.toFixed(1)}, Needed W (Vert)=${requiredBoardWidthFromHeight.toFixed(1)}, CSS MaxW=${finalCssMaxWidth.toFixed(1)}, Target W=${targetWidth.toFixed(1)} (Reverted)`);
+           boardContainer.style.maxWidth = ''; // Revert to CSS if calculated is too small or invalid
+           // console.log(`Reverted to CSS max-width. Calculated target: ${targetWidth.toFixed(1)}px`);
       }
   }
 
 
   // --- Start the game ---
-  // Use DOMContentLoaded to ensure HTML is ready before running init
   document.addEventListener('DOMContentLoaded', () => {
-      init(); // Initialize game state, board, keyboard etc.
-      adjustBoardSize(); // Then adjust size based on initial viewport size
+      init();
+      adjustBoardSize();
   });
-
-  // Adjust size whenever the window is resized or layout changes
   window.addEventListener('resize', adjustBoardSize);
 
 </script>
