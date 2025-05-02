@@ -665,7 +665,7 @@
   let dayOffset; // Offset for the effectiveDate
   let gameNumber; // Game number for the effectiveDate
 
-    // --- Game Date and Word Logic (UTC Version) ---
+    // --- Game Date and Word Logic (UTC Version with Dictionary Words) ---
   function setupDateAndWord(dateString = null) {
       // Define Start Date components from the string
       const startYear = parseInt(START_DATE_STRING.substring(0, 4));
@@ -681,8 +681,6 @@
       let effectiveDateUTC; // This will hold the UTC milliseconds for the date we are loading
       isViewingPastGame = false; // Reset flag
 
-      // console.log(`[Setup UTC] Received dateString: ${dateString}`); // Keep for debugging if needed
-
       if (dateString) {
           // Parse the incoming date string as UTC midnight
           const parts = dateString.split('-');
@@ -691,61 +689,59 @@
                const reqYear = parseInt(parts[0]);
                const reqMonth = parseInt(parts[1]) - 1; // 0-indexed month
                const reqDay = parseInt(parts[2]);
-               // Ensure parsed components are valid before creating UTC date
                if (!isNaN(reqYear) && !isNaN(reqMonth) && !isNaN(reqDay)) {
                     requestedDateUTC = Date.UTC(reqYear, reqMonth, reqDay, 0, 0, 0, 0);
                }
           }
 
-          // console.log(`[Setup UTC] Parsed requestedDateUTC: ${isNaN(requestedDateUTC) ? 'Invalid Date' : new Date(requestedDateUTC).toISOString()}`); // Debugging
-
-          // Validate parsed date (milliseconds): Is it a number? Is it on or before today (UTC)? Is it on or after start date (UTC)?
           if (!isNaN(requestedDateUTC) && requestedDateUTC <= todayUTC && requestedDateUTC >= startDateUTC) {
               effectiveDateUTC = requestedDateUTC;
               isViewingPastGame = true;
           } else {
-              // Fallback to today if requested date is invalid, future, or before start date
               console.warn(`Invalid, future, or too early date requested: ${dateString}. Loading today's game.`);
               effectiveDateUTC = todayUTC;
-              isViewingPastGame = false; // Make sure flag is false
-              // Clear the bad query param from URL history
+              isViewingPastGame = false;
               if (window.history.replaceState) {
                    window.history.replaceState(null, '', window.location.pathname);
               }
           }
       } else {
-          // No date string provided, use today's UTC midnight
           effectiveDateUTC = todayUTC;
           isViewingPastGame = false;
       }
 
       // --- Calculate offset and game number based purely on UTC difference ---
       const diffMillis = effectiveDateUTC - startDateUTC;
-      // Ensure difference is non-negative before calculating offset
       dayOffset = diffMillis >= 0 ? Math.floor(diffMillis / (1000 * 60 * 60 * 24)) : -1;
-      gameNumber = dayOffset + 1; // Game number is offset + 1 (Game #1 corresponds to offset 0)
+      gameNumber = dayOffset + 1;
 
-      // Create a standard Date object representing the effective date (primarily for formatting)
-      // Note: Formatting this directly might show local time, use UTC methods for consistency.
-      effectiveDate = new Date(effectiveDateUTC);
+      effectiveDate = new Date(effectiveDateUTC); // Create Date object for formatting/reference
 
-      // --- Logging for Verification ---
-      // console.log(`[Setup UTC] Effective Date (UTC ms): ${effectiveDateUTC}, ISO: ${effectiveDate.toISOString()}`);
-      // console.log(`[Setup UTC] Start Date (UTC ms): ${startDateUTC}, ISO: ${new Date(startDateUTC).toISOString()}`);
-      // console.log(`[Setup UTC] Calculated dayOffset: ${dayOffset}`);
-      // console.log(`[Setup UTC] Calculated gameNumber: ${gameNumber}`);
-      // --- End Logging ---
+      // *** Filter WORDS list to get only potential daily targets ***
+      const dailyTargetWords = WORDS.filter(word => !word.endsWith('!'));
 
-
-      // Select the target word using the calculated dayOffset
-      targetWord = WORDS.length > 0 ? WORDS[dayOffset % WORDS.length] : "սխալ";
-      // Add a check for negative offset or offset exceeding word list length
-      if (dayOffset < 0 || dayOffset >= WORDS.length) {
-           console.warn(`Calculated dayOffset ${dayOffset} is invalid or out of bounds for WORDS array (length ${WORDS.length}). Using fallback word.`);
-           targetWord = "սխալ"; // Ensure fallback word if offset is bad
-           // Optionally reset gameNumber if offset is invalid?
-           // gameNumber = '?'; // Or handle appropriately elsewhere
+      if (dailyTargetWords.length === 0) {
+           console.error("CRITICAL ERROR: No words available for daily targets after filtering! Check the WORDS list and the '!' suffix usage.");
+           // Decide how to handle this - throw error, use fallback, etc.
+           targetWord = "սխալ"; // Fallback
+           // Potentially invalidate dayOffset/gameNumber if no targets exist
+           dayOffset = -1;
+           gameNumber = '?';
+      } else if (dayOffset < 0) {
+           // Handle invalid date offset (before start date)
+           console.warn(`Calculated dayOffset ${dayOffset} is invalid (before start date). Using fallback word.`);
+           targetWord = "սխալ";
+           gameNumber = '?'; // Indicate invalid game number
+      } else {
+           // Select the target word using the dayOffset MODULO the length of the FILTERED list
+           targetWord = dailyTargetWords[dayOffset % dailyTargetWords.length];
+           // Optional: Add a warning if the offset is surprisingly large, though modulo handles it
+           // if (dayOffset >= dailyTargetWords.length) {
+           //      console.warn(`Day offset ${dayOffset} exceeds length of daily words list (${dailyTargetWords.length}). Wrap-around applied.`);
+           // }
       }
+
+      // Now parse the selected targetWord (which should NOT have '!')
       parsedTarget = splitWord(targetWord);
 
       // Generate the dateKey using the YYYY-MM-DD format derived from UTC components
@@ -762,8 +758,7 @@
       } else {
           gameNumberDisplay.title = `Սեղմեք՝ տեսնելու անցած խաղերը։`;
       }
-      // console.log(`[Setup UTC] Word selected for offset ${dayOffset}: ${targetWord}`); // Debugging
-      // console.log(`[Setup UTC] dateKey: ${dateKey}`); // Debugging
+      // console.log(`[Setup UTC Dict] Word selected for offset ${dayOffset} from ${dailyTargetWords.length} daily words: ${targetWord}`);
   }
 
   function getGameNumberForDate(date) {
@@ -1137,8 +1132,10 @@
     updateCurrentRowDisplay();
   }
 
+    // --- Event Handlers ---
+  // ... (handleKeyClick, handleDelete remain the same) ...
+
   function handleSubmit() {
-    // Prevent submit if game is already over (e.g., loaded past game or finished today's)
     if (isGameOver) return;
 
     if (currentGuess.length !== WORD_LENGTH) {
@@ -1149,15 +1146,23 @@
 
     const guessString = currentGuess.join('');
 
-    if (!WORDS.includes(guessString)) {
+    // *** Updated Validation Check ***
+    // Check if the guess exists in the original WORDS list,
+    // either exactly as typed or with the '!' dictionary suffix.
+    const isValidWord = WORDS.includes(guessString) || WORDS.includes(guessString + '!');
+
+    if (!isValidWord) {
         shakeRow(currentRowIndex);
         showMessage("Տվյալ բառը մեր բառարանում չկա :(", 1500);
-        return;
+        return; // Exit if word is not valid at all
     }
 
+    // --- Word is valid, proceed with checking guess against targetWord ---
+    // Note: checkGuess compares against `parsedTarget`, which comes from `targetWord` (guaranteed not to have '!')
     const result = checkGuess(guessString);
     guesses.push(result);
 
+    // Update cumulative key statuses
     result.forEach(({ letter, status }) => {
         const currentStatus = keyStatuses[letter];
         if (status === 'correct') keyStatuses[letter] = 'correct';
@@ -1165,17 +1170,19 @@
         else if (status === 'absent' && !currentStatus) keyStatuses[letter] = 'absent';
     });
 
+    // Animate and update display
     animateGuessResult(currentRowIndex, result);
-    updateKeyboardHighlight();
+    updateKeyboardHighlight(); // Update keyboard based on cumulative state
 
+    // Proceed to next row or end game after animation delay
     setTimeout(() => {
         currentRowIndex++;
         currentGuess = [];
-        // We will check win/loss first, then save state (which includes history update if won/lost)
+        // Check win/loss first, then save state
         checkWinLoss(guessString); // This will set isGameOver if needed
-        saveState(); // Save state after checking win/loss
+        saveState(); // Save state after checking win/loss (respects isViewingPastGame flag for history update)
 
-    }, WORD_LENGTH * 150 + 300);
+    }, WORD_LENGTH * 150 + 300); // Wait for tile animation + a little buffer
   }
 
 
