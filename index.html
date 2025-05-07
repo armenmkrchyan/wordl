@@ -592,88 +592,151 @@
          }
     }
 
-        /* --- Horizontal Orientation Fix for Mobile --- */
+         /* --- Horizontal Orientation Fix for Mobile (Revised for Board Sizing) --- */
     @media (orientation: landscape) and (max-height: 600px) {
         html, body {
-            height: 100vh; /* Use full viewport height */
-            overflow: hidden; /* Prevent scrolling of the entire page */
+            height: 100vh;
+            max-height: 100vh; /* Ensure it doesn't exceed viewport if content pushes it */
+            overflow: hidden; /* Prevent overall page scrolling */
         }
 
         body {
-            flex-direction: row; /* Arrange .main-content and #keyboard side-by-side */
-            align-items: center; /* Vertically center these two main blocks */
-            justify-content: space-around; /* Distribute space with a gap */
-            padding: 5px;      /* Small padding around the whole game area */
-            gap: 10px;         /* Space between .main-content (left) and #keyboard (right) */
+            flex-direction: row;    /* .main-content (left) | #keyboard (right) */
+            align-items: stretch;   /* Make columns take full available height */
+            justify-content: center;/* Center columns if they together are narrower than viewport */
+            padding: 3px;           /* Minimal body padding */
+            gap: 8px;              /* Space between left and right columns */
         }
 
+        /* Left Column: Header + Board Area */
         .main-content {
-            flex: 1 1 0; /* Share available space, will be capped by its own max-width: 550px */
-            height: 100%; /* Take full height within its flex cell */
-            padding: 0 5px;
+            flex: 1 1 45%;          /* Adjust basis/ratio as needed, aim for board area */
+            max-width: 380px;       /* Cap width to prevent board becoming excessively wide */
+            height: calc(100vh - 6px); /* Full available height minus body padding */
+            display: flex;
+            flex-direction: column; /* Stack header then board-container vertically */
+            align-items: center;    /* Center children horizontally */
+            justify-content: flex-start; /* Align children (header, board) to the top of this column */
+            padding: 0;
             margin: 0;
-            /* .main-content already has: display:flex, flex-direction:column, align-items:center */
-            justify-content: flex-start; /* Header items at the top, board-container will grow */
-            overflow-y: auto; /* Allow internal scroll if header + board is too tall for this column */
+            overflow: hidden;       /* No scroll for this entire column */
         }
 
-        .header-container, .subtitle {
-            flex-shrink: 0; /* Prevent header/subtitle from shrinking too much if space is tight */
-            width: 100%; /* Ensure they take full width of the .main-content column */
+        .main-content > .header-container {
+            flex-shrink: 0;         /* Prevent header from shrinking */
+            width: 100%;
+            margin-top: 0;
+            margin-bottom: 1px;     /* Tighter spacing */
+        }
+        .main-content > .header-container h1 {
+            font-size: clamp(1rem, 2.8vh, 1.3rem); /* Responsive title */
+            margin: 0;
+        }
+        .main-content > .header-container #game-number-display {
+            font-size: clamp(0.7rem, 2vh, 0.9rem);
+        }
+
+        .main-content > .subtitle {
+            flex-shrink: 0;         /* Prevent subtitle from shrinking */
+            width: 100%;
+            font-size: clamp(0.65rem, 1.8vh, 0.8rem);
+            margin-top: 0;
+            margin-bottom: 2px;
+        }
+        
+        /* Position toggle buttons within the left column */
+        .main-content > #toggle-theme {
+            top: clamp(2px, 0.5vh, 4px); 
+            right: clamp(2px, 0.5vh, 4px);
+            padding: clamp(2px, 0.6vh, 4px) clamp(3px, 0.8vh, 6px); 
+            font-size: clamp(0.7rem, 1.8vh, 0.9rem);
+        }
+        .main-content > #toggle-layout {
+            top: clamp(2px, 0.5vh, 4px); 
+            left: clamp(2px, 0.5vh, 4px);
+            padding: clamp(2px, 0.6vh, 4px) clamp(3px, 0.8vh, 6px);
+            font-size: clamp(0.7rem, 1.8vh, 0.9rem);
         }
 
         .board-container {
-            flex-grow: 1; /* Allows board to take available vertical space in .main-content */
-            width: 100%; /* Use full width of .main-content column */
-            max-width: 100%; /* Ensure it doesn't exceed parent; JS will likely set a specific max-width */
-            display: flex; /* To center the .board itself */
-            align-items: center;    /* Vertically center the .board */
-            justify-content: center; /* Horizontally center the .board */
-            margin-top: 5px; /* Small space below subtitle/header */
-            margin-bottom: 5px;
+            flex-grow: 1;           /* Take remaining vertical space in .main-content */
+            width: 100%;
+            max-width: 100%;        /* Use parent's width; JS might set specific max-width */
+            display: flex;          /* For centering .board */
+            align-items: center;    /* Vertically center .board in this container */
+            justify-content: center;/* Horizontally center .board */
+            margin: 2px 0 0 0;
+            min-height: 0;          /* Crucial for flex-grow to allow shrinking */
+            overflow: hidden;       /* No scrollbars within board-container */
         }
 
-        #keyboard {
-            flex: 1 1 0; /* Share available space, will be capped by its own max-width: 550px */
-            height: fit-content; /* Size to its content (key rows) */
-            align-self: center;  /* Ensure vertical centering in body's flex row */
-            /* #keyboard already has: display:flex, flex-direction:column */
-            justify-content: center; /* Vertically center key rows within keyboard */
-            padding: 0 5px;
-            margin: 0;
-            gap: 3px; /* Slightly reduce gap for landscape */
-            max-height: 95vh; /* Safety: prevent keyboard from being taller than screen */
-            overflow-y: auto; /* Allow internal scroll if keyboard content is too tall */
+        .board {
+            display: grid;
+            grid-template-rows: repeat(6, 1fr); /* Distribute height among 6 rows */
+            grid-gap: clamp(2px, 0.4vh, 3px);  /* Responsive gap based on viewport height */
+            
+            height: 100%; /* Fill the allocated height from .board-container */
+            width: auto;  /* Width will be determined by height and aspect-ratio */
+            /* Aspect ratio for 5 wide, 6 high grid, roughly considering square tiles.
+               (5 * tile_side + 4 * gap_x) / (6 * tile_side + 5 * gap_y).
+               If gaps are small and equal, approx 5/6.
+            */
+            aspect-ratio: 5 / 6.1; /* Tuned slightly for ~square tiles. Adjust if tiles aren't perfectly square */
+            max-width: 100%; /* Don't exceed board-container's width limit */
+             /* JS will also set max-width on board-container; the smaller constraint will win */
         }
-
-        /* Adjust tile and key sizes for better fit in landscape */
+        
         .tile {
-            font-size: clamp(1rem, 3vh, 1.5rem); /* Responsive font size based on viewport height */
-            border-width: 1.5px; /* Thinner borders for smaller tiles */
+            width: 100%; /* Tile fills its grid cell width */
+            aspect-ratio: 1 / 1; /* This makes it square, height will follow grid cell's height */
+            border-width: 1px;
+            font-size: clamp(0.8rem, 2.8vh, 1.6rem); /* Responsive font relative to viewport height */
+            /* Make sure tile content div is also flexing if needed */
+            display: flex; align-items: center; justify-content: center;
         }
-        .board, .row { /* Reduce grid gaps for the board */
-            grid-gap: 3px;
+        .tile > div { 
+            line-height: 1; /* Helps with vertical centering of text in smaller tiles */
         }
 
+
+        /* Right Column: Keyboard */
+        #keyboard {
+            flex: 1 1 50%;          /* Keyboard takes roughly half, can shrink/grow */
+            max-width: 480px;       /* Cap keyboard width */
+            height: auto;           /* Height determined by its content (keys) */
+            align-self: center;     /* Vertically center keyboard block in body's flex row */
+            display: flex;
+            flex-direction: column;
+            justify-content: center; /* Center key rows vertically within the keyboard block */
+            padding: 0 2px;
+            margin: 0;
+            gap: clamp(2px, 0.4vh, 3px);
+        }
+        
         .key {
-            min-height: 30px; /* Reduced minimum key height */
-            font-size: clamp(0.8rem, 2.5vh, 1.2rem); /* Responsive font for keys */
+            min-height: clamp(28px, 4.8vh, 38px); /* Keys scale with viewport height */
+            font-size: clamp(0.7rem, 2.3vh, 1.2rem);
+            border-radius: 3px;
         }
         .key.enter, .key.delete {
-            font-size: clamp(0.7rem, 2vh, 1rem); /* Even smaller for Enter/Delete */
+             font-size: clamp(0.6rem, 1.9vh, 1rem);
         }
 
-        /* Adjustments for absolutely positioned elements inside .main-content */
-        .main-content > #toggle-theme {
-            top: 5px; right: 5px; padding: 4px 6px; font-size: 0.8rem;
-        }
-        .main-content > #toggle-layout {
-            top: 5px; left: 5px; padding: 4px 6px; font-size: 0.8rem;
-        }
-
-        /* Message container might need slight adjustment if header shrinks significantly */
+        /* Fixed Message Container - global positioning, adjust for landscape */
         .message-container {
-            top: 10px; /* Raise it a bit, original is 70px */
+            top: 3px; /* Closer to top edge */
+            left: 50%;
+            transform: translateX(-50%);
+            width: auto; 
+            min-width: 140px;
+            max-width: 280px;
+            padding: 3px 5px;
+            z-index: 1000; /* Ensure it's above other popups too */
+        }
+        .message {
+            font-size: clamp(0.7rem, 1.7vh, 0.9rem);
+            padding: clamp(4px, 0.8vh, 6px) clamp(6px, 1vh, 8px);
+            margin-top: 0;
         }
     }
 
