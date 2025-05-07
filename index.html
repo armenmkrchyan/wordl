@@ -592,27 +592,31 @@
          }
     }
 
-         /* --- Horizontal Orientation Fix for Mobile (Revised for Board Sizing) --- */
+     /* --- Horizontal Orientation Fix for Mobile (Revised for svh and Board Sizing) --- */
     @media (orientation: landscape) and (max-height: 600px) {
-        html, body {
-            height: 100vh;
-            max-height: 100vh; /* Ensure it doesn't exceed viewport if content pushes it */
-            overflow: hidden; /* Prevent overall page scrolling */
+        html { /* Apply svh to html element first */
+             height: 100svh; /* Small viewport height - accounts for visible browser UI */
+             max-height: 100svh;
+             overflow: hidden;
         }
-
         body {
+            height: 100%; /* Takes 100% of html's 100svh */
+            max-height: 100%;
+            overflow: hidden; /* Prevent overall page scrolling */
+            display: flex;
             flex-direction: row;    /* .main-content (left) | #keyboard (right) */
-            align-items: stretch;   /* Make columns take full available height */
+            align-items: stretch;   /* Make columns take full available height of body's content box */
             justify-content: center;/* Center columns if they together are narrower than viewport */
-            padding: 3px;           /* Minimal body padding */
-            gap: 8px;              /* Space between left and right columns */
+            padding: 3px;           /* Small body padding (3px top/bottom, 3px left/right) */
+            gap: 8px;               /* Space between left and right columns */
+            box-sizing: border-box; /* Body's padding is INCLUDED in its height/width */
         }
 
         /* Left Column: Header + Board Area */
         .main-content {
             flex: 1 1 45%;          /* Adjust basis/ratio as needed, aim for board area */
             max-width: 380px;       /* Cap width to prevent board becoming excessively wide */
-            height: calc(100vh - 6px); /* Full available height minus body padding */
+            height: 100%;           /* Stretches to body's content-box height */
             display: flex;
             flex-direction: column; /* Stack header then board-container vertically */
             align-items: center;    /* Center children horizontally */
@@ -620,122 +624,114 @@
             padding: 0;
             margin: 0;
             overflow: hidden;       /* No scroll for this entire column */
+            box-sizing: border-box;
         }
 
         .main-content > .header-container {
-            flex-shrink: 0;         /* Prevent header from shrinking */
+            flex-shrink: 0;
             width: 100%;
             margin-top: 0;
-            margin-bottom: 1px;     /* Tighter spacing */
+            margin-bottom: clamp(1px, 0.1svh, 1px); /* Minimal bottom margin, svh based */
         }
         .main-content > .header-container h1 {
-            font-size: clamp(1rem, 2.8vh, 1.3rem); /* Responsive title */
+            font-size: clamp(1rem, 2.8svh, 1.3rem); /* Responsive title with svh */
             margin: 0;
         }
         .main-content > .header-container #game-number-display {
-            font-size: clamp(0.7rem, 2vh, 0.9rem);
+            font-size: clamp(0.7rem, 2svh, 0.9rem); /* svh based */
         }
 
         .main-content > .subtitle {
-            flex-shrink: 0;         /* Prevent subtitle from shrinking */
+            flex-shrink: 0;
             width: 100%;
-            font-size: clamp(0.65rem, 1.8vh, 0.8rem);
+            font-size: clamp(0.65rem, 1.8svh, 0.8rem); /* svh based */
             margin-top: 0;
-            margin-bottom: 2px;
+            margin-bottom: clamp(1px, 0.2svh, 2px); /* Minimal, svh based */
         }
         
-        /* Position toggle buttons within the left column */
         .main-content > #toggle-theme {
-            top: clamp(2px, 0.5vh, 4px); 
-            right: clamp(2px, 0.5vh, 4px);
-            padding: clamp(2px, 0.6vh, 4px) clamp(3px, 0.8vh, 6px); 
-            font-size: clamp(0.7rem, 1.8vh, 0.9rem);
+            top: clamp(2px, 0.5svh, 4px); 
+            right: clamp(2px, 0.5svh, 4px);
+            padding: clamp(2px, 0.6svh, 4px) clamp(3px, 0.8svh, 6px); 
+            font-size: clamp(0.7rem, 1.8svh, 0.9rem); /* svh based */
         }
         .main-content > #toggle-layout {
-            top: clamp(2px, 0.5vh, 4px); 
-            left: clamp(2px, 0.5vh, 4px);
-            padding: clamp(2px, 0.6vh, 4px) clamp(3px, 0.8vh, 6px);
-            font-size: clamp(0.7rem, 1.8vh, 0.9rem);
+            top: clamp(2px, 0.5svh, 4px); 
+            left: clamp(2px, 0.5svh, 4px);
+            padding: clamp(2px, 0.6svh, 4px) clamp(3px, 0.8svh, 6px);
+            font-size: clamp(0.7rem, 1.8svh, 0.9rem); /* svh based */
         }
 
         .board-container {
             flex-grow: 1;           /* Take remaining vertical space in .main-content */
             width: 100%;
-            max-width: 100%;        /* Use parent's width; JS might set specific max-width */
-            display: flex;          /* For centering .board */
-            align-items: center;    /* Vertically center .board in this container */
-            justify-content: center;/* Horizontally center .board */
-            margin: 2px 0 0 0;
+            max-width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: clamp(1px, 0.2svh, 2px) 0 0 0; /* Minimal top margin, svh based */
             min-height: 0;          /* Crucial for flex-grow to allow shrinking */
             overflow: hidden;       /* No scrollbars within board-container */
         }
 
         .board {
             display: grid;
-            grid-template-rows: repeat(6, 1fr); /* Distribute height among 6 rows */
-            grid-gap: clamp(2px, 0.4vh, 3px);  /* Responsive gap based on viewport height */
-            
+            grid-template-rows: repeat(6, 1fr);
+            grid-gap: clamp(2px, 0.4svh, 3px);  /* Responsive gap based on svh */
             height: 100%; /* Fill the allocated height from .board-container */
             width: auto;  /* Width will be determined by height and aspect-ratio */
-            /* Aspect ratio for 5 wide, 6 high grid, roughly considering square tiles.
-               (5 * tile_side + 4 * gap_x) / (6 * tile_side + 5 * gap_y).
-               If gaps are small and equal, approx 5/6.
-            */
-            aspect-ratio: 5 / 6.1; /* Tuned slightly for ~square tiles. Adjust if tiles aren't perfectly square */
-            max-width: 100%; /* Don't exceed board-container's width limit */
-             /* JS will also set max-width on board-container; the smaller constraint will win */
+            aspect-ratio: 5 / 6.1; /* Adjust if tiles aren't perfectly square after svh fix */
+            max-width: 100%;
         }
         
         .tile {
-            width: 100%; /* Tile fills its grid cell width */
-            aspect-ratio: 1 / 1; /* This makes it square, height will follow grid cell's height */
+            width: 100%;
+            aspect-ratio: 1 / 1;
             border-width: 1px;
-            font-size: clamp(0.8rem, 2.8vh, 1.6rem); /* Responsive font relative to viewport height */
-            /* Make sure tile content div is also flexing if needed */
+            font-size: clamp(0.8rem, 2.8svh, 1.6rem); /* Responsive font relative to svh */
             display: flex; align-items: center; justify-content: center;
         }
         .tile > div { 
-            line-height: 1; /* Helps with vertical centering of text in smaller tiles */
+            line-height: 1;
         }
-
 
         /* Right Column: Keyboard */
         #keyboard {
-            flex: 1 1 50%;          /* Keyboard takes roughly half, can shrink/grow */
-            max-width: 480px;       /* Cap keyboard width */
-            height: auto;           /* Height determined by its content (keys) */
-            align-self: center;     /* Vertically center keyboard block in body's flex row */
+            flex: 1 1 50%;
+            max-width: 480px;
+            height: auto;
+            align-self: center;
             display: flex;
             flex-direction: column;
-            justify-content: center; /* Center key rows vertically within the keyboard block */
+            justify-content: center;
             padding: 0 2px;
             margin: 0;
-            gap: clamp(2px, 0.4vh, 3px);
+            gap: clamp(2px, 0.4svh, 3px); /* svh based */
+            box-sizing: border-box;
         }
         
         .key {
-            min-height: clamp(28px, 4.8vh, 38px); /* Keys scale with viewport height */
-            font-size: clamp(0.7rem, 2.3vh, 1.2rem);
+            min-height: clamp(28px, 4.8svh, 38px); /* Keys scale with svh */
+            font-size: clamp(0.7rem, 2.3svh, 1.2rem); /* svh based */
             border-radius: 3px;
         }
         .key.enter, .key.delete {
-             font-size: clamp(0.6rem, 1.9vh, 1rem);
+             font-size: clamp(0.6rem, 1.9svh, 1rem); /* svh based */
         }
 
-        /* Fixed Message Container - global positioning, adjust for landscape */
         .message-container {
-            top: 3px; /* Closer to top edge */
+            top: 3px;
             left: 50%;
             transform: translateX(-50%);
             width: auto; 
             min-width: 140px;
             max-width: 280px;
             padding: 3px 5px;
-            z-index: 1000; /* Ensure it's above other popups too */
+            z-index: 1000;
         }
         .message {
-            font-size: clamp(0.7rem, 1.7vh, 0.9rem);
-            padding: clamp(4px, 0.8vh, 6px) clamp(6px, 1vh, 8px);
+            font-size: clamp(0.7rem, 1.7svh, 0.9rem); /* svh based */
+            padding: clamp(4px, 0.8svh, 6px) clamp(6px, 1svh, 8px); /* svh based */
             margin-top: 0;
         }
     }
