@@ -707,23 +707,137 @@
             margin: 0;
             overflow-y: auto; /* Allow keyboard to scroll if needed */
         }
+    /* --- Horizontal Orientation Fix --- */
+    @media (orientation: landscape) {
+        html, body {
+            height: 100vh; 
+            overflow: hidden; 
+        }
 
-        /* Board container and board adjustments within the new .main-content padding */
+        body {
+            display: flex; 
+            flex-direction: row; 
+            align-items: stretch; 
+            justify-content: center; 
+            gap: 10px; 
+            padding: 8px; 
+            box-sizing: border-box;
+        }
+
+        /* Global Fixed Buttons */
+        .main-content > #toggle-theme,
+        .main-content > #toggle-layout {
+            position: fixed; 
+            top: 16px; 
+            z-index: 1001; 
+        }
+        .main-content > #toggle-theme {
+            right: 16px; 
+        }
+        .main-content > #toggle-layout {
+            left: 16px; 
+        }
+
+        /* Global Fixed Header Text */
+        .header-container,
+        .subtitle { 
+            position: fixed; 
+            left: 0;
+            width: 100%; 
+            box-sizing: border-box;
+            z-index: 1000; 
+            padding-left: calc(16px + 80px + 10px); 
+            padding-right: calc(16px + 80px + 10px);
+        }
+
+        .header-container { 
+            top: 16px; 
+            /* Height approx 1.5rem (h1) to 1.8rem. Using 1.8rem for calculation. */
+        }
+
+        .subtitle {
+            /* Position below .header-container. Adjust if H1's effective height is different */
+            top: calc(16px + 1.8rem + 5px); /* base_top + h1_approx_height + gap */
+            /* Height approx 0.9rem (font-size) + 5px (margin-bottom from base styles, not relevant here)
+               Using 1.2rem for its effective block height for calculation below. */
+            margin-bottom: 0;
+        }
+        
+        /* Space for fixed header:
+           Approx: top_offset(16px) + h1_height(1.8rem ~29px) + gap(5px) + subtitle_height(0.9rem ~15px) + bottom_gap_for_header(10px)
+           = 16 + 29 + 5 + 15 + 10 = ~75px.
+           Let's use a rounder 95px for padding-top to be safe and provide more visual separation.
+        */
+        .main-content,
+        #keyboard {
+            padding-top: 95px; /* Increased padding to clear fixed header */
+            padding-bottom: 0; 
+            padding-left: 0;   
+            padding-right: 0;
+            height: 100%; /* Children of body, which has align-items:stretch */
+            box-sizing: border-box;
+        }
+
+        .main-content { /* Left pane: Board */
+            order: 1;
+            flex: 1 1 60%;
+            /*
+              Recalculate max-width for .main-content's board area.
+              New fixed header padding-top = 95px.
+              Previous constant in calc: 124px (based on 80px padding-top).
+              Increase in padding-top = 95px - 80px = 15px.
+              New constant = 124px + 15px = 139px.
+              Net available height for 6 tiles = 100vh - BodyVPadding(16px) - MainContentOwnVPaddingTop(95px) - BoardContainerMarginBottom(0px) - BoardRowGaps(20px)
+                                            = 100vh - 16px - 95px - 20px = 100vh - 131px. (Slight difference to 139 due to rounding/method, using 131 for direct calc)
+              BoardWidth = (5/6 * (100vh - 131px)) + 16px
+            */
+            max-width: min(480px, calc( (5/6 * (100vh - 131px)) + 16px )); /* Adjusted constant, slightly reduced upper cap */
+            
+            justify-content: center; 
+            margin: 0; 
+            position: relative; 
+        }
+
+        #keyboard { /* Right pane: Keyboard */
+            order: 2;
+            flex: 1 1 40%;
+            max-width: 380px; /* Slightly reduced max-width for keyboard */
+            justify-content: center; 
+            align-self: stretch; 
+            margin: 0;
+            overflow-y: auto; /* This should handle scrolling */
+            /* Explicit max-height to ensure it respects the padded space */
+            max-height: calc(100vh - 95px - 16px); /* Full VH - body V-padding - its own V-padding-top */
+        }
+
+        /* Adjust message container z-index and top */
+        .message-container {
+            z-index: 1002; /* Highest */
+            /* New top: fixed_header_height_approx + gap */
+            top: calc(95px + 10px); /* Position below the 95px padded area */
+        }
+
+        /* Board container and board adjustments */
         .board-container {
-            width: 100%; /* Takes width from .main-content */
-            flex-grow: 1; /* Takes available vertical space in .main-content's content box */
+            width: 100%; 
+            flex-grow: 1; 
             min-height: 0; 
             overflow: hidden; 
-             margin: 0; /* Reset its margins, spacing controlled by .main-content padding */
+            margin: 0; 
+            display: flex; /* Ensure it's a flex container */
+            align-items: center; /* Vertically center the .board within it */
+            justify-content: center; /* Horizontally center the .board */
         }
 
         .board {
             max-width: 100%;
             max-height: 100%; 
             min-height: 0; 
+            /* Ensure the board (grid) itself doesn't try to expand beyond its container */
+            align-self: center; /* Center board if board-container is taller */
         }
 
-        /* Keyboard internal layout - should be fine */
+        /* Keyboard internal layout */
         #keyboard-top-row,
         #keyboard-main-grid {
             width: 100%;
