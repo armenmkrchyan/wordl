@@ -592,123 +592,82 @@
          }
     }
 
-        /* --- Horizontal Orientation Fix --- */
-    @media (orientation: landscape) {
+           /* --- Horizontal Orientation Fix --- */
+    @media (orientation: landscape) { /* Removed min-height condition to apply more broadly */
         html, body {
-            /* Use Small Viewport Height (svh) to account for mobile browser UI */
-            height: 100svh; 
-            overflow: hidden; 
+            height: 100%;
+            overflow: hidden; /* Prevent scrollbars on the body/html itself in landscape */
         }
 
         body {
-            display: flex; 
             flex-direction: row; 
             align-items: stretch; 
             justify-content: center; 
-            gap: 10px; 
-            padding: 8px; 
-            box-sizing: border-box;
+            gap: 10px; /* Slightly reduced gap for smaller screens */
+            padding: 8px; /* Slightly reduced padding for smaller screens */
         }
 
-        /* Global Fixed Buttons */
-        .main-content > #toggle-theme,
-        .main-content > #toggle-layout {
-            position: fixed; 
-            top: 16px; 
-            z-index: 1001; 
-        }
-        .main-content > #toggle-theme {
-            right: 16px; 
-        }
-        .main-content > #toggle-layout {
-            left: 16px; 
-        }
-
-        /* Global Fixed Header Text */
-        .header-container,
-        .subtitle { 
-            position: fixed; 
-            left: 0;
-            width: 100%; 
-            box-sizing: border-box;
-            z-index: 1000; 
-            padding-left: calc(16px + 80px + 10px); 
-            padding-right: calc(16px + 80px + 10px);
-        }
-
-        .header-container { 
-            top: 16px; 
-        }
-
-        .subtitle {
-            top: calc(16px + 1.8rem + 5px); 
-            margin-bottom: 0;
-        }
-        
-        /* Fixed header strip total height is approx 75-80px.
-           Let's use 90px for padding-top to ensure clearance.
-        */
-        .main-content,
-        #keyboard {
-            padding-top: 90px; /* Space for fixed header */
-            padding-bottom: 0; 
-            padding-left: 0;   
-            padding-right: 0;
-            height: 100%; /* Takes height from body (which is 100svh) */
-            box-sizing: border-box;
-        }
-
-        .main-content { /* Left pane: Board */
+        .main-content { /* Left pane: Header, Subtitle, Board */
             order: 1;
-            flex: 1 1 60%;
-            /*
-              Recalculate max-width for .main-content's board area using svh.
-              Net available height for 6 tiles = 100svh - BodyVPadding(16px) - MainContentVPaddingTop(90px) - BoardRowGaps(20px)
-                                            = 100svh - 16px - 90px - 20px = 100svh - 126px.
-              BoardWidth = (5/6 * (100svh - 126px)) + 16px
-            */
-            max-width: min(450px, calc( (5/6 * (100svh - 126px)) + 16px )); /* Adjusted constant and upper cap */
+            flex: 1 1 60%; /* Slightly adjust flex-basis if needed, but max-width is key */
             
+            /*
+              Recalculated max-width for .main-content (board area).
+              Target: Board width should be such that 6 rows of square tiles fit available vertical space.
+              Available vertical space for tiles = 100vh - (body_padding_T+B) - (header_H) - (subtitle_H_and_margin) - (board_row_gaps_total)
+              Let total fixed vertical overhead (paddings, header, subtitle, etc. NOT including tile gaps themselves yet) be X.
+              X_approx = 2*body_padding_landscape(16px) + header_H_approx(36px) + subtitle_H_plus_margin_approx(29px)
+                       = 16 + 36 + 29 = 81px. (This is overhead outside the board's internal structure)
+              TileHeight = ( (100vh - X_approx) - (MAX_ROWS-1)*row_gap ) / MAX_ROWS
+              BoardWidth = TileHeight * WORD_LENGTH + (WORD_LENGTH-1)*col_gap
+              BoardWidth = (5/6) * ( (100vh - X_approx) - (6-1)*4px_row_gap ) + (5-1)*4px_col_gap
+              BoardWidth = calc( (5/6 * ( (100vh - 81px) - 20px) ) + 16px )
+                         = calc( (5/6 * (100vh - 101px) ) + 16px )
+              Using a slightly larger constant (e.g., 115px instead of 101px) for robustness against rem/font variations.
+            */
+            max-width: min(500px, calc( (5/6 * (100vh - 115px)) + 16px )); /* Adjusted constant */
+            
+            height: 100%; 
             justify-content: center; 
+            padding: 0; 
             margin: 0; 
-            position: relative; 
         }
 
         #keyboard { /* Right pane: Keyboard */
             order: 2;
             flex: 1 1 40%;
-            max-width: 360px; /* Adjusted max-width */
-            justify-content: center; 
-            align-self: stretch; 
+            max-width: 400px; /* Slightly reduced max-width for keyboard */
+            height: 100%;
+            justify-content: center;
+            align-self: stretch;
+            padding: 5px;
             margin: 0;
-            overflow-y: auto; 
-            /* Explicit max-height using svh to ensure it respects the padded space */
-            max-height: calc(100svh - 90px - 16px); /* Full SVH - body V-padding - its own V-padding-top */
+            overflow-y: auto; /* Allow keyboard to scroll if needed */
         }
 
-        /* Adjust message container z-index and top */
-        .message-container {
-            z-index: 1002; 
-            top: calc(90px + 10px); /* Position below the 90px padded area */
+        .header-container {
+            width: 100%;
+            flex-shrink: 0;
+        }
+        .subtitle {
+            width: 100%;
+            flex-shrink: 0;
+            margin-bottom: 8px; /* Slightly reduced margin */
         }
 
-        /* Board container and board adjustments */
         .board-container {
-            width: 100%; 
-            flex-grow: 1; 
-            min-height: 0; 
-            overflow: hidden; 
-            margin: 0; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
+            width: 100%; /* Takes width from .main-content */
+            flex-grow: 1; /* Takes available vertical space in .main-content */
+            min-height: 0; /* Allow shrinking */
+            overflow: hidden; /* Safeguard: clip board if it still overflows vertically */
+            /* display: flex, justify-content: center, align-items: center are from base styles and are fine */
         }
 
         .board {
             max-width: 100%;
-            max-height: 100%; 
-            min-height: 0; 
-            align-self: center; 
+            max-height: 100%; /* Try to fit within .board-container's height */
+            min-height: 0; /* Allow shrinking, important for grid children */
+            /* Existing grid styles for rows/columns are fine */
         }
 
         #keyboard-top-row,
