@@ -350,7 +350,7 @@
         #past-games-list li a { font-size: 0.9rem; padding: 6px 10px; }
     }
 
-    /* --- Horizontal Orientation Fix for Mobile (using absolute positioning for header parts) --- */
+        /* --- Horizontal Orientation Fix for Mobile (using absolute positioning for header parts) --- */
     @media (orientation: landscape) and (max-height: 600px) {
         html { height: 100svh; max-height: 100svh; overflow: hidden; }
         body {
@@ -360,38 +360,38 @@
             padding: 3px; gap: 8px; box-sizing: border-box;
             position: relative; /* Crucial for absolute positioning of header elements from .main-content */
         }
-
-        /* Local variables for landscape layout aid */
-        /* These are ':root' scoped, so accessible everywhere. For media query specific, define without :root or on body */
-        body { /* Define on body to ensure scope */
-            --landscape-right-column-start: calc(50% + 4px); /* Half body + half gap */
-            --landscape-right-column-width: calc(50% - 7px); /* Half body - half gap - body_padding_total_for_one_side */
-        }
         
+        /* Define landscape positioning guides (can be thought of as columns) */
+        /* For simplicity, let's use direct calc() values, assuming a ~45/55 or 50/50 split */
+        /* Right "column" for header and keyboard conceptually starts after left column and gap */
+        /* Left column (.main-content) is flex: 1 1 45% */
+        /* Right column (#keyboard) is flex: 1 1 50% */
+        /* Gap is 8px. Body padding is 3px. */
+
+        /* Let's calculate a starting point for the right-side content area (header & keyboard) */
+        /* Approx left edge of right content area = left_column_width + gap + body_padding_left */
+        /* This is still an estimation game for absolute positioning. 
+           A common strategy is to make right "column" take a percentage width and position from right. */
+
 
         /* Left Column: BOARD + MESSAGE_CONTAINER (message container positioning adapted) */
-        .main-content {
+        .main-content { /* This is the LEFT column, board and messages */
             flex: 1 1 45%; max-width: 380px; height: 100%;
             display: flex; flex-direction: column;
-            align-items: center; justify-content: flex-start; /* Message container first, then board */
+            align-items: center; justify-content: flex-start;
             padding: 0; margin: 0; overflow: hidden;
-            /* For landscape, its original header children are absolutely positioned.
-               .main-content itself might still need to be 'relative' if we decide to pin
-               message-container to IT in landscape rather than viewport. Let's try relative.
-            */
             position: relative; 
         }
 
-        /* MESSAGE CONTAINER in LANDSCAPE - now relative to .main-content (left column) */
         .main-content > .message-container, .message-container {
-            position: absolute; /* Relative to .main-content */
+            position: absolute;
             top: clamp(1px, 0.2svh, 3px);
             left: 50%;
             transform: translateX(-50%);
-            width: 90%; /* Full width of parent with some padding */
-            max-width: calc(100% - 10px); /* Ensure fits within .main-content */
-            min-height: auto; /* Let content define height */
-            z-index: 100; /* Above board, below globally moved header items if any overlap issues */
+            width: 90%;
+            max-width: calc(100% - 10px);
+            min-height: auto;
+            z-index: 100;
         }
         .message-container .message {
             font-size: clamp(0.7rem, 1.7svh, 0.9rem);
@@ -404,7 +404,6 @@
             flex-grow: 1; width: 100%; max-width: 100%;
             display: flex; align-items: center; justify-content: center;
             margin: 0; 
-            /* Give some top margin for message-container if it's inside .main-content */
             margin-top: clamp(30px, 5svh, 40px); /* Space below message container */
             min-height: 0; overflow: hidden;
         }
@@ -420,50 +419,60 @@
         }
         .tile > div { line-height: 1; }
 
-        /* == HEADER ELEMENTS (Children of .main-content in HTML): Repositioned to top-right of body == */
+        /* == HEADER ELEMENTS (Children of .main-content in HTML): Repositioned to top-right area of BODY == */
         .main-content > .header-container,
         .main-content > .subtitle,
         .main-content > #toggle-layout,
         .main-content > #toggle-theme {
             position: absolute; /* Relative to body */
             z-index: 30;
+            /* Ensure their default 'left' from portrait is overridden if needed */
+            left: auto; 
+            right: auto; 
+        }
+
+        /* The header TEXT blocks (H1/Game#, Subtitle) */
+        /* These will span the width of the keyboard column visually */
+        .main-content > .header-container,
+        .main-content > .subtitle {
+            /* Position from right edge of screen towards the middle */
+            right: 3px; /* Body padding on the right */
+            /* Assume the keyboard (#keyboard) will have flex-basis 50% and max-width 480px */
+            /* The text block should match this visually */
+            width: min(calc(50% - 3px - 4px), 470px); /* 50% viewport - right padding - half inter-column gap; capped */
+            /* If keyboard is 50%, then roughly left edge would be "50% + 4px (half_gap) + 3px (body_padding)" from LEFT */
+            /* So, for blocks to be *centered* above keyboard, their "left" could be set similarly */
+            left: calc(50% + 4px + 3px); /* Start from middle + half_gap + body padding */
+            text-align: center;
+            padding-left: 5px; padding-right: 5px; /* Inner padding for the text blocks */
         }
 
         .main-content > .header-container {
-            top: clamp(3px, 0.5svh, 5px);
-            left: var(--landscape-right-column-start);
-            right: 3px; /* Body right padding */
-            width: auto;
-            max-width: var(--landscape-right-column-width);
+            top: clamp(3px, 0.5svh, 5px); /* Align to top of body content area */
             margin-top: 0; margin-bottom: 0;
-            padding: 0 3px; /* Add small horizontal padding within this block */
             justify-content: center;
         }
         .main-content > .header-container h1 { font-size: clamp(0.9rem, 2.5svh, 1.2rem); }
         .main-content > .header-container #game-number-display { font-size: clamp(0.6rem, 1.8svh, 0.8rem); }
 
         .main-content > .subtitle {
-            top: calc(clamp(3px, 0.5svh, 5px) + clamp(1.1rem, 3svh, 1.5rem));
-            left: var(--landscape-right-column-start);
-            right: 3px;
-            width: auto;
-            max-width: var(--landscape-right-column-width);
+            top: calc(clamp(3px, 0.5svh, 5px) + clamp(1.1rem, 3svh, 1.5rem)); /* Below H1 block */
             margin-top: 0; margin-bottom: 0;
             font-size: clamp(0.6rem, 1.7svh, 0.75rem);
-            text-align: center;
         }
 
-        .main-content > #toggle-layout {
+        /* The TOGGLE BUTTONS will be at the top corners of the area defined by keyboard column */
+        .main-content > #toggle-layout { /* Top-left of keyboard area */
             top: clamp(3px, 0.5svh, 5px);
-            left: calc(var(--landscape-right-column-start) + clamp(1px, 0.2svh, 3px));
+            /* Position it at the "left" of the conceptual right column */
+            left: calc(50% + 4px + 3px + clamp(1px, 0.2svh, 3px)); /* middle + half_gap + body_pad + small_offset */
             right: auto;
-            /* Apply specific font/padding for landscape toggle button if default is too large */
             font-size: clamp(0.7rem, 1.8svh, 0.9rem);
             padding: clamp(2px, 0.6svh, 4px) clamp(3px, 0.8svh, 6px);
         }
-        .main-content > #toggle-theme {
+        .main-content > #toggle-theme { /* Top-right of screen / keyboard area */
             top: clamp(3px, 0.5svh, 5px);
-            right: clamp(3px, 0.5svh, 5px);
+            right: clamp(3px, 0.5svh, 5px); /* Body right padding + small_offset */
             left: auto;
             font-size: clamp(0.7rem, 1.8svh, 0.9rem);
             padding: clamp(2px, 0.6svh, 4px) clamp(3px, 0.8svh, 6px);
@@ -478,7 +487,8 @@
             align-items: center;
             padding: 0 2px;
             margin: 0;
-            padding-top: clamp(50px, 9svh, 65px); /* SPACE FOR MOVED HEADER */
+            /* Make space for the absolutely positioned header items. THIS IS KEY! */
+            padding-top: clamp(50px, 9svh, 65px); /* Increase if header content is taller */
         }
         #keyboard #keyboard-top-row,
         #keyboard #keyboard-main-grid {
