@@ -592,90 +592,90 @@
          }
     }
 
-           /* --- Horizontal Orientation Fix --- */
-    @media (orientation: landscape) { /* Removed min-height condition to apply more broadly */
+        /* --- Horizontal Orientation Fix for Mobile --- */
+    @media (orientation: landscape) and (max-height: 600px) {
         html, body {
-            height: 100%;
-            overflow: hidden; /* Prevent scrollbars on the body/html itself in landscape */
+            height: 100vh; /* Use full viewport height */
+            overflow: hidden; /* Prevent scrolling of the entire page */
         }
 
         body {
-            flex-direction: row; 
-            align-items: stretch; 
-            justify-content: center; 
-            gap: 10px; /* Slightly reduced gap for smaller screens */
-            padding: 8px; /* Slightly reduced padding for smaller screens */
+            flex-direction: row; /* Arrange .main-content and #keyboard side-by-side */
+            align-items: center; /* Vertically center these two main blocks */
+            justify-content: space-around; /* Distribute space with a gap */
+            padding: 5px;      /* Small padding around the whole game area */
+            gap: 10px;         /* Space between .main-content (left) and #keyboard (right) */
         }
 
-        .main-content { /* Left pane: Header, Subtitle, Board */
-            order: 1;
-            flex: 1 1 60%; /* Slightly adjust flex-basis if needed, but max-width is key */
-            
-            /*
-              Recalculated max-width for .main-content (board area).
-              Target: Board width should be such that 6 rows of square tiles fit available vertical space.
-              Available vertical space for tiles = 100vh - (body_padding_T+B) - (header_H) - (subtitle_H_and_margin) - (board_row_gaps_total)
-              Let total fixed vertical overhead (paddings, header, subtitle, etc. NOT including tile gaps themselves yet) be X.
-              X_approx = 2*body_padding_landscape(16px) + header_H_approx(36px) + subtitle_H_plus_margin_approx(29px)
-                       = 16 + 36 + 29 = 81px. (This is overhead outside the board's internal structure)
-              TileHeight = ( (100vh - X_approx) - (MAX_ROWS-1)*row_gap ) / MAX_ROWS
-              BoardWidth = TileHeight * WORD_LENGTH + (WORD_LENGTH-1)*col_gap
-              BoardWidth = (5/6) * ( (100vh - X_approx) - (6-1)*4px_row_gap ) + (5-1)*4px_col_gap
-              BoardWidth = calc( (5/6 * ( (100vh - 81px) - 20px) ) + 16px )
-                         = calc( (5/6 * (100vh - 101px) ) + 16px )
-              Using a slightly larger constant (e.g., 115px instead of 101px) for robustness against rem/font variations.
-            */
-            max-width: min(500px, calc( (5/6 * (100vh - 115px)) + 16px )); /* Adjusted constant */
-            
-            height: 100%; 
-            justify-content: center; 
-            padding: 0; 
-            margin: 0; 
-        }
-
-        #keyboard { /* Right pane: Keyboard */
-            order: 2;
-            flex: 1 1 40%;
-            max-width: 400px; /* Slightly reduced max-width for keyboard */
-            height: 100%;
-            justify-content: center;
-            align-self: stretch;
-            padding: 5px;
+        .main-content {
+            flex: 1 1 0; /* Share available space, will be capped by its own max-width: 550px */
+            height: 100%; /* Take full height within its flex cell */
+            padding: 0 5px;
             margin: 0;
-            overflow-y: auto; /* Allow keyboard to scroll if needed */
+            /* .main-content already has: display:flex, flex-direction:column, align-items:center */
+            justify-content: flex-start; /* Header items at the top, board-container will grow */
+            overflow-y: auto; /* Allow internal scroll if header + board is too tall for this column */
         }
 
-        .header-container {
-            width: 100%;
-            flex-shrink: 0;
-        }
-        .subtitle {
-            width: 100%;
-            flex-shrink: 0;
-            margin-bottom: 8px; /* Slightly reduced margin */
+        .header-container, .subtitle {
+            flex-shrink: 0; /* Prevent header/subtitle from shrinking too much if space is tight */
+            width: 100%; /* Ensure they take full width of the .main-content column */
         }
 
         .board-container {
-            width: 100%; /* Takes width from .main-content */
-            flex-grow: 1; /* Takes available vertical space in .main-content */
-            min-height: 0; /* Allow shrinking */
-            overflow: hidden; /* Safeguard: clip board if it still overflows vertically */
-            /* display: flex, justify-content: center, align-items: center are from base styles and are fine */
+            flex-grow: 1; /* Allows board to take available vertical space in .main-content */
+            width: 100%; /* Use full width of .main-content column */
+            max-width: 100%; /* Ensure it doesn't exceed parent; JS will likely set a specific max-width */
+            display: flex; /* To center the .board itself */
+            align-items: center;    /* Vertically center the .board */
+            justify-content: center; /* Horizontally center the .board */
+            margin-top: 5px; /* Small space below subtitle/header */
+            margin-bottom: 5px;
         }
 
-        .board {
-            max-width: 100%;
-            max-height: 100%; /* Try to fit within .board-container's height */
-            min-height: 0; /* Allow shrinking, important for grid children */
-            /* Existing grid styles for rows/columns are fine */
+        #keyboard {
+            flex: 1 1 0; /* Share available space, will be capped by its own max-width: 550px */
+            height: fit-content; /* Size to its content (key rows) */
+            align-self: center;  /* Ensure vertical centering in body's flex row */
+            /* #keyboard already has: display:flex, flex-direction:column */
+            justify-content: center; /* Vertically center key rows within keyboard */
+            padding: 0 5px;
+            margin: 0;
+            gap: 3px; /* Slightly reduce gap for landscape */
+            max-height: 95vh; /* Safety: prevent keyboard from being taller than screen */
+            overflow-y: auto; /* Allow internal scroll if keyboard content is too tall */
         }
 
-        #keyboard-top-row,
-        #keyboard-main-grid {
-            width: 100%;
+        /* Adjust tile and key sizes for better fit in landscape */
+        .tile {
+            font-size: clamp(1rem, 3vh, 1.5rem); /* Responsive font size based on viewport height */
+            border-width: 1.5px; /* Thinner borders for smaller tiles */
+        }
+        .board, .row { /* Reduce grid gaps for the board */
+            grid-gap: 3px;
+        }
+
+        .key {
+            min-height: 30px; /* Reduced minimum key height */
+            font-size: clamp(0.8rem, 2.5vh, 1.2rem); /* Responsive font for keys */
+        }
+        .key.enter, .key.delete {
+            font-size: clamp(0.7rem, 2vh, 1rem); /* Even smaller for Enter/Delete */
+        }
+
+        /* Adjustments for absolutely positioned elements inside .main-content */
+        .main-content > #toggle-theme {
+            top: 5px; right: 5px; padding: 4px 6px; font-size: 0.8rem;
+        }
+        .main-content > #toggle-layout {
+            top: 5px; left: 5px; padding: 4px 6px; font-size: 0.8rem;
+        }
+
+        /* Message container might need slight adjustment if header shrinks significantly */
+        .message-container {
+            top: 10px; /* Raise it a bit, original is 70px */
         }
     }
-    /* --- End of Horizontal Orientation Fix --- */
 
   </style>
 </head>
