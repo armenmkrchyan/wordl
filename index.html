@@ -592,6 +592,145 @@
          }
     }
 
+        /* --- Horizontal Orientation Fix --- */
+    @media (orientation: landscape) {
+        html, body {
+            height: 100vh; /* Use vh for full viewport height */
+            overflow: hidden; 
+        }
+
+        body {
+            display: flex; /* Arrange .main-content (board area) and #keyboard side-by-side */
+            flex-direction: row; 
+            align-items: stretch; /* Make children take full height */
+            justify-content: center; 
+            gap: 10px; 
+            padding: 8px; /* Overall padding for the body */
+            box-sizing: border-box;
+            /* Body itself doesn't need padding-top if children handle it,
+               but this padding defines the outermost boundary. */
+        }
+
+        /* Global Fixed Buttons */
+        .main-content > #toggle-theme,
+        .main-content > #toggle-layout {
+            position: fixed; /* Position relative to viewport */
+            top: 16px; /* Consistent top spacing from viewport edge */
+            z-index: 1001; /* Above header text and messages */
+            /* font-size, padding etc. will be inherited or set by other rules,
+               this just handles fixed positioning in landscape */
+        }
+        .main-content > #toggle-theme {
+            right: 16px; /* Consistent right spacing */
+        }
+        .main-content > #toggle-layout {
+            left: 16px; /* Consistent left spacing */
+        }
+
+        /* Global Fixed Header Text */
+        .header-container,
+        .subtitle { /* These are direct children of .main-content in HTML, but behave globally here */
+            position: fixed; /* Position relative to viewport */
+            left: 0;
+            width: 100%; /* Full viewport width */
+            box-sizing: border-box;
+            /* Text alignment is handled by their own existing styles (h1 text-align:center, p text-align:center) */
+            z-index: 1000; /* Below buttons, above game board/keyboard content */
+            /* Ensure padding to avoid text flowing under fixed buttons */
+            padding-left: calc(16px + 80px + 10px); /* approx: button_left_offset + button_width + gap_to_text */
+            padding-right: calc(16px + 80px + 10px);/* approx: button_right_offset + button_width + gap_to_text */
+        }
+
+        .header-container { /* Title and Game Number */
+            top: 16px; /* Align with top of buttons */
+            /* Its height is roughly 1.5rem (h1) to 1.8rem */
+        }
+
+        .subtitle {
+            /* Position below .header-container. Adjust 1.8rem if H1's effective height is different */
+            top: calc(16px + 1.8rem + 5px); /* base_top + h1_approx_height + gap */
+            margin-bottom: 0; /* Fixed position, margin not used for spacing below */
+        }
+        
+        /* Adjust message container z-index to be on top */
+        .message-container {
+            z-index: 1002; /* Highest */
+            /* Keep existing `top: 70px` or adjust if it clashes with fixed header.
+               If fixed header is ~80px tall, message at 70px will be under it.
+               Let's push it below the fixed header block. */
+            top: calc(16px + 1.8rem + 5px + 1.2rem + 15px); /* Approx: subtitle_bottom + gap */
+        }
+
+
+        /* Main Content area (Left Pane - Board) and Keyboard (Right Pane) */
+        /* These need top padding to clear the new fixed global header elements */
+        .main-content,
+        #keyboard {
+            /* Vertical padding to clear the ~80px tall fixed header strip */
+            padding-top: 80px; 
+            padding-bottom: 0; /* Reset any specific bottom padding from other rules for landscape */
+            padding-left: 0;   /* Reset horizontal padding, body has it */
+            padding-right: 0;
+            height: 100%; /* Children of body, which has align-items:stretch */
+            box-sizing: border-box;
+        }
+
+        .main-content { /* Left pane: Board */
+            order: 1;
+            flex: 1 1 60%;
+            /*
+              Recalculate max-width for .main-content's board area.
+              Available height for tiles = ViewportHeight - BodyVPadding - MainContentOwnVpadding - BoardContainerMarginBottom - BoardRowGaps
+              ViewportHeight = 100vh
+              BodyVPadding = 2 * 8px = 16px
+              MainContentOwnVPadding = 80px (new padding-top) + 0px (padding-bottom) = 80px
+              BoardContainerMarginBottom = 8px (from .subtitle's old margin, now space below board)
+              BoardRowGaps = (MAX_ROWS-1)*row_gap = 5 * 4px = 20px
+              Net available height for 6 tiles = 100vh - 16px - 80px - 8px - 20px = 100vh - 124px.
+              BoardWidth = (5/6 * NetAvailableTileHeight) + HorizontalGaps
+            */
+            max-width: min(500px, calc( (5/6 * (100vh - 124px)) + 16px ));
+            
+            /* .main-content is already display:flex, flex-direction:column, align-items:center.
+               justify-content: center helps if content is shorter than padded height. */
+            justify-content: center; 
+            margin: 0; 
+            position: relative; /* Keep for any relative children not made fixed. Board is flow content. */
+        }
+
+        #keyboard { /* Right pane: Keyboard */
+            order: 2;
+            flex: 1 1 40%;
+            max-width: 400px;
+            justify-content: center; /* Vertically center keyboard rows within its padded space */
+            align-self: stretch; /* Already part of body's align-items:stretch */
+            margin: 0;
+            overflow-y: auto; /* Allow keyboard to scroll if needed */
+        }
+
+        /* Board container and board adjustments within the new .main-content padding */
+        .board-container {
+            width: 100%; /* Takes width from .main-content */
+            flex-grow: 1; /* Takes available vertical space in .main-content's content box */
+            min-height: 0; 
+            overflow: hidden; 
+             margin: 0; /* Reset its margins, spacing controlled by .main-content padding */
+        }
+
+        .board {
+            max-width: 100%;
+            max-height: 100%; 
+            min-height: 0; 
+        }
+
+        /* Keyboard internal layout - should be fine */
+        #keyboard-top-row,
+        #keyboard-main-grid {
+            width: 100%;
+        }
+    }
+    /* --- End of Horizontal Orientation Fix --- */
+
   </style>
 </head>
 <body>
