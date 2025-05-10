@@ -1243,7 +1243,7 @@
         const mStr = String(minutes).padStart(2, '0');
         const sStr = String(seconds).padStart(2, '0');
 
-        messageElement.textContent = `${prefixMessage}Հաջորդ բառը՝ ${hStr}:${mStr}:${sStr}-ից`;
+        messageElement.textContent = prefixMessage + "Հաջորդ բառը" + hStr + ":" + mStr + ":" + sStr + "-ից";
         if (!messageElement.classList.contains('show')) {
             messageElement.classList.add('show');
         }
