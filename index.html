@@ -48,6 +48,8 @@
       transition: background 0.3s, color 0.3s;
       background-color: var(--bg-color, #fff);
       color: var(--text-color, #000);
+      /* Add safe area padding to the bottom of the body, with a fallback */
+      padding-bottom: env(safe-area-inset-bottom, 20px);
     }
 
     :root {
@@ -214,7 +216,7 @@
       gap: 4px;
       padding: 0 3px;
       margin-top: 5px;
-      margin-bottom: 20px; /* Changed bottom margin to 20px */
+      margin-bottom: 30px; /* Increased bottom margin */
       align-self: center; /* Center keyboard horizontally */
     }
 
@@ -541,7 +543,7 @@
             gap: 3px;
             padding: 0 2px;
             margin-top: 3px;
-            margin-bottom: 15px; /* Adjusted bottom margin for small screens */
+            margin-bottom: 20px; /* Adjusted bottom margin for small screens, increased from 15px */
         }
         /* Adjust gaps/columns for smaller screens if needed, though JS might handle size */
          #keyboard-main-grid, #keyboard-top-row {
@@ -607,7 +609,11 @@
             flex-direction: row;    /* .main-content (left) | #keyboard (right) */
             align-items: stretch;   /* Make columns take full available height of body's content box */
             justify-content: center;/* Center columns if they together are narrower than viewport */
-            padding: 3px;           /* Small body padding (3px top/bottom, 3px left/right) */
+            /* Specific padding, incorporating safe-area-inset-bottom with a fallback */
+            padding-top: 3px;
+            padding-left: 3px;
+            padding-right: 3px;
+            padding-bottom: calc(3px + env(safe-area-inset-bottom, 10px));
             gap: 8px;               /* Space between left and right columns */
             box-sizing: border-box; /* Body's padding is INCLUDED in its height/width */
         }
@@ -621,7 +627,7 @@
             flex-direction: column; /* Stack header then board-container vertically */
             align-items: center;    /* Center children horizontally */
             justify-content: flex-start; /* Align children (header, board) to the top of this column */
-            padding: 0;
+            padding: 0; /* Reset main-content padding as body handles overall padding */
             margin: 0;
             overflow: hidden;       /* No scroll for this entire column */
             box-sizing: border-box;
@@ -696,16 +702,16 @@
         }
 
         /* Right Column: Keyboard */
-        #keyboard {
+        #keyboard { /* Styles specific to landscape mode */
             flex: 1 1 50%;
             max-width: 480px;
             height: auto;
-            align-self: center;
+            align-self: center; /* Vertically center keyboard in its allocated space */
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            padding: 0 2px;
-            margin: 0;
+            justify-content: center; /* Center key rows vertically */
+            padding: 0 2px; /* Minimal horizontal padding */
+            margin: 0; /* Margin is handled by body's gap and padding */
             gap: clamp(2px, 0.4svh, 3px); /* svh based */
             box-sizing: border-box;
         }
