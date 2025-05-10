@@ -1314,7 +1314,7 @@
       bc.style.maxWidth = tMW;
       const targetW = Math.min(reqBWH, finalCssMW);
       const minRTSize = 30; const minRBW = (WORD_LENGTH*minRTSize) + (WORD_LENGTH-1)*cg;
-      if (targetW > minRBW && targetW > 0) bc.style.maxWidth = `${targetW}px`;
+      if (targetW > minRBW && targetW > 0) bc.style.maxWidth = targetW + 'px';
       else bc.style.maxWidth = '';
   }
 
