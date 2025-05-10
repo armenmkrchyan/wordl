@@ -963,7 +963,6 @@
                if (!['correct', 'present', 'absent', null].includes(keyStatuses[key])) delete keyStatuses[key];
             }
         } catch (e) {
-            console.error(`Error loading saved state for ${dateKey}:`, e);
             resetGameStateVars(); isGameOver = false;
         }
     } else {
