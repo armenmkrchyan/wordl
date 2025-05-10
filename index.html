@@ -963,6 +963,7 @@
                if (!['correct', 'present', 'absent', null].includes(keyStatuses[key])) delete keyStatuses[key];
             }
         } catch (e) {
+            console.error(`Error loading saved state for ${dateKey}:`, e);
             resetGameStateVars(); isGameOver = false;
         }
     } else {
@@ -999,12 +1000,12 @@
             if (wonGame) {
                 showMessage('🎉 Հաղթանակ 🎉', 0);
             } else {
-                 showMessage("Խաղն ավարտված է։ Այսօրվա բառն է " + wordForMessage, 0);
+                 showMessage(`Խաղն ավարտված է։ Բառը՝ ${wordForMessage}`, 0);
             }
         }
     } else {
         if (isViewingPastGame) {
-             showMessage("Խաղ#" + gameNumber + "(" + effectiveDateStringForKey + ")", 3000);
+             showMessage(`Խաղ #${gameNumber} (${effectiveDateStringForKey})`, 3000);
         }
     }
 
@@ -1174,7 +1175,7 @@
             startNextWordCountdown(false); // false for loss
           } else {
             // For past games, show the target word on loss
-            showMessage("Պարտություն։ Բառը" +  targetWord, 0);
+            showMessage(`Պարտություն։ Բառը՝ ${targetWord}`, 0);
           }
      }
      // No 'else' here; game continues if neither win nor max rows reached
@@ -1225,8 +1226,8 @@
         } else {
             // For loss, include the target word in the prefix.
             // targetWord is globally available from setupDateAndWord
-            prefixMessage = "Պարտություն։ Բառը" + targetWord;
-            timeUpMessage = "Պարտություն։ Հաջորդ բառը հասանելի է։ Թարմացրեք էջը։";
+            prefixMessage = `Պարտություն։ Բառը՝ ${targetWord}։ `;
+            timeUpMessage = `Պարտություն։ Հաջորդ բառը հասանելի է։ Թարմացրեք էջը։`;
         }
 
         if (timeRemainingMs <= 0) {
@@ -1243,7 +1244,7 @@
         const mStr = String(minutes).padStart(2, '0');
         const sStr = String(seconds).padStart(2, '0');
 
-        messageElement.textContent = prefixMessage + "Հաջորդ բառը" + hStr + ":" + mStr + ":" + sStr + "-ից";
+        messageElement.textContent = `${prefixMessage}Հաջորդ բառը՝ ${hStr}:${mStr}:${sStr}-ից`;
         if (!messageElement.classList.contains('show')) {
             messageElement.classList.add('show');
         }
@@ -1262,7 +1263,7 @@
       try {
           pastGamesList.innerHTML = '';
           if (isNaN(startDateAtArmeniaMidnightAsUTC) || startDateAtArmeniaMidnightAsUTC > todayAtArmeniaMidnightAsUTCGlobal) {
-               pastGamesList.innerHTML = "<li>Խաղերը սկսվում են " + START_DATE_STRING + "-ից (Հայաստանի ժամանակով)։</li>";
+               pastGamesList.innerHTML = `<li>Խաղերը սկսվում են ${START_DATE_STRING}-ից (Հայաստանի ժամանակով)։</li>`;
                pastGamesPopup.style.display = 'flex'; return;
           }
           const todayOffsetInArmenia = Math.floor((todayAtArmeniaMidnightAsUTCGlobal - startDateAtArmeniaMidnightAsUTC) / (1000 * 60 * 60 * 24));
@@ -1278,10 +1279,10 @@
                   const y = gameCalDateInArmenia.getUTCFullYear();
                   const m = String(gameCalDateInArmenia.getUTCMonth() + 1).padStart(2, '0');
                   const d = String(gameCalDateInArmenia.getUTCDate()).padStart(2, '0');
-                  const gameDateStrInArmenia = y + '-' + m + '-' + d;
+                  const gameDateStrInArmenia = `${y}-${m}-${d}`;
                   const li = document.createElement('li'); const a = document.createElement('a');
-                  a.href = window.location.pathname + '?date=' + gameDateStrInArmenia;
-                  a.textContent = 'Խաղ #' + i + '-' + gameDateStrInArmenia; a.title = 'Դիտել' +  gameDateStrInArmenia +  'խաղը';
+                  a.href = `${window.location.pathname}?date=${gameDateStrInArmenia}`;
+                  a.textContent = `Խաղ #${i} - ${gameDateStrInArmenia}`; a.title = `Դիտել ${gameDateStrInArmenia} խաղը`;
                   if (gameDateStrInArmenia === effectiveDateStringForKey) a.style.fontWeight = 'bold';
                   li.appendChild(a); items.push(li);
               } items.reverse().forEach(item => pastGamesList.appendChild(item));
@@ -1314,7 +1315,7 @@
       bc.style.maxWidth = tMW;
       const targetW = Math.min(reqBWH, finalCssMW);
       const minRTSize = 30; const minRBW = (WORD_LENGTH*minRTSize) + (WORD_LENGTH-1)*cg;
-      if (targetW > minRBW && targetW > 0) bc.style.maxWidth = targetW + 'px';
+      if (targetW > minRBW && targetW > 0) bc.style.maxWidth = `${targetW}px`;
       else bc.style.maxWidth = '';
   }
 
