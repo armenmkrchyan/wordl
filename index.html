@@ -1278,10 +1278,10 @@
                   const y = gameCalDateInArmenia.getUTCFullYear();
                   const m = String(gameCalDateInArmenia.getUTCMonth() + 1).padStart(2, '0');
                   const d = String(gameCalDateInArmenia.getUTCDate()).padStart(2, '0');
-                  const gameDateStrInArmenia = `${y}-${m}-${d}`;
+                  const gameDateStrInArmenia = y + '-' + m + '-' + d;
                   const li = document.createElement('li'); const a = document.createElement('a');
-                  a.href = `${window.location.pathname}?date=${gameDateStrInArmenia}`;
-                  a.textContent = `Խաղ #${i} - ${gameDateStrInArmenia}`; a.title = `Դիտել ${gameDateStrInArmenia} խաղը`;
+                  a.href = window.location.pathname + '?date=' + gameDateStrInArmenia;
+                  a.textContent = 'Խաղ #' + i + '-' + gameDateStrInArmenia; a.title = 'Դիտել' +  gameDateStrInArmenia +  'խաղը';
                   if (gameDateStrInArmenia === effectiveDateStringForKey) a.style.fontWeight = 'bold';
                   li.appendChild(a); items.push(li);
               } items.reverse().forEach(item => pastGamesList.appendChild(item));
