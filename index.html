@@ -1225,8 +1225,8 @@
         } else {
             // For loss, include the target word in the prefix.
             // targetWord is globally available from setupDateAndWord
-            prefixMessage = `Պարտություն։ Բառը՝ ${targetWord}։ `;
-            timeUpMessage = `Պարտություն։ Հաջորդ բառը հասանելի է։ Թարմացրեք էջը։`;
+            prefixMessage = "Պարտություն։ Բառը`" + targetWord;
+            timeUpMessage = "Պարտություն։ Հաջորդ բառը հասանելի է։ Թարմացրեք էջը։";
         }
 
         if (timeRemainingMs <= 0) {
